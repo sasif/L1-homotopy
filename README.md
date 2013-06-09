@@ -24,22 +24,39 @@ Github repository: https://github.com/sasif/L1-homotopy
 
 References: 
 
-	- M. Salman Asif and Justin Romberg, "Sparse recovery of streaming signals using L1-homotopy," preprint available at http://users.ece.gatech.edu/~sasif/ and ???  
+	- M. Salman Asif and Justin Romberg, "Sparse recovery of streaming signals using L1-homotopy,"   
+	  			preprint available at http://users.ece.gatech.edu/~sasif/ and ???  
 
-	- M. Salman Asif, "Dynamic compressive sensing: Sparse recovery algorithms for streaming signals and video." Doctoral Thesis, Georgia Institute of Technology, 2013. 
+	- M. Salman Asif, "Dynamic compressive sensing: Sparse recovery algorithms for streaming signals and video." 
+	 			Doctoral Thesis, Georgia Institute of Technology, 2013. 
 
 %------------------------------------------------------------
 
 L1-homotopy is a highly versatile homotopy program that can solve a variety of L1-norm minimization problems using a warm start.   
 
-l1homotopy.m is the main function that solves the following homotopy program:   
-
+	We consider the following linear model of observations: 
+		
+		y = Ax+e
+		
+	where x is a sparse vector of interest, A is the system matrix, y is the measurement vector, and e is the noise.   
+	We want to solve the following weighted L-norm minimization program:  
+	
+	minimize_x  ||W x||_1 + 1/2*||Ax-y||_2^2,  
+	
+	where W is a diagonal matrix with positive weights.
+	
+	Instead of solving the optimization program from scratch, we use a vector xh_old as the starting point   
+	and solve the following homotopy program:  
+	
 	minimize_x  ||W x||_1 + 1/2*||Ax-y||_2^2 + (1-epsilon)u'x,  
 
 	u is defined as u = -W*sign(xh_old)-A'*(A*xh_old-y)   
 	xh_old is an arbitrary warm-start vector (or a zero vector if no warm-start is available)  
 
-The homotopy is solved by changing epsilon from 0 to 1 using the algorithm described in the paper and the thesis.  
+	
+	l1homotopy.m is the main function that solves the following homotopy program by changing epsilon from 0 to 1, 
+	the solution of homotopy program changes from the warm-start vector (xh_old) to the desired solution. 
+	Further details in Section IV of the paper or Chapter III of the thesis.  
 
 
 Scripts for different problems are also included in this package to demonstrate the use of l1homotopy:   
