@@ -24,9 +24,9 @@ Github repository: https://github.com/sasif/L1-homotopy
 
 References: 
 
-- M. Salman Asif and Justin Romberg, "Sparse recovery of streaming signals using L1-homotopy," preprint available at http://users.ece.gatech.edu/~sasif/ and ???  
+	- M. Salman Asif and Justin Romberg, "Sparse recovery of streaming signals using L1-homotopy," preprint available at http://users.ece.gatech.edu/~sasif/ and ???  
 
-- M. Salman Asif, "Dynamic compressive sensing: Sparse recovery algorithms for streaming signals and video." Doctoral Thesis, Georgia Institute of Technology, 2013. 
+	- M. Salman Asif, "Dynamic compressive sensing: Sparse recovery algorithms for streaming signals and video." Doctoral Thesis, Georgia Institute of Technology, 2013. 
 
 %------------------------------------------------------------
 
@@ -34,10 +34,10 @@ L1-homotopy is a highly versatile homotopy program that can solve a variety of L
 
 l1homotopy.m is the main function that solves the following homotopy program:   
 
-minimize_x  ||W x||_1 + 1/2*||Ax-y||_2^2 + (1-epsilon)u'x,  
+	minimize_x  ||W x||_1 + 1/2*||Ax-y||_2^2 + (1-epsilon)u'x,  
 
-u is defined as u = -W*sign(xh_old)-A'*(A*xh_old-y)   
-xh_old is an arbitrary warm-start vector (or a zero vector if no warm-start is available)  
+	u is defined as u = -W*sign(xh_old)-A'*(A*xh_old-y)   
+	xh_old is an arbitrary warm-start vector (or a zero vector if no warm-start is available)  
 
 The homotopy is solved by changing epsilon from 0 to 1 using the algorithm described in the paper and the thesis.  
 
