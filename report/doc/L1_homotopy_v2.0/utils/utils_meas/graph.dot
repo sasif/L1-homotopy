@@ -1,9 +1,0 @@
-/* Created by mdot for Matlab */
-digraph m2html {
-  A_n -> realnoiselet;
-  At_n -> realnoiselet;
-
-  A_n [URL="A_n.html"];
-  At_n [URL="At_n.html"];
-  realnoiselet [URL="realnoiselet.html"];
-}

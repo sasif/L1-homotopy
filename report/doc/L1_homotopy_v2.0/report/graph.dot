@@ -1,5 +1,0 @@
-/* Created by mdot for Matlab */
-digraph m2html {
-
-  generateM2HTML [URL="generateM2HTML.html"];
-}

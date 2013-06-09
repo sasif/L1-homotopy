@@ -1,9 +1,0 @@
-/* Created by mdot for Matlab */
-digraph m2html {
-
-  demo_adpWBPDN [URL="demo_adpWBPDN.html"];
-  demo_wtBPDN [URL="demo_wtBPDN.html"];
-  job_adpWBPDN [URL="job_adpWBPDN.html"];
-  job_wtBPDN_ALL [URL="job_wtBPDN_ALL.html"];
-  job_wtBPDN_WAVE [URL="job_wtBPDN_WAVE.html"];
-}
