@@ -64,8 +64,6 @@ This code is in development stage; any comments or bug reports are very welcome.
 
 %------------------------------------------------------------
 
-Copyright (2009--2013) M. Salman Asif and Justin Romberg
-
 This file is part of L1 homotopy toolbox.
 Copyright (C) 2013, M. Salman Asif, all rights reserved.
 
