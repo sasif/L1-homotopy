@@ -1,0 +1,194 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of update_primal</title>
+  <meta name="keywords" content="update_primal">
+  <meta name="description" content="update_primal.m">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../menu.html L1_homotopy_v2.0 --><!-- menu.html Pursuits_Homotopy -->
+<h1>update_primal
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>update_primal.m</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function [i_delta, out_x, delta, chk_x] = update_primal(gamma_x, gamma_lambda, z_x, x_k, del_x_vec, pk, dk, epsilon, out_lambda); </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> update_primal.m
+
+ This function computes the minimum step size in the primal update direction and
+ finds change in the primal or dual support with that step.
+
+ Inputs:
+ gamma_x - current support of x
+ gamma_lambda - current support of lambda
+ z_x - sign sequence of x
+ z_lambda - sign sequence of lambda
+ del_x_vec - primal update direction
+ pk
+ dk
+ epsilon - current value of epsilon
+ out_lambda - element removed from support of lambda in previous step (if any)
+
+ Outputs:
+ i_delta - index corresponding to newly active primal constraint (new_lambda)
+ out_x - element in x shrunk to zero
+ delta - primal step size
+ chk_x - 1  an element is removed from support of x
+         0  a new element enters the support of lambda
+
+ Written by: Salman Asif, Georgia Tech
+ Email: sasif@ece.gatech.edu</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="BPDN_homotopy_demo.html" class="code" title="">BPDN_homotopy_demo</a>	BPDN_homotopy_demo.m</li><li><a href="BPDN_homotopy_function_old.html" class="code" title="function out = BPDN_homotopy_function(A, y, in)">BPDN_homotopy_function_old</a>	BPDN_homotopy_function.m</li><li><a href="DS_homotopy_demo.html" class="code" title="">DS_homotopy_demo</a>	DS_homotopy_demo_test.m</li><li><a href="DS_homotopy_function.html" class="code" title="function [xk_1, lambdak_1, gamma_xk, gamma_lambdak, iter, th] = DS_homotopy_function(A, y, thresh, maxiter);">DS_homotopy_function</a>	DS_homotopy_function.m</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% update_primal.m</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% This function computes the minimum step size in the primal update direction and</span>
+0004 <span class="comment">% finds change in the primal or dual support with that step.</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% Inputs:</span>
+0007 <span class="comment">% gamma_x - current support of x</span>
+0008 <span class="comment">% gamma_lambda - current support of lambda</span>
+0009 <span class="comment">% z_x - sign sequence of x</span>
+0010 <span class="comment">% z_lambda - sign sequence of lambda</span>
+0011 <span class="comment">% del_x_vec - primal update direction</span>
+0012 <span class="comment">% pk</span>
+0013 <span class="comment">% dk</span>
+0014 <span class="comment">% epsilon - current value of epsilon</span>
+0015 <span class="comment">% out_lambda - element removed from support of lambda in previous step (if any)</span>
+0016 <span class="comment">%</span>
+0017 <span class="comment">% Outputs:</span>
+0018 <span class="comment">% i_delta - index corresponding to newly active primal constraint (new_lambda)</span>
+0019 <span class="comment">% out_x - element in x shrunk to zero</span>
+0020 <span class="comment">% delta - primal step size</span>
+0021 <span class="comment">% chk_x - 1  an element is removed from support of x</span>
+0022 <span class="comment">%         0  a new element enters the support of lambda</span>
+0023 <span class="comment">%</span>
+0024 <span class="comment">% Written by: Salman Asif, Georgia Tech</span>
+0025 <span class="comment">% Email: sasif@ece.gatech.edu</span>
+0026 
+0027 <a name="_sub0" href="#_subfunctions" class="code">function [i_delta, out_x, delta, chk_x] = update_primal(gamma_x, gamma_lambda, z_x, x_k, del_x_vec, pk, dk, epsilon, out_lambda);</a>
+0028 
+0029 N = length(x_k);
+0030 
+0031 <span class="comment">% gamma_lc = setdiff([1:N]', [gamma_lambda; out_lambda]); WRONG</span>
+0032 <span class="comment">% check out_lambda as well, that is if outgoing lambda switches sign in just one step</span>
+0033 temp_gamma = zeros(N,1);
+0034 temp_gamma(gamma_lambda) = gamma_lambda;
+0035 gamma_lc = find([1:N]' ~= temp_gamma);
+0036 
+0037 delta1_constr = (epsilon-pk(gamma_lc))./(1+dk(gamma_lc));
+0038 delta1_pos_ind = find(delta1_constr&gt;0);
+0039 delta1_pos = delta1_constr(delta1_pos_ind);
+0040 [delta1 i_delta1] = min(delta1_pos);
+0041 <span class="keyword">if</span> isempty(delta1)
+0042     delta1 = inf;
+0043 <span class="keyword">end</span>
+0044 delta2_constr = (epsilon+pk(gamma_lc))./(1-dk(gamma_lc));
+0045 delta2_pos_ind = find(delta2_constr&gt;0);
+0046 delta2_pos = delta2_constr(delta2_pos_ind);
+0047 [delta2 i_delta2] = min(delta2_pos);
+0048 <span class="keyword">if</span> isempty(delta2)
+0049     delta2 = inf;
+0050 <span class="keyword">end</span>
+0051 
+0052 <span class="keyword">if</span> delta1&gt;delta2
+0053     delta = delta2;
+0054     i_delta = gamma_lc(delta2_pos_ind(i_delta2));
+0055 <span class="keyword">else</span>
+0056     delta = delta1;
+0057     i_delta = gamma_lc(delta1_pos_ind(i_delta1));
+0058 <span class="keyword">end</span>
+0059 
+0060 delta3_constr = (-x_k(gamma_x)./del_x_vec(gamma_x));
+0061 delta3_pos_index = find(delta3_constr&gt;0);
+0062 [delta3 i_delta3] = min(delta3_constr(delta3_pos_index));
+0063 out_x_index = gamma_x(delta3_pos_index(i_delta3));
+0064 
+0065 chk_x = 0;
+0066 out_x = [];
+0067 <span class="keyword">if</span> delta3 &gt; 0 &amp; delta3 &lt;= delta
+0068     chk_x = 1;
+0069     delta = delta3;
+0070     out_x = out_x_index;
+0071 <span class="keyword">end</span>
+0072 
+0073 
+0074 <span class="comment">% If program goes in any of the following loops, there is some problem!!!</span>
+0075 <span class="comment">%</span>
+0076 <span class="comment">%%% THESE ARE PROBABLY UNNECESSARY</span>
+0077 <span class="comment">%%% NEED TO REMOVE THEM.</span>
+0078 <span class="comment">%</span>
+0079 <span class="comment">% The following checks are just to deal with degenerate cases when more</span>
+0080 <span class="comment">% than one elements want to enter or leave the support at any step</span>
+0081 <span class="comment">% (e.g., Bernoulli matrix with small number of measurements)</span>
+0082 
+0083 <span class="comment">% This one is ONLY for those indices which are zero. And we don't know where</span>
+0084 <span class="comment">% will its dx point in next steps, so after we calculate dx and its in opposite</span>
+0085 <span class="comment">% direction to z_x, we will have to remove that index from the support.</span>
+0086 xk_1 = x_k+delta*del_x_vec;
+0087 xk_1(out_x) = 0;
+0088 wrong_sign = find(sign(xk_1(gamma_x)).*z_x(gamma_x)==-1);
+0089 <span class="keyword">if</span> ~isempty(gamma_x(wrong_sign))
+0090     disp(<span class="string">'Sign mismatch!'</span>); 
+0091     <span class="comment">% keyboard;</span>
+0092     
+0093     chk_x = 1;
+0094     delta = 0;
+0095     <span class="comment">% can also choose specific element which became non-zero first but all</span>
+0096     <span class="comment">% that matters here is AtA(gx,gl) doesn't become singular.</span>
+0097     <span class="comment">% [val_wrong_x ind_wrong_x] =  sort(abs(del_x_vec(gamma_x(wrong_sign))),'descend');</span>
+0098     out_x = gamma_x(wrong_sign(1));
+0099 <span class="keyword">end</span>
+0100 
+0101 <span class="comment">% If more than one primal constraints became active in previous iteration i.e.,</span>
+0102 <span class="comment">% more than one elements wanted to enter the support and we added only one.</span>
+0103 <span class="comment">% So here we need to check if those remaining elements are still active.</span>
+0104 i_delta_temp = gamma_lc(abs(pk(gamma_lc)+delta*dk(gamma_lc))-(epsilon-delta) &gt;= 10*eps);
+0105 <span class="keyword">if</span> ~isempty(i_delta_temp)
+0106     <span class="keyword">if</span> ~isempty(out_lambda)
+0107         i_delta_more = i_delta_temp;<span class="comment">%(find(i_delta_temp~=out_lambda));</span>
+0108     <span class="keyword">else</span>
+0109         i_delta_more = i_delta_temp;
+0110     <span class="keyword">end</span>
+0111     <span class="keyword">if</span> length(i_delta_more)&gt;=1 &amp; ~sum((i_delta_temp==i_delta))
+0112         
+0113         disp(<span class="string">'Degenerate indices in previous iteration!'</span>); 
+0114         <span class="comment">% keyboard;</span>
+0115         
+0116         <span class="comment">% ideal way would be to check that incoming element doesn't make AtA</span>
+0117         <span class="comment">% singular!</span>
+0118         [v_temp i_temp] = max(-pk(i_delta_more)./dk(i_delta_more));
+0119         i_delta = i_delta_more(i_temp);
+0120         delta = 0;
+0121         chk_x = 0;
+0122         out_x = [];
+0123     <span class="keyword">end</span>
+0124 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

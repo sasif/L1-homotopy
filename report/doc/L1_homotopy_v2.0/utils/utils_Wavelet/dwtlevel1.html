@@ -1,0 +1,122 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of dwtlevel1</title>
+  <meta name="keywords" content="dwtlevel1">
+  <meta name="description" content="dwtlevel1.m">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../../menu.html L1_homotopy_v2.0 --><!-- ../menu.html utils --><!-- menu.html utils_Wavelet -->
+<h1>dwtlevel1
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>dwtlevel1.m</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function w = dwtlevel1(x, h0, h1, sym) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> dwtlevel1.m
+
+ One level of the discrete wavelet transform.  Periodic extension (for now)
+ and the wavelets are lined up the best way for &quot;tree structure&quot;.
+ Usage : w = dwtlevel1(x, h0, h1, sym)
+
+ Written by : Justin Romberg
+ Created : 5/1/2001</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="cconv.html" class="code" title="function y = cconv(x,h,k)">cconv</a>	cconv.m</li><li><a href="symext.html" class="code" title="function xe = symext(x, ln, rn, par, sym)">symext</a>	symext.m</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="dwtmult1.html" class="code" title="function w = dwtmult1(x, h0, h1, L, sym)">dwtmult1</a>	dwtmult1.m</li><li><a href="dwtmult1_conv.html" class="code" title="function w_conv = dwtmult1_conv(x, h0, h1, L)">dwtmult1_conv</a>	dwtmult1_conv.m</li><li><a href="dwtmult2.html" class="code" title="function w = dwtmult2(x, h0, h1, L, sym)">dwtmult2</a>	dwtmult2.m</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% dwtlevel1.m</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% One level of the discrete wavelet transform.  Periodic extension (for now)</span>
+0004 <span class="comment">% and the wavelets are lined up the best way for &quot;tree structure&quot;.</span>
+0005 <span class="comment">% Usage : w = dwtlevel1(x, h0, h1, sym)</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">% Written by : Justin Romberg</span>
+0008 <span class="comment">% Created : 5/1/2001</span>
+0009 
+0010 <a name="_sub0" href="#_subfunctions" class="code">function w = dwtlevel1(x, h0, h1, sym)</a>
+0011 
+0012 <span class="keyword">if</span> (nargin == 3), sym=0; <span class="keyword">end</span>
+0013 
+0014 N = length(x);
+0015 m0 = length(h0);
+0016 m1 = length(h1);
+0017 
+0018 <span class="keyword">if</span> (m0 ~= m1)
+0019   error(<span class="string">'Use biorfilt to create filters'</span>);
+0020 <span class="keyword">end</span>
+0021 
+0022 <span class="comment">% NEED TO FIX THIS SO IT WORKS LIKE BIORFILT()</span>
+0023 <span class="comment">% if wavelet filters have unequal length, zero pad the shorter one</span>
+0024 <span class="comment">% the difference in length has to be even</span>
+0025 <span class="comment">%if (m0 &gt; m1)</span>
+0026 <span class="comment">%  h1 = [zeros(1,(m0-m1)/2) h1 zeros(1,(m0-m1)/2)];</span>
+0027 <span class="comment">%  m1 = length(h1);</span>
+0028 <span class="comment">%elseif (m1 &gt; m0)</span>
+0029 <span class="comment">%  h0 = [zeros(1,(m1-m0)/2) h0 zeros(1,(m1-m0)/2)];</span>
+0030 <span class="comment">%  m0 = length(h0);</span>
+0031 <span class="comment">%end</span>
+0032 
+0033 <span class="comment">% center on the middle of the filter</span>
+0034 <span class="comment">% odd length - hole at (m1-1)/2</span>
+0035 <span class="comment">%    (bottom left node of tree centers on sample 1.5)</span>
+0036 <span class="comment">% even length - hole at m1/2</span>
+0037 <span class="comment">%    (bottom left node of tree centers on sample 1)</span>
+0038 k = floor(m1/2);
+0039 <span class="keyword">if</span> (sym == 0)
+0040   <span class="comment">% circular filtering</span>
+0041   c0 = <a href="cconv.html" class="code" title="function y = cconv(x,h,k)">cconv</a>(x, h0, k);
+0042   c1 = <a href="cconv.html" class="code" title="function y = cconv(x,h,k)">cconv</a>(x, h1, k);
+0043   <span class="comment">% downsample</span>
+0044   w = [c0(1:2:N) c1(1:2:N)];
+0045 <span class="keyword">elseif</span> (sym == 1)
+0046   k = floor(m1/2)-1;
+0047   <span class="comment">% symmetrically extend</span>
+0048   xe = <a href="symext.html" class="code" title="function xe = symext(x, ln, rn, par, sym)">symext</a>(x, k, m0-k-1, <span class="string">'o'</span>, <span class="string">'s'</span>);
+0049   <span class="comment">% filter</span>
+0050   c0 = conv2(xe, h0, <span class="string">'valid'</span>);
+0051   c1 = conv2(xe, h1, <span class="string">'valid'</span>);
+0052   <span class="comment">% downsample</span>
+0053   w = [c0(1:2:N) c1(1:2:N)];
+0054 <span class="keyword">elseif</span> (sym == 2)
+0055   <span class="comment">% symmetrically extend</span>
+0056   xe = <a href="symext.html" class="code" title="function xe = symext(x, ln, rn, par, sym)">symext</a>(x, m0-1-k, k, <span class="string">'e'</span>, <span class="string">'s'</span>);
+0057   <span class="comment">% filter</span>
+0058   c0 = conv2(xe, h0, <span class="string">'valid'</span>);
+0059   c1 = conv2(xe, h1, <span class="string">'valid'</span>);
+0060   <span class="comment">% downsample</span>
+0061   w = [c0(1:2:N) c1(1:2:N)];
+0062 <span class="keyword">elseif</span> (sym == 3)
+0063   <span class="comment">% linear filtering</span>
+0064   c0 = conv(x, h0);
+0065   c1 = conv(x, h1);
+0066   <span class="comment">% downsample</span>
+0067   w = [c0(1:2:end); c1(1:2:end)];
+0068 <span class="keyword">end</span>
+0069</pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

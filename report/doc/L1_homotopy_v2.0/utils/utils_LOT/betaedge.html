@@ -1,0 +1,71 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of betaedge</title>
+  <meta name="keywords" content="betaedge">
+  <meta name="description" content="betaedge.m">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../../menu.html L1_homotopy_v2.0 --><!-- ../menu.html utils --><!-- menu.html utils_LOT -->
+<h1>betaedge
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>betaedge.m</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function b = betaedge(t) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> betaedge.m
+
+ Transition function for a lapped orthogonal transform.
+
+ beta(t) = 0   t &lt; 0
+         = sqrt(35t^4-84t^5+70t^6-20t^7)   0&lt;t&lt;1
+         = 1   t &gt; 1
+
+ (if -1&lt;t&lt;1, then beta(t) needs to be shifted by 1 and scaled by 1/2, i.e, t --&gt; (t+1)/2)</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="lotwin.html" class="code" title="function g0 = lotwin(t, eta, varargin)">lotwin</a>	lotwin.m</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% betaedge.m</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% Transition function for a lapped orthogonal transform.</span>
+0004 <span class="comment">%</span>
+0005 <span class="comment">% beta(t) = 0   t &lt; 0</span>
+0006 <span class="comment">%         = sqrt(35t^4-84t^5+70t^6-20t^7)   0&lt;t&lt;1</span>
+0007 <span class="comment">%         = 1   t &gt; 1</span>
+0008 <span class="comment">%</span>
+0009 <span class="comment">% (if -1&lt;t&lt;1, then beta(t) needs to be shifted by 1 and scaled by 1/2, i.e, t --&gt; (t+1)/2)</span>
+0010 
+0011 <a name="_sub0" href="#_subfunctions" class="code">function b = betaedge(t)</a>
+0012 
+0013 b = zeros(length(t),1);
+0014 ti = find((t&gt;=0)&amp;(t&lt;=1));
+0015 b(ti) = sqrt(35*t(ti).^4 - 84*t(ti).^5 + 70*t(ti).^6 - 20*t(ti).^7);
+0016 b(t&gt;1) = 1;
+0017</pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

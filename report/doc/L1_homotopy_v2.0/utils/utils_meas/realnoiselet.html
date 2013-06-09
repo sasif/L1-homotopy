@@ -1,0 +1,79 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of realnoiselet</title>
+  <meta name="keywords" content="realnoiselet">
+  <meta name="description" content="Real-valued Noiselet Transform">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../../menu.html L1_homotopy_v2.0 --><!-- ../menu.html utils --><!-- menu.html utils_meas -->
+<h1>realnoiselet
+&nbsp;&nbsp;<img src="../../../c.png" alt="Windows 32, Windows 64" border="0" title="Windows 32, Windows 64"></h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>Real-valued Noiselet Transform</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">    Real-valued Noiselet Transform
+ 
+    Usage: w = realnoiselet(x)
+    x must be a REAL VALUED COLUMN VECTOR or MATRIX
+    m = size(x,1) must be a POWER OF TWO
+ 
+    Notes:
+    1) This implementation uses exactly m*log2(m) additions/subtractions.
+    2) This is a real-valued variation of &quot;dragon&quot; noiselets.
+    3) This is symmetric and orthogonal. To invert, apply again and
+       divide by m.
+ 
+    Written by: Justin Romberg, Georgia Tech
+                Peter Stobbe, Caltech
+    Email: jrom@ece.gatech.edu, stobbe@acm.caltech.edu
+    Created: October 2006
+    Last Modified: December 2006</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="../../../L1_homotopy_v2.0/readme.html" class="code" title="">readme</a>	----------L1 Homotopy Package-------------+</li><li><a href="A_n.html" class="code" title="function y = A_n(x,OMEGA,P)">A_n</a>	Takes noiselet measurements.</li><li><a href="At_n.html" class="code" title="function x = At_n(y, N, OMEGA,P)">At_n</a>	Takes transpose of noiselet measurements.</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">%    Real-valued Noiselet Transform</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">%    Usage: w = realnoiselet(x)</span>
+0004 <span class="comment">%    x must be a REAL VALUED COLUMN VECTOR or MATRIX</span>
+0005 <span class="comment">%    m = size(x,1) must be a POWER OF TWO</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">%    Notes:</span>
+0008 <span class="comment">%    1) This implementation uses exactly m*log2(m) additions/subtractions.</span>
+0009 <span class="comment">%    2) This is a real-valued variation of &quot;dragon&quot; noiselets.</span>
+0010 <span class="comment">%    3) This is symmetric and orthogonal. To invert, apply again and</span>
+0011 <span class="comment">%       divide by m.</span>
+0012 <span class="comment">%</span>
+0013 <span class="comment">%    Written by: Justin Romberg, Georgia Tech</span>
+0014 <span class="comment">%                Peter Stobbe, Caltech</span>
+0015 <span class="comment">%    Email: jrom@ece.gatech.edu, stobbe@acm.caltech.edu</span>
+0016 <span class="comment">%    Created: October 2006</span>
+0017 <span class="comment">%    Last Modified: December 2006</span></pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

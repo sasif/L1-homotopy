@@ -1,0 +1,268 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of job_wtBPDN_WAVE</title>
+  <meta name="keywords" content="job_wtBPDN_WAVE">
+  <meta name="description" content="Comparison of various solvers for iterative reweighting and adaptive reweighting">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../menu.html L1_homotopy_v2.0 --><!-- menu.html WeightedBPDN -->
+<h1>job_wtBPDN_WAVE
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>Comparison of various solvers for iterative reweighting and adaptive reweighting</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> Comparison of various solvers for iterative reweighting and adaptive reweighting
+
+ Solves the following basis pursuit denoising (BPDN) problem
+ min_x  \Sum \w_i |x_i| + 1/2*||y-Ax||_2^2
+
+ while updating the weights w_i
+
+ Written by: Salman Asif, Georgia Tech
+ Email: sasif@gatech.edu
+ Created: June 16, 2011
+ 
+ Reference: 
+ &quot;Fast and accurate algorithms for re-weighted L1 norm minimization,&quot; by 
+ M. Salman Asif and Justin Romberg
+ 
+ To reproduce experiments in the paper, use this scrip with 
+ 
+ rseed = 2012;
+ rand('state',rseed);
+ randn('state',rseed);
+  
+ before running each simulation in 
+ script_simulation_wtBPDN
+
+ The paper has results for Blocks and HeaviSine at SNR = 40
+ Run publish_results.m in the misc folder to generate pdfs presented int the paper.
+
+ NOTE: While preparing the code for release, I realized that I used the average
+ of SER in db when I compiled results for publication, which is probably 
+ not the correct way to compute the average. 
+
+ The average SER in the paper was computed as mean(-10log10(normalized error))
+ The standard way to compute average is -10log10(mean(normalized squared error))
+ where mean is over all the experiments. 
+
+ To reproduce results in the paper, use publish_results.m
+ Otherwise use publish_results_new.m
+
+ This changes the values of average SER for all the solvers. However, the 
+ comparison among the solvers remains almost same.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../L1_homotopy_v2.0/WeightedBPDN/src/script_simulation_wtBPDN.html" class="code" title="">script_simulation_wtBPDN</a>	partial script for running different solvers</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% Comparison of various solvers for iterative reweighting and adaptive reweighting</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% Solves the following basis pursuit denoising (BPDN) problem</span>
+0004 <span class="comment">% min_x  \Sum \w_i |x_i| + 1/2*||y-Ax||_2^2</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% while updating the weights w_i</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">% Written by: Salman Asif, Georgia Tech</span>
+0009 <span class="comment">% Email: sasif@gatech.edu</span>
+0010 <span class="comment">% Created: June 16, 2011</span>
+0011 <span class="comment">%</span>
+0012 <span class="comment">% Reference:</span>
+0013 <span class="comment">% &quot;Fast and accurate algorithms for re-weighted L1 norm minimization,&quot; by</span>
+0014 <span class="comment">% M. Salman Asif and Justin Romberg</span>
+0015 <span class="comment">%</span>
+0016 <span class="comment">% To reproduce experiments in the paper, use this scrip with</span>
+0017 <span class="comment">%</span>
+0018 <span class="comment">% rseed = 2012;</span>
+0019 <span class="comment">% rand('state',rseed);</span>
+0020 <span class="comment">% randn('state',rseed);</span>
+0021 <span class="comment">%</span>
+0022 <span class="comment">% before running each simulation in</span>
+0023 <span class="comment">% script_simulation_wtBPDN</span>
+0024 <span class="comment">%</span>
+0025 <span class="comment">% The paper has results for Blocks and HeaviSine at SNR = 40</span>
+0026 <span class="comment">% Run publish_results.m in the misc folder to generate pdfs presented int the paper.</span>
+0027 <span class="comment">%</span>
+0028 <span class="comment">% NOTE: While preparing the code for release, I realized that I used the average</span>
+0029 <span class="comment">% of SER in db when I compiled results for publication, which is probably</span>
+0030 <span class="comment">% not the correct way to compute the average.</span>
+0031 <span class="comment">%</span>
+0032 <span class="comment">% The average SER in the paper was computed as mean(-10log10(normalized error))</span>
+0033 <span class="comment">% The standard way to compute average is -10log10(mean(normalized squared error))</span>
+0034 <span class="comment">% where mean is over all the experiments.</span>
+0035 <span class="comment">%</span>
+0036 <span class="comment">% To reproduce results in the paper, use publish_results.m</span>
+0037 <span class="comment">% Otherwise use publish_results_new.m</span>
+0038 <span class="comment">%</span>
+0039 <span class="comment">% This changes the values of average SER for all the solvers. However, the</span>
+0040 <span class="comment">% comparison among the solvers remains almost same.</span>
+0041 
+0042 
+0043 <span class="comment">% function job_wtBPDN_WAVE(mT, sT, snr, rwt_mode, lam_mode)</span>
+0044 <span class="comment">% mT = 1, sT = 2, snr = 3, rwt_mode = 5, lam_mode = 1;</span>
+0045 
+0046 clear
+0047 
+0048 EXP_LIST = [1 1 2 5 1; 1 1 3 5 1; 1 1 4 5 1; 1 2 2 5 1; 1 2 3 5 1; 1 2 4 5 1];
+0049 maxNumCompThreads(1);
+0050 <span class="comment">% numCores = str2double(getenv('NUMBER_OF_PROCESSORS'));</span>
+0051 <span class="comment">% mpSize = 1;% size(EXP_LIST,1);</span>
+0052 <span class="comment">% if matlabpool('size') ~= mpSize</span>
+0053 <span class="comment">%     if matlabpool('size')~=0</span>
+0054 <span class="comment">%         matlabpool close;</span>
+0055 <span class="comment">%     else</span>
+0056 <span class="comment">%         matlabpool('open', mpSize);</span>
+0057 <span class="comment">%     end</span>
+0058 <span class="comment">% end</span>
+0059 
+0060 <span class="comment">%% Setup path</span>
+0061 mname = mfilename;
+0062 mpath = mfilename(<span class="string">'fullpath'</span>);
+0063 mdir = mpath(1:end-length(mname));
+0064 cd(mdir);
+0065 
+0066 addpath ../Pursuits_Homotopy/
+0067 addpath ../utils/
+0068 addpath ../utils/utils_Wavelet
+0069 addpath ../solvers/
+0070 addpath src/
+0071 
+0072 <span class="comment">%% Simulation parameters</span>
+0073 <span class="comment">% reweighted setup</span>
+0074 rwt = 5;        <span class="comment">% number of reweighting iterations</span>
+0075 rwt_adp = 0;    <span class="comment">% number of reweighting iterations after adaptive reweighting</span>
+0076 
+0077 <span class="comment">% rank-1 update mode</span>
+0078 delx_mode = <span class="string">'mil'</span>; <span class="comment">% mil or qr</span>
+0079 
+0080 <span class="comment">% simulation setup</span>
+0081 maxsim = 100;
+0082 
+0083 mType_list = {<span class="string">'randn'</span>,<span class="string">'orth'</span>};
+0084 sType_list = {<span class="string">'blocks'</span>,<span class="string">'HeaviSine'</span>,<span class="string">'pcwPoly'</span>};
+0085 SNR_list = [20:10:40 inf];
+0086 
+0087 lambda_list = [0, 1e-1, 1e-2, 1e-4]; 
+0088 <span class="comment">% multiplication factor for tau = lambda *\|A'y\|_\infty</span>
+0089 <span class="comment">% 0 --&gt; sigma*log(N)</span>
+0090 
+0091 N_list = [256 512 1024];
+0092 M_ratio = [2:.5:4];
+0093 
+0094 <span class="keyword">for</span> pf = 1:length(EXP_LIST)
+0095     
+0096     mT = EXP_LIST(pf,1);
+0097     sT = EXP_LIST(pf,2);
+0098     snr = EXP_LIST(pf,3);
+0099     rwt_mode = EXP_LIST(pf,4);
+0100     lam_mode = EXP_LIST(pf,5);
+0101     
+0102     EXP_stack = {};
+0103     estack = 1;
+0104     EXP_stack{1,1} = <span class="string">'mType'</span>;
+0105     EXP_stack{1,2} = <span class="string">'sType'</span>;
+0106     EXP_stack{1,3} = <span class="string">'SNR'</span>;
+0107     EXP_stack{1,4} = <span class="string">'rwt_mode'</span>;
+0108     EXP_stack{1,5} = <span class="string">'lambda_mode'</span>;
+0109     EXP_stack{1,6} = <span class="string">'N'</span>;
+0110     EXP_stack{1,7} = <span class="string">'M'</span>;
+0111     EXP_stack{1,8} = <span class="string">'T'</span>;
+0112     EXP_stack{1,9} = <span class="string">'str0'</span>;
+0113     EXP_stack{1,10} = <span class="string">'str2'</span>;
+0114     EXP_stack{1,11} = <span class="string">'avg SIM_stack'</span>;
+0115     EXP_stack{1,12} = <span class="string">'SIM_stack'</span>;
+0116     EXP_stack{1,13} = <span class="string">'SIM_memory'</span>;
+0117     
+0118     <span class="comment">% for mT = 1:length(mType_list);</span>
+0119     <span class="comment">%     for sT = 1:length(sType_list);</span>
+0120     <span class="comment">%         for snr = 1:length(SNR_list);</span>
+0121     <span class="comment">%                 for lam_mode = 1:length(lambda_list)</span>
+0122     
+0123     <span class="keyword">for</span> nl = 1:length(N_list)
+0124         <span class="keyword">for</span> mr = 1:length(M_ratio)
+0125             
+0126             N = N_list(nl);     <span class="comment">% signal length</span>
+0127             M = round(N/M_ratio(mr));   <span class="comment">% no. of measurements</span>
+0128             T = N;   <span class="comment">% sparsity level</span>
+0129             
+0130             sType = char(sType_list{sT});
+0131             mType = char(mType_list{mT});
+0132             SNR = SNR_list(snr);
+0133             
+0134             lambda = lambda_list(lam_mode);
+0135             
+0136             str0 = sprintf(<span class="string">'mType-%s, sType-%s, SNR = %d, (N,M,T) = %d, %d, %d, rwt_mode-%d, lambda%3.4g.'</span>, mType, sType, SNR, N, M, T, rwt_mode, lambda);
+0137             disp(str0);
+0138             
+0139             <span class="comment">% filename_save = sprintf('results_comparison_ALL/comparison_wtBPDN_mType%s_sType%s_SNR%d_rwt_mode%d_lambda%3.4g_N%d_M%d_T%d.mat',mType,sType,SNR,rwt_mode,lambda,N,M,T);</span>
+0140             <span class="comment">% filename_save = sprintf('results_comparison_ALL/comparison_wtBPDN_mT-%s_sT-%s_SNR%d_rwt_mode%d_lam_mode%d.mat',mType,sType,SNR,rwt_mode,lam_mode);</span>
+0141             
+0142             filename_save = sprintf(<span class="string">'results_comparison_ALL/comparison_wtBPDN_mT-%s_sT-%s_SNR%d-reproduce-Trwt.mat'</span>,mType,sType,SNR);
+0143             <span class="comment">% filename_save = sprintf('results_comparison_ALL/comparison_wtBPDN_mT-%s_sT-%s_SNR%d-reproduce-rwt.mat',mType,sType,SNR);</span>
+0144             
+0145             <span class="comment">% load RandomStates</span>
+0146             <span class="comment">%</span>
+0147             <span class="comment">% Experiments in the earlier draft...</span>
+0148             <span class="comment">% rseed = 0;</span>
+0149             <span class="comment">% rseed = sum(100*clock);</span>
+0150             <span class="comment">% RandStream.setDefaultStream(RandStream('mt19937ar','seed',rseed));</span>
+0151             <span class="comment">%</span>
+0152             <span class="comment">% Experiments that reproduce results in the paper...</span>
+0153             rseed = 2012;
+0154             rand(<span class="string">'state'</span>,rseed);
+0155             randn(<span class="string">'state'</span>,rseed);
+0156             
+0157             <span class="comment">% rng(rseed);</span>
+0158             <span class="comment">% rseed = rng(2012);</span>
+0159             
+0160             <span class="comment">%% Run simulation</span>
+0161             <a href="../../L1_homotopy_v2.0/WeightedBPDN/src/script_simulation_wtBPDN.html" class="code" title="">script_simulation_wtBPDN</a>
+0162             
+0163             <span class="comment">%% save results</span>
+0164             estack = estack+1;
+0165             
+0166             EXP_stack{estack,1} = mType;
+0167             EXP_stack{estack,2} = sType;
+0168             EXP_stack{estack,3} = SNR;
+0169             EXP_stack{estack,4} = rwt_mode;
+0170             EXP_stack{estack,5} = lambda;
+0171             EXP_stack{estack,6} = N;
+0172             EXP_stack{estack,7} = M;
+0173             EXP_stack{estack,8} = T;
+0174             EXP_stack{estack,9} = str0;
+0175             EXP_stack{estack,10} = str2;
+0176             EXP_stack{estack,11} = mean(cell2mat(SIM_stack),1);
+0177             EXP_stack{estack,12} = SIM_stack;
+0178             EXP_stack{estack,13} = SIM_memory;
+0179             
+0180             eval(sprintf(<span class="string">'save %s'</span>, filename_save));
+0181         <span class="keyword">end</span>
+0182     <span class="keyword">end</span>
+0183 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

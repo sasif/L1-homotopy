@@ -1,0 +1,136 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of create_DWT</title>
+  <meta name="keywords" content="create_DWT">
+  <meta name="description" content="Creates a DWT representation matrix without signal extension">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../../menu.html L1_homotopy_v2.0 --><!-- ../menu.html utils --><!-- menu.html utils_Wavelet -->
+<h1>create_DWT
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>Creates a DWT representation matrix without signal extension</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function Psi = create_DWT(in) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> Creates a DWT representation matrix without signal extension</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="daub1018.html" class="code" title="function [h0, h1, g0, g1] = daub1018()">daub1018</a>	daub1018.m</li><li><a href="daub79.html" class="code" title="function [h0, h1, g0, g1] = daub79()">daub79</a>	daub79.m</li><li><a href="dauborth.html" class="code" title="function [h0,h1,g0,g1] = dauborth(M)">dauborth</a>	dauborth.m</li><li><a href="idwtmult1_conv.html" class="code" title="function x = idwtmult1_conv(w, g0, g1, J)">idwtmult1_conv</a>	idwtmult1_conv.m</li><li><a href="ifwt.html" class="code" title="">ifwt</a>	ifwt.m</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="../../../L1_homotopy_v2.0/demo_KalmanRWT.html" class="code" title="">demo_KalmanRWT</a>	demo_KalmanRWT</li><li><a href="../../../L1_homotopy_v2.0/demo_streamingDWT.html" class="code" title="">demo_streamingDWT</a>	demo_streamingDWT</li><li><a href="apply_DWT.html" class="code" title="function alpha = apply_DWT(x,varargin)">apply_DWT</a>	Apply DWT on a streaming signal</li><li><a href="create_PSI_DWT.html" class="code" title="function PSI = create_PSI_DWT(in)">create_PSI_DWT</a>	Arrange DWT syntheis matrices over P overlapping windows (edges ignored)</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% Creates a DWT representation matrix without signal extension</span>
+0002 
+0003 <a name="_sub0" href="#_subfunctions" class="code">function Psi = create_DWT(in)</a>
+0004 
+0005 <span class="comment">% A wavelet basis function using orthogonal wavelets</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">% inputs:</span>
+0008 <span class="comment">%   J -- finest scale for wavelets</span>
+0009 <span class="comment">%   wType -- type of wavelets</span>
+0010 <span class="comment">%   sym -- type of extension</span>
+0011 <span class="comment">%   N -- length of signal interval</span>
+0012 
+0013 N = in.N;  
+0014 wType = in.wType; 
+0015 J = in.J;
+0016 sym = in.sym;
+0017 
+0018 <span class="keyword">if</span> strcmpi(wType(1:4),<span class="string">'daub'</span>)
+0019     <span class="keyword">switch</span> wType
+0020         <span class="keyword">case</span> <span class="string">'daub79'</span>
+0021             [h0 h1 g0 g1] = <a href="daub79.html" class="code" title="function [h0, h1, g0, g1] = daub79()">daub79</a>; sym = 1;
+0022         <span class="keyword">case</span> <span class="string">'daub1018'</span>
+0023             [h0 h1 g0 g1] = <a href="daub1018.html" class="code" title="function [h0, h1, g0, g1] = daub1018()">daub1018</a>; sym = 2;
+0024             <span class="comment">%         case 'daub4'</span>
+0025             <span class="comment">%             filter_length = 4;</span>
+0026             <span class="comment">%             [h0 h1 g0 g1] = daub4;</span>
+0027             <span class="comment">%         case 'daub8'</span>
+0028             <span class="comment">%             filter_length = 8;</span>
+0029             <span class="comment">%             [h0 h1 g0 g1] = daub8;</span>
+0030         <span class="keyword">otherwise</span>
+0031             filter_length = str2num(wType(5:end));
+0032             [h0 h1 g0 g1] = <a href="dauborth.html" class="code" title="function [h0,h1,g0,g1] = dauborth(M)">dauborth</a>(filter_length);
+0033     <span class="keyword">end</span>
+0034 <span class="keyword">else</span>
+0035     error(<span class="string">'Not implemented yet'</span>);
+0036 <span class="keyword">end</span>
+0037 
+0038 <span class="comment">% switch lower(wType)</span>
+0039 <span class="comment">%     case 'daub2'</span>
+0040 <span class="comment">%         [h0 h1 g0 g1] = dauborth(2);</span>
+0041 <span class="comment">%         filter_length = 2;</span>
+0042 <span class="comment">%     case 'daub4'</span>
+0043 <span class="comment">%         [h0 h1 g0 g1] = dauborth(4);</span>
+0044 <span class="comment">%         filter_length = 4;</span>
+0045 <span class="comment">%     case 'daub8'</span>
+0046 <span class="comment">%         [h0 h1 g0 g1] = dauborth(8);</span>
+0047 <span class="comment">%         filter_length = 8;</span>
+0048 <span class="comment">%     case 'daub12'</span>
+0049 <span class="comment">%         [h0 h1 g0 g1] = dauborth(12);</span>
+0050 <span class="comment">%         filter_length = 12;</span>
+0051 <span class="comment">%     otherwise</span>
+0052 <span class="comment">%         disp('NAO');</span>
+0053 <span class="comment">% end</span>
+0054 
+0055 <span class="comment">% compute the lengths of functions at every scale</span>
+0056 <span class="keyword">if</span> sym == 3
+0057     w_len = filter_length;
+0058     <span class="comment">% for j = 1:J-1; w_len(end+1) = w_len(end)+2^j*(filter_length-1); end</span>
+0059     <span class="keyword">for</span> j = 1:J-1; w_len(end+1) = 2*w_len(end)-1+(filter_length-1); <span class="keyword">end</span>
+0060     w_len(end+1) = w_len(end); 
+0061 <span class="keyword">else</span>
+0062     w_len = N;
+0063 <span class="keyword">end</span>
+0064 <span class="comment">%</span>
+0065 <span class="keyword">if</span> w_len(end) &gt; N &amp;&amp; sym == 3;
+0066     error(<span class="string">'reduce the scale J or increase length N - length of scaling function is larger than N'</span>);
+0067 <span class="keyword">end</span>
+0068 
+0069 <span class="comment">% compute synthesis matrix...</span>
+0070 <span class="keyword">switch</span> sym
+0071     <span class="keyword">case</span> 3
+0072         iW_h = @(x) <a href="idwtmult1_conv.html" class="code" title="function x = idwtmult1_conv(w, g0, g1, J)">idwtmult1_conv</a>(x,g0,g1,J);
+0073         <span class="comment">% iW_h = @(x) dwtmult1_conv(x,h0,h1,J);</span>
+0074     <span class="keyword">otherwise</span>
+0075         iW_h = @(x) <a href="ifwt.html" class="code" title="">ifwt</a>(x,g0,g1,J,sym);
+0076 <span class="keyword">end</span>
+0077 Psi = [];
+0078 <span class="keyword">for</span> ii = 1:N;   
+0079     Psi(:,end+1) = iW_h(circshift([1; zeros(N-1,1)],ii-1));    
+0080 <span class="keyword">end</span>
+0081 
+0082 <span class="comment">% %-----------------% %</span>
+0083 <span class="comment">% % debug</span>
+0084 <span class="comment">% %-----------------% %</span>
+0085 <span class="comment">% PSI = [[Psi; zeros(N)] [zeros(N); Psi]];</span>
+0086 <span class="comment">% vec = @(z) z(:);</span>
+0087 <span class="comment">% max(abs(vec(PSI'*PSI-eye(2*N))))</span>
+0088 <span class="comment">% %%</span>
+0089 <span class="comment">% in = []; in.J = 4; in.N = 256; in.wType = 'daub10'; in.sym = 3;</span>
+0090 <span class="comment">% Psi = create_DWT(in);</span></pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

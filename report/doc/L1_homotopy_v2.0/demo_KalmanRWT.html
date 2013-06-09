@@ -1,0 +1,919 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of demo_KalmanRWT</title>
+  <meta name="keywords" content="demo_KalmanRWT">
+  <meta name="description" content="demo_KalmanRWT">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- menu.html L1_homotopy_v2.0 -->
+<h1>demo_KalmanRWT
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>demo_KalmanRWT</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> demo_KalmanRWT
+
+ Solves the following dynamic BPDN problem over a window t = t_1,...,t_L
+ min_x \sum_t \|W_t x_t\|_1 + 1/2*||A_t x_t - y_t||_2^2 + 1/2||F_t x_t - x_t+1\|_2^2
+
+ which updates the solution as the signal changes according to a linear
+ dynamical system.
+
+ for instance, y_t = A_t x_t + e_t
+               x_t+1 = F_t x_t + f_t 
+       where F_t is a partially known function that models prediction
+       between the consecutive x_t and f_t denotes the prediction error 
+       (e.g., a random drift)
+
+ Applications:
+       streaming signal recovery using a dynamic model
+ 
+       track a signal as y, A, and/or x change... 
+       predict an estimate of the solution and
+       update weights according to the predicted solution
+
+ Written by: Salman Asif, Georgia Tech
+ Email: sasif@gatech.edu
+ Created: November 2012</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="l1homotopy.html" class="code" title="function out = l1homotopy(A, y, opts)">l1homotopy</a>	l1homotopy.m</li><li><a href="../L1_homotopy_v2.0/solvers/SpaRSA_adpW.html" class="code" title="function [x,x_debias,objective,times,debias_start,mses,taus, numA, numAt]=SpaRSA_adpW(y,A,tau,varargin)">SpaRSA_adpW</a>	SpaRSA version 2.0, December 31, 2007</li><li><a href="../L1_homotopy_v2.0/solvers/soft.html" class="code" title="function y = soft(x,T)">soft</a>	</li><li><a href="../L1_homotopy_v2.0/solvers/yall1.html" class="code" title="function [x, Out] = yall1(A, b, opts)">yall1</a>	</li><li><a href="../L1_homotopy_v2.0/utils/fig.html" class="code" title="function h = fig(varargin)">fig</a>	</li><li><a href="../L1_homotopy_v2.0/utils/genAmat.html" class="code" title="function A = genAmat(M,N,in);">genAmat</a>	</li><li><a href="../L1_homotopy_v2.0/utils/genSignal.html" class="code" title="function [x varargout] = genSignal(N,in)">genSignal</a>	Inputs</li><li><a href="../L1_homotopy_v2.0/utils/utils_LOT/create_PHI.html" class="code" title="function PHI = create_PHI(in);">create_PHI</a>	Inputs</li><li><a href="../L1_homotopy_v2.0/utils/utils_Wavelet/apply_DWT.html" class="code" title="function alpha = apply_DWT(x,varargin)">apply_DWT</a>	Apply DWT on a streaming signal</li><li><a href="../L1_homotopy_v2.0/utils/utils_Wavelet/create_DWT.html" class="code" title="function Psi = create_DWT(in)">create_DWT</a>	Creates a DWT representation matrix without signal extension</li><li><a href="../L1_homotopy_v2.0/utils/utils_Wavelet/create_PSI_DWT.html" class="code" title="function PSI = create_PSI_DWT(in)">create_PSI_DWT</a>	Arrange DWT syntheis matrices over P overlapping windows (edges ignored)</li><li><a href="../L1_homotopy_v2.0/utils/utils_Wavelet/cshift.html" class="code" title="function y = cshift(x, t, dir)">cshift</a>	cshift.m</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% demo_KalmanRWT</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% Solves the following dynamic BPDN problem over a window t = t_1,...,t_L</span>
+0004 <span class="comment">% min_x \sum_t \|W_t x_t\|_1 + 1/2*||A_t x_t - y_t||_2^2 + 1/2||F_t x_t - x_t+1\|_2^2</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% which updates the solution as the signal changes according to a linear</span>
+0007 <span class="comment">% dynamical system.</span>
+0008 <span class="comment">%</span>
+0009 <span class="comment">% for instance, y_t = A_t x_t + e_t</span>
+0010 <span class="comment">%               x_t+1 = F_t x_t + f_t</span>
+0011 <span class="comment">%       where F_t is a partially known function that models prediction</span>
+0012 <span class="comment">%       between the consecutive x_t and f_t denotes the prediction error</span>
+0013 <span class="comment">%       (e.g., a random drift)</span>
+0014 <span class="comment">%</span>
+0015 <span class="comment">% Applications:</span>
+0016 <span class="comment">%       streaming signal recovery using a dynamic model</span>
+0017 <span class="comment">%</span>
+0018 <span class="comment">%       track a signal as y, A, and/or x change...</span>
+0019 <span class="comment">%       predict an estimate of the solution and</span>
+0020 <span class="comment">%       update weights according to the predicted solution</span>
+0021 <span class="comment">%</span>
+0022 <span class="comment">% Written by: Salman Asif, Georgia Tech</span>
+0023 <span class="comment">% Email: sasif@gatech.edu</span>
+0024 <span class="comment">% Created: November 2012</span>
+0025 
+0026 clear
+0027 close all force
+0028 
+0029 <span class="comment">% Limit the number of computational threads (for profiling)</span>
+0030 maxNumCompThreads(1);
+0031 
+0032 <span class="comment">%% Setup path</span>
+0033 mname = mfilename;
+0034 mpath = mfilename(<span class="string">'fullpath'</span>);
+0035 mdir = mpath(1:end-length(mname));
+0036 cd(mdir);
+0037 
+0038 addpath utils/
+0039 addpath utils/utils_Wavelet
+0040 addpath utils/utils_LOT
+0041 addpath solvers/
+0042 
+0043 fprintf([<span class="string">'----------'</span>,datestr(now),<span class="string">'-------%s------------------\n'</span>],mname)
+0044 
+0045 <span class="comment">% load RandomStates</span>
+0046 <span class="comment">%</span>
+0047 rseed = 2013;
+0048 rand(<span class="string">'state'</span>,rseed);
+0049 randn(<span class="string">'state'</span>,rseed);
+0050 
+0051 <span class="comment">% simulation parameters</span>
+0052 mType = <span class="string">'sign'</span>; <span class="comment">% {'randn','orth','rdct'};</span>
+0053 mFixed = 0; <span class="comment">% measurement system time-(in)variant</span>
+0054 sType = <span class="string">'pcwreg'</span>; <span class="comment">% {'heavisine', 'pcwreg', 'blocks','pcwPoly'}</span>
+0055 SNR = 35;       <span class="comment">% additive Gaussian noise</span>
+0056 
+0057 wt_pred = sqrt(0.5);
+0058 
+0059 N = 256;   <span class="comment">% signal length</span>
+0060 R = 4; <span class="comment">% compression rate</span>
+0061 M = round(N/R);    <span class="comment">% no. of measurements</span>
+0062 
+0063 LM = 1*N; <span class="comment">% LM: length of measurement window</span>
+0064 LS_Kalman = <span class="string">'smooth'</span>; <span class="comment">% {'filter','smooth','inst'};</span>
+0065 
+0066 <span class="comment">% streaming window</span>
+0067 P = 3; <span class="comment">% size of the working window is P*N</span>
+0068 
+0069 <span class="comment">% signal length</span>
+0070 sig_length = 2^15; <span class="comment">% 128*128;</span>
+0071 
+0072 <span class="comment">% signal dynamics</span>
+0073 dType = <span class="string">'crshift'</span>; <span class="comment">% type of dynamics 'crshift', or 'static'</span>
+0074 <a href="../L1_homotopy_v2.0/utils/utils_Wavelet/cshift.html" class="code" title="function y = cshift(x, t, dir)">cshift</a> = -1;
+0075 rshift_max = 0.5;
+0076 rshift_h = @(z) (rand-0.5)*rshift_max*2;
+0077 
+0078 <span class="comment">% DWT parameters</span>
+0079 <span class="comment">% type of scaling function</span>
+0080 <span class="comment">% depth of scaling functions (number of wavelet levels)</span>
+0081 <span class="comment">% type of extension for DWT (0 - periodic extension, 3 - streaming)</span>
+0082 wType = <span class="string">'daub79'</span>; sym = 1;
+0083 wType = <span class="string">'daub8'</span>; sym = 0;
+0084 J = log2(N)-3;
+0085 
+0086 <span class="comment">% rank-1 update mode</span>
+0087 delx_mode = <span class="string">'mil'</span>; <span class="comment">% mil or qr</span>
+0088 
+0089 <span class="comment">% add snapshots of the signal in streaming window and average them before comitting to the output.</span>
+0090 avg_output = 0; 
+0091 
+0092 verbose = 0;
+0093 
+0094 
+0095 <span class="comment">%% SM: Sampling modes</span>
+0096 <span class="comment">% % LM: length of measurement window</span>
+0097 <span class="comment">% LM = 2*N; % 'universal' sampling scheme (align before the overlapping regions of DWT windows that are measured)</span>
+0098 <span class="keyword">if</span> LM &gt; N
+0099     LeftEdge_trunc = 1;
+0100 <span class="keyword">else</span>
+0101     LeftEdge_trunc = 0;
+0102 <span class="keyword">end</span>
+0103 LeftProj_cancel = 1;
+0104 
+0105 
+0106 <span class="comment">%%</span>
+0107 fprintf(<span class="string">'CS-Kalman tracking a dynamical signal and reweighting..\n'</span>);
+0108 str0 = sprintf(<span class="string">'mType-%s, sType-%s, SNR = %d, (N,M,R) = %d, %d, %d, P = %d, LM = %d, LS_Kalman-%s \n wType-%s, J = %d, sym = %d, specified signal-length = %d, \n dType-%s, cshift = %d, rshift_max = %0.3g, wt_pred = %0.3g. '</span>, mType, sType, SNR, N, round(N/R), R, P, LM, LS_Kalman, wType, J, sym, sig_length, dType, <a href="../L1_homotopy_v2.0/utils/utils_Wavelet/cshift.html" class="code" title="function y = cshift(x, t, dir)">cshift</a>, rshift_max, wt_pred);
+0109 disp(str0);
+0110 
+0111 <span class="comment">%% DWT setup</span>
+0112 <span class="comment">% DWT parameters</span>
+0113 <span class="comment">% Length of each window is L. (extend to adaptive/dyadic windows later?)</span>
+0114 <span class="comment">% wType = 'daub4'; % type of scaling function</span>
+0115 <span class="comment">% J = 3; % depth of scaling functions (number of wavelet levels)</span>
+0116 <span class="comment">% sym = 3; % type of extension for DWT (0 - periodic extension, 3 - streaming)</span>
+0117 in_Psi = []; in_Psi.N = N; in_Psi.J = J; in_Psi.wType = wType; in_Psi.sym = sym;
+0118 Psi = <a href="../L1_homotopy_v2.0/utils/utils_Wavelet/create_DWT.html" class="code" title="function Psi = create_DWT(in)">create_DWT</a>(in_Psi); <span class="comment">% DWT synthesis matrix over a window</span>
+0119 L = size(Psi,1);
+0120 
+0121 <span class="comment">%% Signal generation</span>
+0122 
+0123 <span class="comment">% Setup dynamical model</span>
+0124 <span class="comment">% At every time instance, add to the original/previous signal</span>
+0125 <span class="comment">% an integer circular shift that is known</span>
+0126 <span class="comment">% a random drift that is unknown</span>
+0127 <span class="keyword">if</span> strcmpi(dType, <span class="string">'crshift'</span>)
+0128     <span class="comment">% Generate a signal by circular shift and a random drift in a seed</span>
+0129     <span class="comment">% signal</span>
+0130     in = []; in.type = sType; in.randgen = 0; in.take_fwt = 0;
+0131     [x_init sig wave_struct] = <a href="../L1_homotopy_v2.0/utils/genSignal.html" class="code" title="function [x varargout] = genSignal(N,in)">genSignal</a>(N,in);
+0132     
+0133     F_h = @(x,<a href="../L1_homotopy_v2.0/utils/utils_Wavelet/cshift.html" class="code" title="function y = cshift(x, t, dir)">cshift</a>,rshift) interp1(1:N,circshift(x,<a href="../L1_homotopy_v2.0/utils/utils_Wavelet/cshift.html" class="code" title="function y = cshift(x, t, dir)">cshift</a>),[1:N]+rshift,<span class="string">'linear'</span>,<span class="string">'extrap'</span>)';
+0134     
+0135     F0 = zeros(N);
+0136     <span class="keyword">for</span> ii = 1:N;
+0137         F0(:,ii) = F_h(circshift([1; zeros(N-1,1)],ii-1),<a href="../L1_homotopy_v2.0/utils/utils_Wavelet/cshift.html" class="code" title="function y = cshift(x, t, dir)">cshift</a>,0);
+0138     <span class="keyword">end</span>
+0139     sigt = sig; sig = [];
+0140     <span class="keyword">for</span> ii = 1:round(sig_length/N);
+0141         rshift = rshift_h(1);
+0142         sigt = F_h(sigt, <a href="../L1_homotopy_v2.0/utils/utils_Wavelet/cshift.html" class="code" title="function y = cshift(x, t, dir)">cshift</a>, rshift);
+0143         sig = [sig; sigt];
+0144     <span class="keyword">end</span>
+0145 <span class="keyword">else</span>
+0146     <span class="comment">% Generate a predefined streaming signal</span>
+0147     in = []; in.type = sType; in.randgen = 0; in.take_fwt = 0;
+0148     [x_init sig wave_struct] = <a href="../L1_homotopy_v2.0/utils/genSignal.html" class="code" title="function [x varargout] = genSignal(N,in)">genSignal</a>(N,in);
+0149     
+0150     <a href="../L1_homotopy_v2.0/utils/utils_Wavelet/cshift.html" class="code" title="function y = cshift(x, t, dir)">cshift</a> = 0; rshift = 0;
+0151     F_h = @(x,<a href="../L1_homotopy_v2.0/utils/utils_Wavelet/cshift.html" class="code" title="function y = cshift(x, t, dir)">cshift</a>,rshift) x;
+0152     F0 = eye(N);
+0153 <span class="keyword">end</span>
+0154 <span class="comment">% sig = [zeros(L-N,1);sig];</span>
+0155 sig_length = length(sig);
+0156 
+0157 <span class="comment">% view DWT coefficients...</span>
+0158 alpha_vec = <a href="../L1_homotopy_v2.0/utils/utils_Wavelet/apply_DWT.html" class="code" title="function alpha = apply_DWT(x,varargin)">apply_DWT</a>(sig,N,wType,J,sym);
+0159 figure(123);
+0160 subplot(211); imagesc(reshape(alpha_vec,N,length(alpha_vec)/N));
+0161 axis xy;
+0162 subplot(212); plot(alpha_vec);
+0163 
+0164 <span class="comment">% view innovations in the signal..</span>
+0165 <span class="comment">% dsig = []; for n = 0:N:length(sig)-N; dsig = [dsig; sig(n+1:n+N)-circshift(sig(n+N+1:n+2*N),1)]; figure(1); plot([sig(n+1:n+N) sig(n+1:n+N)-circshift(sig(n+N+1:n+2*N),1)]); pause; end</span>
+0166 
+0167 <span class="comment">% Simulation parameters</span>
+0168 streaming_iter = ceil(length(sig)/N);
+0169 SIM_stack = cell(streaming_iter,1);
+0170 SIM_memory = cell(streaming_iter,1);
+0171 
+0172 x_vec = zeros(N*streaming_iter,1);
+0173 xh_vec = zeros(N*streaming_iter,3);
+0174 sig_vec = zeros(length(sig),1);
+0175 sigh_vec = zeros(length(sig),3);
+0176 
+0177 <span class="comment">%% Setup sensing matrices</span>
+0178 in = []; in.type = mType;
+0179 <span class="keyword">if</span> mFixed
+0180     At = <a href="../L1_homotopy_v2.0/utils/genAmat.html" class="code" title="function A = genAmat(M,N,in);">genAmat</a>(M,LM,in);
+0181     genAmat_h = @(m,n) At;
+0182 <span class="keyword">else</span>
+0183     genAmat_h = @(M,N) <a href="../L1_homotopy_v2.0/utils/genAmat.html" class="code" title="function A = genAmat(M,N,in);">genAmat</a>(M,N,in);
+0184 <span class="keyword">end</span>
+0185 in.P = P-(LM-N)/N;
+0186 in.LM = LM; in.M = M; in.N = N;
+0187 PHI = <a href="../L1_homotopy_v2.0/utils/utils_LOT/create_PHI.html" class="code" title="function PHI = create_PHI(in);">create_PHI</a>(in);
+0188 
+0189 <span class="comment">%% Dynamics matrix</span>
+0190 F = zeros(P*N,(P+1)*N);
+0191 <span class="keyword">for</span> p = 1:P
+0192     F((p-1)*N+1:p*N,(p-1)*N+1:(p+1)*N) = [F0 -eye(N)];
+0193 <span class="keyword">end</span>
+0194 F = wt_pred*F(:,N+1:end);
+0195 
+0196 <span class="comment">%% Create analysis/synthesis matrix explicitly and compute sparse coeffs.</span>
+0197 in = [];
+0198 in.P = P; in.Psi = Psi;
+0199 <span class="comment">% in.P = P; in.Jp = Jp; in.wType = wType; in.N = N; in.sym = sym;</span>
+0200 PSI = <a href="../L1_homotopy_v2.0/utils/utils_Wavelet/create_PSI_DWT.html" class="code" title="function PSI = create_PSI_DWT(in)">create_PSI_DWT</a>(in);
+0201 
+0202 <span class="comment">% Sparse coefficients...</span>
+0203 T_length = size(PSI,1);
+0204 t_ind = 1:T_length;
+0205 
+0206 sigt = sig(t_ind); <span class="comment">% Signal under the LOT window at time t</span>
+0207 <span class="keyword">if</span> sym == 1 || sym == 2
+0208     x = pinv(PSI'*PSI)*(PSI'*sigt); <span class="comment">% Sparse LOT coefficients</span>
+0209 <span class="keyword">else</span>
+0210     x = PSI'*sigt;
+0211 <span class="keyword">end</span>
+0212 
+0213 <span class="comment">%% initialize with a predicted value of first x</span>
+0214 <span class="comment">% xt = x(1:N);</span>
+0215 <span class="comment">%</span>
+0216 <span class="comment">% At = genAmat_h(M,N);</span>
+0217 <span class="comment">% sigma = sqrt(norm(At*xt)^2/10^(SNR/10)/M);</span>
+0218 <span class="comment">% e = randn(M,1)*sigma;</span>
+0219 <span class="comment">% yt = At*xt+e;</span>
+0220 <span class="comment">%</span>
+0221 <span class="comment">% tau = max(1e-2*max(abs(At'*yt)),sigma*sqrt(log(N)));</span>
+0222 <span class="comment">%</span>
+0223 <span class="comment">% % rwt L1 with the first set of measurement...</span>
+0224 <span class="comment">% in = [];</span>
+0225 <span class="comment">% in.tau = tau; W = tau;</span>
+0226 <span class="comment">% in.delx_mode = delx_mode;</span>
+0227 <span class="comment">% for wt_itr = 1:5</span>
+0228 <span class="comment">%     W_old = W;</span>
+0229 <span class="comment">%</span>
+0230 <span class="comment">%     out = l1homotopy(At,yt,in);</span>
+0231 <span class="comment">%     xh = out.x_out;</span>
+0232 <span class="comment">%</span>
+0233 <span class="comment">%     % Update weights</span>
+0234 <span class="comment">%     xh_old = xh;</span>
+0235 <span class="comment">%     alpha = 1; epsilon = 1;</span>
+0236 <span class="comment">%     beta = M*(norm(xh_old,2)/norm(xh_old,1))^2;</span>
+0237 <span class="comment">%     W = tau/alpha./(beta*abs(xh_old)+epsilon);</span>
+0238 <span class="comment">%</span>
+0239 <span class="comment">%     yh = At*xh_old;</span>
+0240 <span class="comment">%     Atr = At'*(At*xh-yt);</span>
+0241 <span class="comment">%     u =  -W.*sign(xh)-Atr;</span>
+0242 <span class="comment">%     pk_old = Atr+u;</span>
+0243 <span class="comment">%</span>
+0244 <span class="comment">%     in = out;</span>
+0245 <span class="comment">%     in.xh_old = xh;</span>
+0246 <span class="comment">%     in.pk_old = pk_old;</span>
+0247 <span class="comment">%     in.u = u;</span>
+0248 <span class="comment">%     in.W_old = W_old;</span>
+0249 <span class="comment">%     in.W = W;</span>
+0250 <span class="comment">% end</span>
+0251 <span class="comment">% xh(abs(xh)&lt;tau/sqrt(log(N))) = 0;</span>
+0252 
+0253 
+0254 <span class="comment">% Another way to initialize...</span>
+0255 <span class="comment">% Best M/2-sparse signal...</span>
+0256 <span class="comment">% [val_sort ind_sort] = sort(abs(x),'descend');</span>
+0257 <span class="comment">% xh = x;</span>
+0258 <span class="comment">% xh(ind_sort(P*N/2+1:end)) = 0;</span>
+0259 
+0260 <span class="comment">% Oracle value for the initialization</span>
+0261 xh = x; disp(<span class="string">'oracle initialization'</span>);
+0262 
+0263 <span class="comment">% model for the outgoing window...</span>
+0264 sim = 1;
+0265 st_ind = N;
+0266 t_ind = st_ind+t_ind;
+0267 s_ind = t_ind(1:L);
+0268 
+0269 sig_out = PSI(st_ind+1:st_ind+N,:)*xh;
+0270 xh = xh(st_ind+1:end);
+0271 
+0272 xh_out = xh(1:N);
+0273 x_vec((sim-1)*N+1:sim*N,1) = x(st_ind+1:st_ind+N);
+0274 xh_vec((sim-1)*N+1:sim*N,1:3) = [xh_out xh_out xh_out];
+0275 
+0276 sig_temp = Psi*xh_out;
+0277 sig_temp = [sig_out; sig_temp(N+1:end)];
+0278 sig_vec(s_ind) = sigt(s_ind);
+0279 sigh_vec(s_ind,1:3) = sigh_vec(s_ind,1:3)+[sig_temp sig_temp sig_temp];
+0280 
+0281 
+0282 <span class="comment">%% Generate complete measurement system</span>
+0283 <span class="comment">% Sparse coefficients...</span>
+0284 t_ind = t_ind + N;
+0285 sigt = sig(t_ind); <span class="comment">% Signal under the LOT window at time t</span>
+0286 <span class="keyword">if</span> sym == 1 || sym == 2
+0287     x = pinv(PSI'*PSI)*(PSI'*sigt); <span class="comment">% Sparse LOT coefficients</span>
+0288 <span class="keyword">else</span>
+0289     x = PSI'*sigt;
+0290 <span class="keyword">end</span>
+0291 
+0292 y = PHI*sigt(1:end-(L-N));
+0293 
+0294 leny = length(y);
+0295 sigma = sqrt(norm(y)^2/10^(SNR/10)/leny);
+0296 e = randn(leny,1)*sigma;
+0297 y = y+e;
+0298 
+0299 
+0300 PSI_M = PSI(1:end-(L-N),:);
+0301 A = [PHI; F]*PSI_M;
+0302 
+0303 
+0304 sig_out = sigh_vec(t_ind(1:N)-N,1);
+0305 y = [y; -wt_pred*F0*sig_out; zeros((P-1)*N,1)];
+0306 
+0307 <span class="comment">% REMOVE the part of outgoing DWT projection in the overlapping region</span>
+0308 <span class="comment">% on left side of streaming window...</span>
+0309 <span class="keyword">if</span> LeftProj_cancel
+0310     y = y-[PHI(:,1:(L-N));F(:,1:(L-N))]*(Psi(end-(L-N)+1:<span class="keyword">end</span>,:)*xh_out(1:N));
+0311 <span class="keyword">end</span>
+0312 
+0313 <span class="comment">%% parameter selection</span>
+0314 <span class="comment">% tau = sigma*sqrt(log(N));</span>
+0315 tau = max(1e-2*max(abs(A'*y)),sigma*sqrt(log(P*N)));
+0316 
+0317 maxiter = 2*P*N;
+0318 err_fun = @(z) (norm(x-z)/norm(x))^2;
+0319 
+0320 
+0321 <span class="comment">%% Initialize by solving a rwt L1 problem</span>
+0322 in = [];
+0323 in.tau = tau; W = tau;
+0324 in.W = W;
+0325 in.delx_mode = delx_mode;
+0326 in.debias = 0;
+0327 in.verbose = 0;
+0328 in.plots = 0;
+0329 in.record = 1;
+0330 in.err_fun = err_fun;
+0331 tic
+0332 <span class="keyword">for</span> wt_itr = 1:5
+0333     
+0334     out = <a href="l1homotopy.html" class="code" title="function out = l1homotopy(A, y, opts)">l1homotopy</a>(A,y,in);
+0335     xh = out.x_out;
+0336     iter_bpdn = out.iter;
+0337     time_bpdn = toc;
+0338     gamma_bpdn = out.gamma;
+0339     
+0340     <span class="comment">% Update weights</span>
+0341     xh_old = xh;
+0342     
+0343     alpha = 1; epsilon = 1;
+0344     beta = M*(norm(xh,2)/norm(xh,1))^2;
+0345     W = tau/alpha./(beta*abs(xh)+epsilon);
+0346     
+0347     W_old = W;
+0348     yh = A*xh;
+0349     Atr = A'*(A*xh-y);
+0350     u =  -W.*sign(xh)-Atr;
+0351     pk_old = Atr+u;
+0352     
+0353     in = out;
+0354     in.xh_old = xh;
+0355     in.pk_old = pk_old;
+0356     in.u = u;
+0357     in.W_old = W_old;
+0358     in.W = W;
+0359 <span class="keyword">end</span>
+0360 W = W_old;
+0361 
+0362 sim = sim+1;
+0363 x_vec((sim-1)*N+1:sim*N,1) = x(1:N);
+0364 xh_vec((sim-1)*N+1:sim*N,1:3) = [xh(1:N) xh(1:N) xh(1:N)];
+0365 
+0366 s_ind = t_ind(1:L);
+0367 sig_temp = Psi*xh(1:N);
+0368 sig_vec(s_ind) = sigt(1:L);
+0369 sigh_vec(s_ind,1:3) = sigh_vec(s_ind,1:3)+[sig_temp sig_temp sig_temp];
+0370 
+0371 <span class="comment">% average instantaneous estimates before committing to output...</span>
+0372 estimate_buffer = repmat(xh(1:(P-1)*N,1),1,P-1)/(P-1);
+0373 
+0374 xh_streamingRWT = xh;
+0375 x_sparsa = xh;
+0376 x_yall1 = xh;
+0377 
+0378 
+0379 <span class="comment">%% Kalman initialization</span>
+0380 <span class="keyword">if</span> LM == N
+0381     Pk_1 = eye(N)/(wt_pred)^2;
+0382     sig_kalman = sig_vec(t_ind(1:N)-N,1);
+0383     
+0384     Ak = PHI(1:M,1:N);
+0385     yk = y(1:M);
+0386     x_k = F0*sig_kalman;
+0387     P_k = F0*Pk_1*F0'+1/(wt_pred^2)*eye(N);
+0388     PAt = P_k*Ak';
+0389     Kk = PAt*(pinv(Ak*PAt+eye(M)));
+0390     Pk_1 = P_k-Kk*PAt';
+0391     sig_kalman = x_k + Kk*(yk-Ak*x_k);
+0392     
+0393     sig_temp = sigh_vec(t_ind(1:N)-N,3);
+0394     y_kalman = y;
+0395     y_kalman(P*M+1:P*M+N) = -wt_pred*(F0*sig_temp);
+0396     
+0397     <span class="keyword">switch</span> LS_Kalman
+0398         <span class="keyword">case</span> <span class="string">'inst'</span>
+0399             sig_P = [PHI;F]\y_kalman;
+0400             sig_kalman = sig_P(1:N);
+0401         <span class="keyword">case</span> <span class="string">'smooth'</span>
+0402             <span class="comment">% solves for x_1 using the prediction covariance matrix</span>
+0403             <span class="comment">% from all previous measurements and smoothing with P-1 future measurements</span>
+0404             <span class="comment">% minimize 1/2 (x_1-x_1|0)'*P_1|0(x_1-x_1|0)</span>
+0405             <span class="comment">% + \sum_{k = 1,...,P} 1/2||y_k-A_k x_k||_2^2 + lambda/2||F_k</span>
+0406             <span class="comment">% x_k-x_k+1||_2^2</span>
+0407             
+0408             iP_k = pinv(P_k);
+0409             Pmat = PHI'*PHI + F'*F;
+0410             Pmat(1:N,1:N) = Pmat(1:N,1:N)-wt_pred^2*eye(N)+iP_k;
+0411             Pty = PHI'*y_kalman(1:M*P)+[iP_k*(F0*sig_temp); zeros((P-1)*N,1)];
+0412             sig_P2 = pinv(Pmat)*Pty;
+0413             sig_kalman = sig_P2(1:N);
+0414         <span class="keyword">case</span> <span class="string">'filter'</span>
+0415             <span class="comment">% no change...</span>
+0416     <span class="keyword">end</span>
+0417     
+0418     sigh_vec(t_ind(1:N),3) = sig_kalman;
+0419 <span class="keyword">end</span>
+0420 
+0421 
+0422 <span class="comment">%% GO...</span>
+0423 
+0424 done = 0;
+0425 <span class="keyword">while</span> ~done
+0426     
+0427     <span class="comment">% Update the solution after updating the measurement matrix and/or the</span>
+0428     <span class="comment">% sparse signal</span>
+0429     x_old = x;
+0430     y_old = y; A_old = A;
+0431     
+0432     sigt_old = sigt; t_ind_old = t_ind;
+0433     PHI_old = PHI;
+0434     
+0435     <span class="comment">% Shift the sampling window</span>
+0436     t_ind = t_ind+N;
+0437     <span class="keyword">if</span> t_ind(end) &gt; length(sig)
+0438         <span class="keyword">break</span>;
+0439     <span class="keyword">end</span>
+0440     sigt = sig(t_ind); <span class="comment">% Signal under the LOT window at time t</span>
+0441     <span class="keyword">if</span> sym == 1 || sym == 2
+0442         x = pinv(PSI'*PSI)*(PSI'*sigt); <span class="comment">% Sparse LOT coefficients</span>
+0443     <span class="keyword">else</span>
+0444         x = PSI'*sigt;
+0445     <span class="keyword">end</span>
+0446     
+0447     <span class="comment">% System matrix setup...</span>
+0448     <span class="comment">% Shift up and left</span>
+0449     PHI(1:end-M,1:end-N) = PHI(M+1:<span class="keyword">end</span>,N+1:end);
+0450     <span class="comment">% new measurement matrix</span>
+0451     Phi = genAmat_h(M,LM);
+0452     PHI(end-M+1:<span class="keyword">end</span>,end-LM+1:end) = Phi;
+0453     
+0454     <span class="comment">% shift old measurements and add one new set of measurementts</span>
+0455     y = PHI*sigt(1:end-(L-N));
+0456     e(1:end-M) = e(M+1:end);
+0457     e(end-M+1:end) = randn(M,1)*sigma;
+0458     y= y+e;
+0459     
+0460     A = [PHI; F]*PSI_M;
+0461     
+0462     A0 = A; x0 = x; y0 = y;
+0463     <span class="keyword">for</span> solver = {<span class="string">'l1homotopy'</span>,<span class="string">'sparsa'</span>}
+0464         solver = char(solver);
+0465         <span class="keyword">switch</span> solver
+0466             <span class="keyword">case</span> <span class="string">'l1homotopy'</span>
+0467                 xh = xh_streamingRWT;
+0468                 sig_out = sigh_vec(t_ind(1:N)-N,1);
+0469             <span class="keyword">case</span> <span class="string">'sparsa'</span>
+0470                 xh = x_sparsa;
+0471                 sig_out = sigh_vec(t_ind(1:N)-N,2);
+0472             <span class="keyword">case</span> <span class="string">'yall1'</span>
+0473                 xh = x_yall1;
+0474                 sig_out = sigh_vec(t_ind(1:N)-N,3);
+0475         <span class="keyword">end</span>
+0476         y = y0; A = A0; x = x0;
+0477         xh_old = xh;
+0478         y = [y; -wt_pred*F0*sig_out; zeros((P-1)*N,1)];
+0479         
+0480         <span class="comment">% REMOVE the part of outgoing DWT projection in the overlapping region</span>
+0481         <span class="comment">% on left side of streaming window...</span>
+0482         <span class="keyword">if</span> LeftProj_cancel
+0483             y = y-[PHI(:,1:(L-N));F(:,1:(L-N))]*(Psi(end-(L-N)+1:<span class="keyword">end</span>,:)*xh_old(1:N));
+0484         <span class="keyword">end</span>
+0485         
+0486         <span class="comment">% Update the signal estimate (for warm start)</span>
+0487         xh(1:end-N) = xh(N+1:end);
+0488         sigh_old = PSI(1:end-L,:)*xh;
+0489         <span class="comment">% sigh_pred = [sigh_old; F_h(sigh_old(end-N+1:end),cshift,0); zeros(L-N,1)];</span>
+0490         sigh_pred = [sigh_old; F_h(sigh_old(end-N+1:end),<a href="../L1_homotopy_v2.0/utils/utils_Wavelet/cshift.html" class="code" title="function y = cshift(x, t, dir)">cshift</a>,0)];
+0491         
+0492         <span class="keyword">if</span> sym == 3
+0493             sigh_temp = F_h(sigh_pred(end-N+1:end),<a href="../L1_homotopy_v2.0/utils/utils_Wavelet/cshift.html" class="code" title="function y = cshift(x, t, dir)">cshift</a>,0);
+0494             sigh_pred = [sigh_pred; sigh_temp(1:L-N)];
+0495             <span class="comment">% sigh_pred = [sigh_pred; linspace(sigh_pred(end),0,L-N)'];</span>
+0496         <span class="keyword">end</span>
+0497         <span class="keyword">if</span> sym == 1 || sym == 2
+0498             xh = pinv(PSI'*PSI)*(PSI'*sigh_pred); <span class="comment">% Sparse LOT coefficients</span>
+0499         <span class="keyword">else</span>
+0500             xh = PSI'*sigh_pred;
+0501         <span class="keyword">end</span>
+0502         xh(abs(xh)&lt;tau/sqrt(log(P*N))) = 0;
+0503         <span class="comment">%         xh_temp = xh(end-N+1:end);</span>
+0504         <span class="comment">%         xh_temp(abs(xh_temp)&lt;tau/sqrt(log(P*N))) = 0;</span>
+0505         <span class="comment">%         xh(end-N+1:end) = xh_temp;</span>
+0506         <span class="keyword">if</span> sym == 3 <span class="comment">% truncate coefficients for overlapping wavelets...</span>
+0507             <span class="keyword">for</span> p = 2.^(0:J)
+0508                 xh((P-1)*N+N/p) = 0;                
+0509             <span class="keyword">end</span>
+0510         <span class="keyword">end</span>
+0511         
+0512         <a href="../L1_homotopy_v2.0/utils/fig.html" class="code" title="function h = fig(varargin)">fig</a>(111);
+0513         plot([x xh]);
+0514         
+0515         <span class="comment">% Remove the top-left edge of the system matrix</span>
+0516         <span class="keyword">if</span> LeftEdge_trunc
+0517             <span class="comment">% fprintf('Consider oldest set of LOT coefficients to be fully known, and remove their contribution from the measurements... \n');</span>
+0518             alpha0h = xh(1:N);
+0519             xh = xh(N+1:end);
+0520             y = y-A(:,1:N)*alpha0h;
+0521             A = A(:,N+1:end);
+0522             
+0523             A_old = A; y_old = y;
+0524             A(size(PHI,1)+1:size(PHI,1)+N,:) = [];
+0525             y(size(PHI,1)+1:size(PHI,1)+N) = [];
+0526             
+0527             alpha0 = x(1:N);
+0528             x = x(N+1:end);
+0529         <span class="keyword">end</span>
+0530         
+0531         <span class="comment">% Update weights</span>
+0532         alpha = 1; epsilon = 1;
+0533         beta = M*(norm(xh,2)/norm(xh,1))^1;
+0534         W = tau/alpha./(beta*abs(xh)+epsilon);
+0535         W_old = W;
+0536         
+0537         <span class="keyword">if</span> strcmpi(solver,<span class="string">'l1homotopy'</span>);
+0538             
+0539             homotopy_mode = <span class="string">'dummy'</span>;
+0540             <span class="keyword">switch</span> homotopy_mode
+0541                 <span class="keyword">case</span> <span class="string">'dummy'</span>
+0542                     <span class="comment">% create a dummy variable...</span>
+0543                     <span class="comment">% use homotopy on the measurements...</span>
+0544                     <span class="comment">% in principle, we can start with any xh_old with this formulation</span>
+0545                     <span class="comment">% and any starting value of tau or W...</span>
+0546                     gamma = find(xh);
+0547                     M_trunc = size(A,1); <span class="comment">% P*(M-1);</span>
+0548                     <span class="keyword">if</span> length(gamma) &gt;= M_trunc
+0549                         disp(<span class="string">'length of gamma exceeded number of rows'</span>);
+0550                         [xh_sort ind_sort] = sort(abs(xh),<span class="string">'descend'</span>);
+0551                         xh(ind_sort(M_trunc+1:end)) = 0;
+0552                         gamma = ind_sort(1:M_trunc);
+0553                     <span class="keyword">end</span>
+0554                     Atr = A'*(A*xh-y);
+0555                     u =  -W.*sign(xh)-Atr;
+0556                     pk_old = Atr+u;
+0557                 <span class="keyword">otherwise</span>
+0558                     didp(<span class="string">'Go back ... no escape'</span>);
+0559             <span class="keyword">end</span>
+0560             
+0561             
+0562             in = out;
+0563             gamma_old = gamma;
+0564             in.gamma = gamma_old;
+0565             <span class="keyword">switch</span> delx_mode
+0566                 <span class="keyword">case</span> <span class="string">'mil'</span>;
+0567                     <span class="comment">% in.delx_mode = 'mil';</span>
+0568                     <span class="comment">% The following gram matrix and its inverse can be used from the</span>
+0569                     <span class="comment">% previous homotopy. Too lazy to include that right now...</span>
+0570                     <span class="comment">% wt BPDN homotopy update</span>
+0571                     AtAgx = A(:,gamma_old)'*A(:,gamma_old);
+0572                     iAtAgx = pinv(AtAgx);
+0573                     in.iAtA = iAtAgx;
+0574                 <span class="keyword">case</span> {<span class="string">'qr'</span>,<span class="string">'chol'</span>};
+0575                     <span class="comment">% in.delx_mode = 'qr';</span>
+0576                     [Q R] = qr(A(:,gamma_old),0);
+0577                     in.Q = Q; in.R = R;
+0578                 <span class="keyword">case</span> <span class="string">'qrM'</span>
+0579                     <span class="comment">% in.delx_mode = 'qrM';</span>
+0580                     [Q0 R0] = qr(A(:,gamma_old));
+0581                     in.Q0 = Q0; in.R0 = R0;
+0582             <span class="keyword">end</span>
+0583             
+0584             in.xh_old = xh;
+0585             in.pk_old = pk_old;
+0586             in.u = u;
+0587             in.W = W;
+0588             in.delx_mode = delx_mode;
+0589             in.debias = 0;
+0590             in.verbose = 0;
+0591             in.plots = 0;
+0592             in.record = 1;
+0593             in.err_fun = @(z) (norm(x-z)/norm(x))^2;
+0594             tic
+0595             out = <a href="l1homotopy.html" class="code" title="function out = l1homotopy(A, y, opts)">l1homotopy</a>(A,y,in);
+0596             time_streamingRWT = toc;
+0597             xh_streamingRWT = out.x_out;
+0598             gamma_streamingRWT = out.gamma;
+0599             iter_streamingRWT = out.iter;
+0600             <span class="comment">% Reconstructed signal</span>
+0601             <span class="keyword">if</span> LeftEdge_trunc
+0602                 x = [alpha0; x];
+0603                 xh_streamingRWT = [alpha0h; xh_streamingRWT];
+0604             <span class="keyword">end</span>
+0605         <span class="keyword">elseif</span>  strcmpi(solver,<span class="string">'sparsa'</span>)
+0606             <span class="comment">%% SpaRSA</span>
+0607             x_sparsa = xh; W_sparsa = W/tau; iter_sparsa = 0; time_sparsa = 0;
+0608             <span class="keyword">if</span> norm(y) &gt; 1e-3
+0609                 psi_function = @(x,tau) <a href="../L1_homotopy_v2.0/solvers/soft.html" class="code" title="function y = soft(x,T)">soft</a>(x,tau*W_sparsa);
+0610                 phi_function = @(x) sum(abs(W_sparsa.*x));
+0611                 tic;
+0612                 [x_sparsa,x_debias_SpaRSA_m,obj_SpaRSA_m_cont,<span class="keyword">...</span>
+0613                     times_SpaRSA_m_cont,debias_start_SpaRSA_m,mse_SpaRSA_m,taus_SpaRSA_m, numA, numAt]= <span class="keyword">...</span>
+0614                     <a href="../L1_homotopy_v2.0/solvers/SpaRSA_adpW.html" class="code" title="function [x,x_debias,objective,times,debias_start,mses,taus, numA, numAt]=SpaRSA_adpW(y,A,tau,varargin)">SpaRSA_adpW</a>(y,A,tau,<span class="keyword">...</span>
+0615                     <span class="string">'Monotone'</span>,0,<span class="keyword">...</span>
+0616                     <span class="string">'adp_wt'</span>,0,<span class="keyword">...</span>
+0617                     <span class="string">'W_new'</span>,W_sparsa,<span class="keyword">...</span>
+0618                     <span class="string">'Debias'</span>,0,<span class="keyword">...</span>
+0619                     <span class="string">'Initialization'</span>,x_sparsa,<span class="keyword">...</span>
+0620                     <span class="string">'StopCriterion'</span>,2,<span class="keyword">...</span>
+0621                     <span class="string">'ToleranceA'</span>,1e-4,<span class="keyword">...</span>
+0622                     <span class="string">'psi'</span>,psi_function,<span class="keyword">...</span>
+0623                     <span class="string">'phi'</span>,phi_function,<span class="keyword">...</span>
+0624                     <span class="string">'Safeguard'</span>,1,<span class="keyword">...</span>
+0625                     <span class="string">'MaxiterA'</span>,maxiter,<span class="keyword">...</span>
+0626                     <span class="string">'Verbose'</span>,0,<span class="keyword">...</span>
+0627                     <span class="string">'True_x'</span>,x,<span class="keyword">...</span>
+0628                     <span class="string">'Continuation'</span>,1,<span class="keyword">...</span>
+0629                     <span class="string">'Continuationsteps'</span>,-1);
+0630                 
+0631                 time_sparsa = toc;
+0632                 iter_sparsa = (numA+numAt)/2;
+0633                 error_sparsa = norm(x-x_sparsa)/norm(x);
+0634             <span class="keyword">end</span>
+0635             <span class="comment">% Reconstructed signal</span>
+0636             <span class="keyword">if</span> LeftEdge_trunc
+0637                 x = [alpha0; x];
+0638                 x_sparsa = [alpha0h; x_sparsa];
+0639             <span class="keyword">end</span>
+0640         <span class="keyword">elseif</span> strcmpi(solver,<span class="string">'yall1'</span>)
+0641             
+0642             <span class="comment">%% YALL1</span>
+0643             disp(<span class="string">'yall1 only works when A is underdetermined'</span>);
+0644             <span class="comment">% set options</span>
+0645             digit = 4; <span class="keyword">if</span> sigma &gt; 0; digit = 4; <span class="keyword">end</span>
+0646             opts = [];
+0647             opts.tol = 10^(-digit);
+0648             opts.weights = W/tau;
+0649             opts.print = 0;
+0650             opts.maxit = maxiter;
+0651             opts.nonorth = 1;
+0652             <span class="comment">% opts.x0 = xh;</span>
+0653             opts.nu = 0; opts.rho = tau;
+0654             tic;
+0655             [x_yall1,Out_yall1] = <a href="../L1_homotopy_v2.0/solvers/yall1.html" class="code" title="function [x, Out] = yall1(A, b, opts)">yall1</a>(A,y,opts);
+0656             <span class="comment">% time_yall1 = [time_yall1 Out.cputime];</span>
+0657             time_yall1 = toc;
+0658             iter_yall1 = (Out_yall1.cntA+Out_yall1.cntAt)/2;
+0659             err_yall1 = norm(x-x_yall1)/norm(x);
+0660             <span class="comment">% Reconstructed signal</span>
+0661             <span class="keyword">if</span> LeftEdge_trunc
+0662                 x = [alpha0; x];
+0663                 x_yall1 = [alpha0h; x_yall1];
+0664             <span class="keyword">end</span>
+0665             
+0666             <span class="keyword">if</span> max(abs(x_yall1)) &gt; 500
+0667                 stp = 1;
+0668             <span class="keyword">end</span>
+0669         <span class="keyword">end</span>
+0670     <span class="keyword">end</span>
+0671     
+0672     <span class="comment">%% Plot DWT coeffs. on the window</span>
+0673     <a href="../L1_homotopy_v2.0/utils/fig.html" class="code" title="function h = fig(varargin)">fig</a>(1); subplot(211);
+0674     plot([x xh_streamingRWT x_sparsa]);
+0675     title(<span class="string">'Comparison betweeen the original and reconstructed signal'</span>)
+0676     
+0677     <span class="comment">%% Reconstructed signal</span>
+0678     sim = sim+1;
+0679     x_vec((sim-1)*N+1:sim*N,1) = x(1:N);
+0680     xh = xh_streamingRWT;
+0681     
+0682     <span class="comment">% remove the oldest estimate, shift the remaining up and left, and add the new estimate</span>
+0683     estimate_buffer = [[estimate_buffer(N+1:<span class="keyword">end</span>,2:end); zeros(N,P-2)] xh(1:end-N)/(P-1)];
+0684     <span class="keyword">if</span> avg_output
+0685         xh_est = xh(1:N);
+0686         xh(1:N) = sum(estimate_buffer(1:N,:),2);
+0687         <span class="comment">% fig(123); plot([xh_est xh(1:N) x(1:N)])</span>
+0688         <span class="keyword">if</span> sim == 2
+0689             disp(<span class="string">'output is averaged'</span>);
+0690         <span class="keyword">end</span>
+0691     <span class="keyword">end</span>
+0692     xh_vec((sim-1)*N+1:sim*N,1) = xh(1:N);
+0693     xh_vec((sim-1)*N+1:sim*N,2) = x_sparsa(1:N);
+0694     
+0695     s_ind = t_ind(1:L);
+0696     sig_vec(s_ind) = sigt(1:L);
+0697     sigh_vec(s_ind,1) = sigh_vec(s_ind,1)+Psi*xh(1:N);
+0698     sigh_vec(s_ind,2) = sigh_vec(s_ind,2)+Psi*x_sparsa(1:N);
+0699     
+0700     
+0701     
+0702     <span class="comment">%% plot recovered signals</span>
+0703     <a href="../L1_homotopy_v2.0/utils/fig.html" class="code" title="function h = fig(varargin)">fig</a>(1); subplot(212)
+0704     plot([sig_vec(1:s_ind(end)) sigh_vec(1:s_ind(end),1)]);
+0705     
+0706     drawnow;
+0707     
+0708     <span class="comment">%% Kalman recursion</span>
+0709     <span class="keyword">if</span> LM == N
+0710         
+0711         Ak = PHI(1:M,1:N);
+0712         yk = y(1:M);
+0713         x_k = F0*sig_kalman;
+0714         P_k = F0*Pk_1*F0'+1/(wt_pred^2)*eye(N);
+0715         PAt = P_k*Ak';
+0716         Kk = PAt*(pinv(Ak*PAt+eye(M)));
+0717         sig_kalman = x_k + Kk*(yk-Ak*x_k);
+0718         Pk_1 = P_k-Kk*PAt';
+0719         <span class="comment">%         if mod(sim,50) == 0</span>
+0720         <span class="comment">%             Pk_1 = eye(N)/wt_pred^2;</span>
+0721         <span class="comment">%         end</span>
+0722         
+0723         sig_temp = sigh_vec(t_ind(1:N)-N,3);
+0724         y_kalman = y;
+0725         y_kalman(P*M+1:P*M+N) = -wt_pred*(F0*sig_temp);
+0726         
+0727         <span class="keyword">switch</span> LS_Kalman
+0728             <span class="keyword">case</span> <span class="string">'inst'</span>
+0729                 sig_P = [PHI;F]\y_kalman;
+0730                 sig_kalman = sig_P(1:N);
+0731             <span class="keyword">case</span> <span class="string">'smooth'</span>
+0732                 <span class="comment">% solves for x_1 using the prediction covariance matrix</span>
+0733                 <span class="comment">% from all previous measurements and smoothing with P-1 future measurements</span>
+0734                 <span class="comment">% minimize 1/2 (x_1-x_1|0)'*P_1|0(x_1-x_1|0)</span>
+0735                 <span class="comment">% + \sum_{k = 1,...,P} 1/2||y_k-A_k x_k||_2^2 + lambda/2||F_k</span>
+0736                 <span class="comment">% x_k-x_k+1||_2^2</span>
+0737                 
+0738                 iP_k = pinv(P_k);
+0739                 Pmat = PHI'*PHI + F'*F;
+0740                 Pmat(1:N,1:N) = Pmat(1:N,1:N)-wt_pred^2*eye(N)+iP_k;
+0741                 Pty = PHI'*y_kalman(1:M*P)+[iP_k*(F0*sig_temp); zeros((P-1)*N,1)];
+0742                 sig_P2 = pinv(Pmat)*Pty;
+0743                 sig_kalman = sig_P2(1:N);
+0744             <span class="keyword">case</span> <span class="string">'filter'</span>
+0745                 <span class="comment">% do nothing</span>
+0746         <span class="keyword">end</span>
+0747         
+0748         sigh_vec(t_ind(1:N),3) = sig_kalman;
+0749         
+0750         <a href="../L1_homotopy_v2.0/utils/fig.html" class="code" title="function h = fig(varargin)">fig</a>(33)
+0751         plot([sig_vec(s_ind(1:N),1) sigh_vec(s_ind(1:N),1) sigh_vec(s_ind(1:N),3)]);
+0752         title(<span class="string">'comparison with LS-Kalman'</span>);
+0753         err_l1 = norm(sig_vec(s_ind(1:N),1)-sigh_vec(s_ind(1:N),1))^2/norm(sig_vec(s_ind(1:N),1))^2;
+0754         err_ls = norm(sig_vec(s_ind(1:N),1)-sigh_vec(s_ind(1:N),3))^2/norm(sig_vec(s_ind(1:N),1))^2;
+0755         <span class="keyword">if</span> mod(sim-1,verbose) == 0 &amp;&amp; verbose
+0756             fprintf(<span class="string">'L1 vs LS Kalman: sim %d  --%3.4g : %3.4g--\n'</span>,sim, err_l1, err_ls);
+0757         <span class="keyword">end</span>
+0758     <span class="keyword">end</span>
+0759     
+0760     <span class="comment">%% Record results</span>
+0761     SIM_stack{sim} = [sim, tau, <span class="keyword">...</span>
+0762         norm(x-xh_streamingRWT)^2/norm(x)^2, sum(iter_streamingRWT,2), sum(time_streamingRWT,2), <span class="keyword">...</span>
+0763         norm(x-x_sparsa)^2/norm(x)^2, sum(iter_sparsa,2), sum(time_sparsa,2), <span class="keyword">...</span>
+0764         err_ls];
+0765     
+0766     <span class="comment">% print and plot</span>
+0767     <span class="keyword">if</span> mod(sim-1,verbose) == 0 &amp;&amp; verbose
+0768         fprintf(<span class="string">'streaming iter. %d. tau = %3.4g, (err,iter,time): streamingRWT homotopy-%3.4g,%3.4g,%3.4g, SpaRSA-%3.4g,%3.4g,%3.4g, LS-Kalman-%3.4g\n'</span>, <span class="keyword">...</span>
+0769             SIM_stack{sim});
+0770     <span class="keyword">end</span>
+0771 <span class="keyword">end</span>
+0772 fprintf(<span class="string">'\n'</span>);
+0773 mS =  sum(cell2mat(SIM_stack),1);
+0774 fprintf(<span class="string">'Summed results: streaming_iter %d. tau = %3.4g, \n solver-(err,iter,time): \n streamingRWT homotopy-%3.4g,%3.4g,%3.4g; \n SpaRSA-%3.4g,%3.4g,%3.4g; \n LS-Kalman-%3.4g. \n'</span>, streaming_iter, mS(2:end));
+0775 <span class="comment">% mS =  mean(cell2mat(SIM_stack),1);</span>
+0776 <span class="comment">% fprintf('Average results: streaming_iter %d. tau = %3.4g, \n solver-(err,iter,time): \n streamingRWT homotopy-%3.4g,%3.4g,%3.4g; \n SpaRSA-%3.4g,%3.4g,%3.4g; \n LS-Kalman-%3.4g. \n', streaming_iter, mS(2:end));</span>
+0777 
+0778 <span class="comment">% l1homotopy-%3.4g,%3.4g,%3.4g;</span>
+0779 st_ind = 2*N;
+0780 err_l1homotopy = norm(sig_vec(st_ind+1:N*sim)-sigh_vec(st_ind+1:N*sim,1))^2/norm(sig_vec(st_ind+1:N*sim))^2;
+0781 err_sparsa = norm(sig_vec(st_ind+1:N*sim)-sigh_vec(st_ind+1:N*sim,2))^2/norm(sig_vec(st_ind+1:N*sim))^2;
+0782 <span class="keyword">if</span> LM == N
+0783     err_kalman = norm(sig_vec(st_ind+1:N*sim)-sigh_vec(st_ind+1:N*sim,3))^2/norm(sig_vec(st_ind+1:N*sim))^2;
+0784     fprintf(<span class="string">'Signal MSE: l1homotopy-%3.4g, sparsa-%3.4g, LS-kalman-%3.4g.\n'</span>,([err_l1homotopy,err_sparsa,err_kalman]));
+0785     fprintf(<span class="string">'Signal SER (in dB): l1homotopy-%3.4g, sparsa-%3.4g, LS-kalman-%3.4g.\n'</span>,-10*log10([err_l1homotopy,err_sparsa,err_kalman]));
+0786 
+0787 <span class="keyword">else</span>
+0788     fprintf(<span class="string">'Signal MSE: l1homotopy-%3.4g, sparsa-%3.4g.\n'</span>,err_l1homotopy,err_sparsa);
+0789     fprintf(<span class="string">'Signal SER (in dB): l1homotopy-%3.4g, sparsa-%3.4g.\n'</span>,-10*log10([err_l1homotopy,err_sparsa]));
+0790 <span class="keyword">end</span>
+0791 
+0792 <span class="comment">%% plot signal and reconstruction error</span>
+0793 x_len = min(length(x_vec),length(xh_vec))-(P-1)*N;
+0794 sig_len = min(length(sig_vec),length(sigh_vec))-(P-1)*N-L-N;
+0795 x_vec1 = x_vec(1:x_len);
+0796 xh_vec1 = xh_vec(1:x_len,1);
+0797 sig_vec1 = sig_vec(1:sig_len);
+0798 sigh_vec1 = sigh_vec(1:sig_len,1);
+0799 
+0800 <a href="../L1_homotopy_v2.0/utils/fig.html" class="code" title="function h = fig(varargin)">fig</a>(123);
+0801 subplot(221);
+0802 imagesc(reshape(sig_vec1,N,sig_len/N));
+0803 axis tight;
+0804 title(<span class="string">'original signal'</span>)
+0805 subplot(2,2,2)
+0806 imagesc(reshape(sigh_vec1,N,sig_len/N));
+0807 <span class="comment">% plot((1:sig_len)/N,sigh_vec1-sig_vec1, 'LineWidth',1);</span>
+0808 axis tight
+0809 title(<span class="string">'reconstruction error'</span>)
+0810 subplot(2,2,3);
+0811 imagesc(reshape(x_vec1,N,x_len/N)); axis xy;
+0812 axis tight;
+0813 title(<span class="string">'DWT coefficients'</span>);
+0814 colorbar
+0815 subplot(2,2,4);
+0816 imagesc(reshape(x_vec1-xh_vec1,N,x_len/N),[0 max(abs(x_vec1))/20]); axis xy
+0817 axis tight
+0818 title(<span class="string">'reconstruction error'</span>);
+0819 colorbar
+0820 
+0821 
+0822 <a href="../L1_homotopy_v2.0/utils/fig.html" class="code" title="function h = fig(varargin)">fig</a>(3);
+0823 <span class="comment">% view DWT coefficients...</span>
+0824 alpha_vec1 = <a href="../L1_homotopy_v2.0/utils/utils_Wavelet/apply_DWT.html" class="code" title="function alpha = apply_DWT(x,varargin)">apply_DWT</a>(sig_vec1,N,wType,J,sym);
+0825 alphah_vec1 = <a href="../L1_homotopy_v2.0/utils/utils_Wavelet/apply_DWT.html" class="code" title="function alpha = apply_DWT(x,varargin)">apply_DWT</a>(sigh_vec1,N,wType,J,sym);
+0826 subplot(221); imagesc(reshape(alpha_vec1,N,length(alpha_vec1)/N));
+0827 axis xy;
+0828 title(<span class="string">'original'</span>)
+0829 subplot(222); imagesc(reshape(alphah_vec1,N,length(alpha_vec1)/N));
+0830 axis xy;
+0831 title(<span class="string">'reconstructed'</span>);
+0832 subplot(212); plot([alpha_vec1 alphah_vec1]);
+0833 title(<span class="string">'comparison'</span>);
+0834 
+0835 <span class="comment">%%</span>
+0836 <span class="keyword">if</span> LM == N
+0837     st_ind = 2*N;
+0838     <a href="../L1_homotopy_v2.0/utils/fig.html" class="code" title="function h = fig(varargin)">fig</a>(4); clf; hold on;
+0839     s_len = length(sig_vec(st_ind+1:N*sim));
+0840     rshp1 = @(x) reshape(x(st_ind+1:N*sim),N,s_len/N);
+0841     err_fun = @(x) -10*log10(sum(rshp1(sig_vec-x).^2,1)./sum(rshp1(sig_vec).^2,1));
+0842     plot(err_fun(sigh_vec(:,1)),<span class="string">'b'</span>);
+0843     <span class="comment">% plot(err_fun(sigh_vec(:,2)),'k');</span>
+0844     plot(err_fun(sigh_vec(:,3)),<span class="string">'r'</span>);
+0845     title(<span class="string">'error evolution'</span>);
+0846     xlabel(<span class="string">'iteration'</span>);
+0847     ylabel(<span class="string">'ser in db'</span>);
+0848     legend(<span class="string">'L1'</span>,<span class="string">'LS'</span>);
+0849     shg
+0850 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

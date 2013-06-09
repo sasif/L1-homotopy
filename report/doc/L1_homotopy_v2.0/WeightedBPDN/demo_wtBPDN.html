@@ -1,0 +1,367 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of demo_wtBPDN</title>
+  <meta name="keywords" content="demo_wtBPDN">
+  <meta name="description" content="demo_wtBPDN">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../menu.html L1_homotopy_v2.0 --><!-- menu.html WeightedBPDN -->
+<h1>demo_wtBPDN
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>demo_wtBPDN</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> demo_wtBPDN
+
+ Solves the following basis pursuit denoising (BPDN) problem
+ min_x  \Sum \w_i |x_i| + 1/2*||y-Ax||_2^2
+
+ and dynamically update the weights w_i
+
+ Written by: Salman Asif, Georgia Tech
+ Email: sasif@gatech.edu
+ Created: March 16, 2011</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../L1_homotopy_v2.0/Pursuits_Homotopy/BPDN_homotopy_function.html" class="code" title="function out = BPDN_homotopy_function(A, y, in)">BPDN_homotopy_function</a>	BPDN_homotopy_function.m</li><li><a href="../../L1_homotopy_v2.0/WeightedBPDN/src/script_rwtBPDN_adaptive.html" class="code" title="function out = script_rwtBPDN_adaptive(in)">script_rwtBPDN_adaptive</a>	BPDN rwt update (initialize with adaptive_wtBPDN)</li><li><a href="../../L1_homotopy_v2.0/WeightedBPDN/src/script_rwtBPDN_iterative.html" class="code" title="function out = script_rwtBPDN_iterative(in);">script_rwtBPDN_iterative</a>	BPDN rwt update (initialize with standard homotopy)</li><li><a href="../../L1_homotopy_v2.0/utils/OMP_function.html" class="code" title="function out = OMP_function(y,A,in)">OMP_function</a>	</li><li><a href="../../L1_homotopy_v2.0/utils/fig.html" class="code" title="function h = fig(varargin)">fig</a>	</li><li><a href="../../L1_homotopy_v2.0/utils/genAmat.html" class="code" title="function A = genAmat(M,N,in);">genAmat</a>	</li><li><a href="../../L1_homotopy_v2.0/utils/genSignal.html" class="code" title="function [x varargout] = genSignal(N,in)">genSignal</a>	Inputs</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% demo_wtBPDN</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% Solves the following basis pursuit denoising (BPDN) problem</span>
+0004 <span class="comment">% min_x  \Sum \w_i |x_i| + 1/2*||y-Ax||_2^2</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% and dynamically update the weights w_i</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">% Written by: Salman Asif, Georgia Tech</span>
+0009 <span class="comment">% Email: sasif@gatech.edu</span>
+0010 <span class="comment">% Created: March 16, 2011</span>
+0011 
+0012 <span class="comment">% Comparison between IRW-H and ARW-H,</span>
+0013 <span class="comment">% INIT: solution of standard BPDN problem (un-weighted L1)</span>
+0014 <span class="comment">% also included OMP, oracle-support LS, and oracle-weighted L1</span>
+0015 
+0016 clear
+0017 close all force
+0018 
+0019 <span class="comment">%% parfor setup</span>
+0020 <span class="comment">% numCores = str2double(getenv('NUMBER_OF_PROCESSORS'));</span>
+0021 <span class="comment">% mpSize = numCores-1;</span>
+0022 <span class="comment">% if matlabpool('size') ~= mpSize</span>
+0023 <span class="comment">%     if matlabpool('size')~=0</span>
+0024 <span class="comment">%         matlabpool close;</span>
+0025 <span class="comment">%     else</span>
+0026 <span class="comment">%         matlabpool('open', mpSize);</span>
+0027 <span class="comment">%     end</span>
+0028 <span class="comment">% end</span>
+0029 
+0030 <span class="comment">%% Setup path</span>
+0031 mname = mfilename;
+0032 mpath = mfilename(<span class="string">'fullpath'</span>);
+0033 mdir = mpath(1:end-length(mname));
+0034 cd(mdir);
+0035 
+0036 addpath ../Pursuits_Homotopy/
+0037 addpath ../utils/ 
+0038 addpath ../utils/utils_Wavelet/
+0039 addpath src/
+0040 
+0041 disp([<span class="string">'--------------------'</span>,datestr(now),<span class="string">'-------------------------'</span>])
+0042 
+0043 <span class="comment">% load RandomStates</span>
+0044 <span class="comment">%</span>
+0045 <span class="comment">% rseed = 0;</span>
+0046 <span class="comment">% rseed = sum(100*clock);</span>
+0047 <span class="comment">% RandStream.setDefaultStream(RandStream('mt19937ar','seed',rseed));</span>
+0048 
+0049 rseed = 2012;
+0050 rand(<span class="string">'state'</span>,rseed);
+0051 randn(<span class="string">'state'</span>,rseed);
+0052 
+0053 <span class="comment">% simulation parameters</span>
+0054 mType = <span class="string">'randn'</span>; <span class="comment">% {'randn','orth','rdct'};</span>
+0055 sType = <span class="string">'blocks'</span>; <span class="comment">% {'randn','sign','highD', 'blocks','pcwPoly'}</span>
+0056 SNR = 40;
+0057 rwt_mode = 5;   <span class="comment">% mode for selecting parameters in iteratirve reweighting</span>
+0058 lambda = 0;     <span class="comment">% mode for selecting regularization parameter for BPDN</span>
+0059 
+0060 N = 512;   <span class="comment">% signal length</span>
+0061 R = 4;
+0062 M = round(N/R);    <span class="comment">% no. of measurements</span>
+0063 T = round(M/5);    <span class="comment">% sparsity level</span>
+0064 
+0065 <span class="comment">% reweighted setup</span>
+0066 rwt = 5;        <span class="comment">% number of reweighting iterations</span>
+0067 rwt_adp = 0;    <span class="comment">% number of reweighting iterations after adaptive reweighting</span>
+0068 
+0069 <span class="comment">% rank-1 update mode</span>
+0070 delx_mode = <span class="string">'mil'</span>; <span class="comment">% mil or qr</span>
+0071 
+0072 str0 = sprintf(<span class="string">'mType-%s, sType-%s, SNR = %d, (N,M,T) = %d, %d, %d, rwt_mode-%d, lambda%3.4g.'</span>, mType, sType, SNR, N, M, T, rwt_mode, lambda);
+0073 disp(str0);
+0074 
+0075 
+0076 <span class="comment">%% setup waitbar</span>
+0077 <span class="comment">% h = waitbar(0,'1','Name','Adaptive wtBPDN...',...</span>
+0078 <span class="comment">%     'CreateCancelBtn',...</span>
+0079 <span class="comment">%     'setappdata(gcbf,''canceling'',1)');</span>
+0080 <span class="comment">% setappdata(h,'canceling',0)</span>
+0081 <span class="comment">% reverseStr = '';</span>
+0082 
+0083 maxsim = 10;
+0084 SIM_stack = cell(maxsim,1);
+0085 SIM_memory = cell(maxsim,1);
+0086                                 
+0087 
+0088 <span class="comment">%% Setting up figures for proper display...</span>
+0089 <a href="../../L1_homotopy_v2.0/utils/fig.html" class="code" title="function h = fig(varargin)">fig</a>(1); 
+0090 Position = get(gcf,<span class="string">'Position'</span>);
+0091 ScreenSize = get(0,<span class="string">'ScreenSize'</span>);
+0092 Position(1) = 1;
+0093 Position(2) = ScreenSize(4)/3; 
+0094 Position(3:4) = ScreenSize(3:4)/2;
+0095 set(gcf,<span class="string">'Position'</span>,Position);
+0096 <a href="../../L1_homotopy_v2.0/utils/fig.html" class="code" title="function h = fig(varargin)">fig</a>(2); 
+0097 Position = get(gcf,<span class="string">'Position'</span>);
+0098 ScreenSize = get(0,<span class="string">'ScreenSize'</span>);
+0099 Position(1) = ScreenSize(3)/2;
+0100 Position(2) = ScreenSize(4)/3; 
+0101 Position(3:4) = ScreenSize(3:4)/2;
+0102 set(gcf,<span class="string">'Position'</span>,Position);
+0103 <span class="keyword">for</span> sim = 1:maxsim
+0104     <span class="comment">%     % Check for Cancel button press</span>
+0105     <span class="comment">%     if getappdata(h,'canceling')</span>
+0106     <span class="comment">%         break</span>
+0107     <span class="comment">%     end</span>
+0108     <span class="comment">%     % Report current estimate in the waitbar's message field</span>
+0109     <span class="comment">%     waitbar(sim/maxsim,h,sprintf('sim %d of %d',sim,maxsim))</span>
+0110     
+0111     <span class="comment">% Generate a random signal</span>
+0112     in = []; in.type = sType; in.T = T; in.randgen = 1;
+0113     <span class="keyword">switch</span> sType
+0114         <span class="keyword">case</span> <span class="string">'blocks'</span>
+0115             in.take_fwt = 1;
+0116             in.wType = <span class="string">'haar'</span>;
+0117         <span class="keyword">case</span> <span class="string">'heavisine'</span>
+0118             in.take_fwt = 1;
+0119             in.wType = <span class="string">'daub4'</span>;
+0120         <span class="keyword">case</span> <span class="string">'pcwpoly'</span>;
+0121             in.take_fwt = 1;
+0122             in.wType = <span class="string">'daub8'</span>;
+0123     <span class="keyword">end</span>
+0124             
+0125     x = <a href="../../L1_homotopy_v2.0/utils/genSignal.html" class="code" title="function [x varargout] = genSignal(N,in)">genSignal</a>(N,in); 
+0126     [val ind] = sort(abs(x),<span class="string">'descend'</span>);
+0127     ind_pos = ind(val&gt;1e-1);
+0128     gamma_orig = ind_pos(1:min(length(ind_pos),M-1));
+0129     
+0130 
+0131     <span class="comment">% measurement matrix</span>
+0132     in = []; in.type = mType;
+0133     A = <a href="../../L1_homotopy_v2.0/utils/genAmat.html" class="code" title="function A = genAmat(M,N,in);">genAmat</a>(M,N,in);
+0134     
+0135     <span class="comment">% measurements</span>
+0136     sigma = sqrt(norm(A*x)^2/10^(SNR/10)/M);
+0137     <span class="comment">%sigma = .05;</span>
+0138     e = randn(M,1)*sigma;
+0139     y = A*x+e;
+0140     
+0141     <span class="comment">%     % orthogonalize rows of A</span>
+0142     <span class="comment">%     [Q, R] = qr(A',0);</span>
+0143     <span class="comment">%     A = Q'; y = R' \ y;</span>
+0144     
+0145     <span class="comment">% parameter selection</span>
+0146     <span class="keyword">if</span> lambda &gt; 0
+0147         tau = lambda*max(abs(A'*y));
+0148     <span class="keyword">else</span>
+0149         <span class="comment">% tau = sigma*sqrt(log(N));</span>
+0150         tau = max(1e-4*max(abs(A'*y)),sigma*sqrt(log(N)));
+0151     <span class="keyword">end</span>
+0152     
+0153     maxiter = 4*N;
+0154     
+0155     <span class="comment">%% Adaptive support &amp; weight selection (ARW-H in the paper)</span>
+0156     in = [];
+0157     in.A = A; in.y = y; in.x = x;
+0158     in.x_init = zeros(N,1); in.max_rwt = rwt_adp;
+0159     in.tau = tau;
+0160     in.rwt_mode = rwt_mode;
+0161     in.delx_mode = delx_mode;
+0162     in.debias = 0;
+0163     in.verbose = 0;
+0164     <span class="keyword">if</span> in.verbose
+0165         fprintf(<span class="string">'sType-%s, mType-%s, (N,M,T)-%d,%d,%d '</span>,sType,mType,N,M,T);    
+0166     <span class="keyword">end</span>
+0167     out = <a href="../../L1_homotopy_v2.0/WeightedBPDN/src/script_rwtBPDN_adaptive.html" class="code" title="function out = script_rwtBPDN_adaptive(in)">script_rwtBPDN_adaptive</a>(in);
+0168     xh_adp = out.x_out;
+0169     iter_adp = out.iter;
+0170     time_adp = out.time;
+0171     gamma_adp = out.gamma;
+0172     W_adp = out.W_new;
+0173     err_adp = out.err;
+0174     supp_diff_adp = out.supp_diff;
+0175     
+0176     
+0177     <span class="comment">%% Iterative reweighting (IRW-H in the paper)</span>
+0178     in = [];
+0179     in.A = A; in.y = y; in.x = x;
+0180     in.x_init = zeros(N,1); in.max_rwt = rwt;
+0181     in.tau = tau;
+0182     in.rwt_mode = rwt_mode;
+0183     in.delx_mode = delx_mode;
+0184     out = <a href="../../L1_homotopy_v2.0/WeightedBPDN/src/script_rwtBPDN_iterative.html" class="code" title="function out = script_rwtBPDN_iterative(in);">script_rwtBPDN_iterative</a>(in);
+0185     xh_rwt = out.x_out;
+0186     xh_rwt_init = out.x_init;
+0187     iter_rwt = out.iter;
+0188     time_rwt = out.time;
+0189     gamma_rwt = out.gamma;
+0190     err_rwt = out.err;
+0191     supp_diff_rwt = out.supp_diff;
+0192     W_rwt = out.W_new;
+0193     
+0194     <span class="comment">%% Oracle rwt BPDN</span>
+0195     alpha = 5; beta = 10;
+0196     W_new = ones(N,1); W_new(gamma_orig) = 1/alpha./(beta*abs(x(gamma_orig)));    
+0197     <span class="comment">% epsilon = 0.1; W_new = 1/alpha./(beta*(abs(x))+epsilon);</span>
+0198     
+0199     <span class="comment">% To check the accuracy of rwtBPDN_adaptive set</span>
+0200     <span class="comment">% W_new = W_adp/tau;</span>
+0201     
+0202     in = [];
+0203     in.tau = tau;
+0204     in.maxiter = maxiter;
+0205     in.x_orig = x;
+0206     in.record = 1;
+0207     in.delx_mode = delx_mode;
+0208     <span class="comment">%     in.Te = rwt_itr;</span>
+0209     AW = A*diag(1./W_new);
+0210     out_new = <a href="../../L1_homotopy_v2.0/Pursuits_Homotopy/BPDN_homotopy_function.html" class="code" title="function out = BPDN_homotopy_function(A, y, in)">BPDN_homotopy_function</a>(AW, y, in); <span class="comment">%BPDN</span>
+0211     xh_orac = out_new.x_out.*(1./W_new);
+0212     gamma_orac = out_new.gamma;
+0213     iter_orac = out_new.iter;
+0214     time_orac = out_new.time;
+0215     
+0216     <span class="comment">%% oracle LS</span>
+0217     x_LS = zeros(N,1);
+0218     x_LS(gamma_orig) = A(:,gamma_orig)\y;
+0219                                         
+0220     <span class="comment">%% OMP</span>
+0221     in = [];
+0222     in.Te = round(1.2*T);
+0223     out = <a href="../../L1_homotopy_v2.0/utils/OMP_function.html" class="code" title="function out = OMP_function(y,A,in)">OMP_function</a>(y,A,in);
+0224     x_omp = out.x_out;
+0225     iter_omp = out.iter;
+0226     gamma_omp = out.gamma;
+0227     
+0228     
+0229     <span class="comment">% fprintf('sim %d -- iter: %d; %d; %d; %d. Error: %3.4g; %3.4g; %3.4g; %3.4g; %3.4g. Diff-supp = %d; %d; %d; %d.\n', sim, iter_orac, iter_adp, iter_rwt, iter_omp, norm(x-x_LS)/norm(x), norm(x-xh_orac)/norm(x), norm(x-xh_adp)/norm(x), norm(x-xh_rwt)/norm(x), norm(x-x_omp)/norm(x), length(setdiff(gamma_orac,gamma_orig)), length(setdiff(gamma_adp,gamma_orig)),length(setdiff(gamma_rwt,gamma_orig)),length(setdiff(gamma_omp,gamma_orig)));</span>
+0230     <span class="comment">% msg = sprintf('sim %d -- iter: %d; %d; %d; %d. Error: %3.4g; %3.4g; %3.4g; %3.4g; %3.4g. Diff-supp = %d; %d; %d; %d.\n', sim, iter_orac, iter_adp, iter_rwt, iter_omp, norm(x-x_LS)/norm(x), norm(x-xh_orac)/norm(x), norm(x-xh_adp)/norm(x), norm(x-xh_rwt)/norm(x), norm(x-x_omp)/norm(x), length(setdiff(gamma_orac,gamma_orig)), length(setdiff(gamma_adp,gamma_orig)),length(setdiff(gamma_rwt,gamma_orig)),length(setdiff(gamma_omp,gamma_orig)));</span>
+0231     <span class="comment">% fprintf([reverseStr, msg]);</span>
+0232     <span class="comment">% reverseStr = repmat(sprintf('\b'), 1, length(msg));</span>
+0233     
+0234     <span class="comment">% SIM_stack(sim,:) = [sim, iter_orac, iter_adp(1), sum(iter_adp,2), iter_rwt(1), sum(iter_rwt,2), iter_omp, norm(x-x_LS)/norm(x),  norm(x-xh_orac)/norm(x), err_adp(1), norm(x-xh_adp)/norm(x), err_rwt(1), norm(x-xh_rwt)/norm(x), norm(x-x_omp)/norm(x), length(setdiff(gamma_orac,gamma_orig)), length(setdiff(gamma_adp,gamma_orig)),length(setdiff(gamma_rwt,gamma_orig)),length(setdiff(gamma_omp,gamma_orig))];</span>
+0235     <span class="comment">% fprintf('sim %d -- iter: %d; %d; %d; %d. Error: %3.4g; %3.4g; %3.4g; %3.4g; %3.4g. Diff-supp = %d; %d; %d; %d.\n', sim, iter_orac, iter_adp, iter_rwt, iter_omp, norm(x-x_LS)/norm(x), norm(x-xh_orac)/norm(x), norm(x-xh_adp)/norm(x), norm(x-xh_rwt)/norm(x), norm(x-x_omp)/norm(x), length(setdiff(gamma_orac,gamma_orig)), length(setdiff(gamma_adp,gamma_orig)),length(setdiff(gamma_rwt,gamma_orig)),length(setdiff(gamma_omp,gamma_orig)));</span>
+0236     
+0237     SIM_stack{sim} = [sim, tau, norm(x-x_LS)^2/norm(x)^2, norm(x-xh_orac)^2/norm(x)^2, iter_orac, <span class="keyword">...</span>
+0238         norm(x-xh_adp)^2/norm(x)^2, sum(iter_adp,2), sum(time_adp,2), <span class="keyword">...</span>
+0239         norm(x-xh_rwt)^2/norm(x)^2, sum(iter_rwt,2), sum(time_rwt,2), <span class="keyword">...</span>
+0240         norm(x-x_omp)^2/norm(x)^2, iter_omp];  
+0241     
+0242     <span class="comment">% adaptive rwt</span>
+0243     exp = 1;
+0244     SIM_memory{sim}{exp,1} = <span class="string">'ARW-H'</span>;
+0245     SIM_memory{sim}{exp,2} = iter_adp;
+0246     SIM_memory{sim}{exp,3} = err_adp;
+0247     SIM_memory{sim}{exp,4} = supp_diff_adp;
+0248     SIM_memory{sim}{exp,5} = time_adp;
+0249     <span class="comment">% iterative rwt</span>
+0250     exp = exp+1;
+0251     SIM_memory{sim}{exp,1} = <span class="string">'IRW-H'</span>;
+0252     SIM_memory{sim}{exp,2} = iter_rwt;
+0253     SIM_memory{sim}{exp,3} = err_rwt;
+0254     SIM_memory{sim}{exp,4} = supp_diff_rwt;
+0255     SIM_memory{sim}{exp,5} = time_rwt;
+0256 
+0257     mS =  SIM_stack{sim};
+0258     fprintf(<span class="string">'sim %d. tau = %3.4g, oracLS=%3.4g. (err,iter,time): oracWT-%3.4g,%3.4g; ARW-H-%3.4g,%3.4g,%3.4g; IRW-H-%3.4g,%3.4g,%3.4g; OMP-%3.4g,%3.4g. \n'</span>, sim, mS(2:end));
+0259 
+0260     <span class="comment">%% plot recovered signals</span>
+0261     <a href="../../L1_homotopy_v2.0/utils/fig.html" class="code" title="function h = fig(varargin)">fig</a>(1); clf
+0262     subplot(221); plot([x xh_adp xh_rwt xh_rwt_init]); title(<span class="string">'ORIG .. ARW-H .. IRW-H .. INIT estimates'</span>);
+0263     subplot(222); plot([W_adp W_rwt]); title(<span class="string">'Weights: ARW-H .. IRW-H'</span>); 
+0264     subplot(223); plot(xh_adp,x,<span class="string">'bd'</span>); title(<span class="string">'Original vs ARW-H estimate'</span>); axis square
+0265     subplot(224); plot(xh_rwt_init, x,<span class="string">'k.'</span>); 
+0266     hold on; plot(xh_rwt, x,<span class="string">'rs'</span>);    title(<span class="string">'Original vs INIT and IRW-H estimate'</span>); axis square;
+0267     <a href="../../L1_homotopy_v2.0/utils/fig.html" class="code" title="function h = fig(varargin)">fig</a>(2); clf
+0268     hold on; plot(xh_rwt_init, x,<span class="string">'k.'</span>);    
+0269     hold on; plot(xh_rwt, x,<span class="string">'rs'</span>);        
+0270     plot(xh_adp,x,<span class="string">'bd'</span>);
+0271     XLim = get(gca,<span class="string">'XLim'</span>);
+0272     XLim(1) = sign(XLim(1))*max(abs(XLim(:)));
+0273     XLim(2) = sign(XLim(2))*max(abs(XLim(:)));
+0274     set(gca,<span class="string">'XLim'</span>,XLim);
+0275     set(gca,<span class="string">'YLim'</span>,XLim);    
+0276     axis square; shg    
+0277     title(<span class="string">'Comparison betweeen INIT .. IRW-H .. ARW-H and the original signal'</span>)
+0278     legend(<span class="string">'INIT'</span>,<span class="string">'IRW-H'</span>,<span class="string">'ARW-H'</span>,<span class="string">'Location'</span>,<span class="string">'NorthWest'</span>);
+0279     
+0280     <span class="keyword">if</span> sim == 1
+0281         fprintf(<span class="string">'\n Hit any key to continue... resize figures (if you want) \n'</span>)    
+0282         pause;   
+0283     <span class="keyword">end</span>
+0284 <span class="keyword">end</span>
+0285 
+0286 mS =  mean(cell2mat(SIM_stack),1);
+0287 fprintf(<span class="string">'Average results: maxsim %d. tau = %3.4g, oracLS=%3.4g. (err,iter,time): oracWT-%3.4g,%3.4g; ARW-H-%3.4g,%3.4g,%3.4g; IRW-H-%3.4g,%3.4g,%3.4g; OMP-%3.4g,%3.4g. \n'</span>, maxsim, mS(2:end));
+0288 
+0289 <span class="comment">%% Plot results...</span>
+0290 EXP = {<span class="string">'ARW-H'</span>,<span class="string">'IRW-H'</span>};
+0291 exp_plot = [1 2];
+0292 <a href="../../L1_homotopy_v2.0/utils/fig.html" class="code" title="function h = fig(varargin)">fig</a>(101);
+0293 <span class="keyword">for</span> exp_no = 1:length(exp_plot)
+0294     exp = exp_plot(exp_no);
+0295     sim_err = [];
+0296     sim_itr = [];
+0297     sim_time = [];
+0298     sim_supp_diff = [];
+0299     <span class="keyword">for</span> ii = 1:maxsim
+0300         sim_err = [sim_err; [SIM_memory{ii}{exp,3}]];
+0301         sim_itr = [sim_itr; [SIM_memory{ii}{exp,2}]];
+0302         sim_time = [sim_time; [SIM_memory{ii}{exp,5}]];
+0303         sim_supp_diff = [sim_supp_diff; [SIM_memory{ii}{exp,4}]];
+0304     <span class="keyword">end</span>
+0305     subplot(2,length(exp_plot),exp_no); plot(sim_err); title(sprintf(<span class="string">'rel. error for %s'</span>,char(EXP{exp})));
+0306     subplot(2,length(exp_plot),length(exp_plot)+exp_no); plot(sim_itr); title(sprintf(<span class="string">'iter. count for %s'</span>,char(EXP{exp})));
+0307     <span class="comment">% subplot(3,length(exp_plot),2*length(exp_plot)+exp_no); plot(sim_supp_diff); title(sprintf('supp diff for %s',char(EXP{exp})));</span>
+0308 <span class="keyword">end</span>
+0309 
+0310 <span class="comment">% delete(h)</span>
+0311 <span class="comment">% DELETE the waitbar; don't try to CLOSE it.</span>
+0312 <span class="comment">% close all force % After Ctrl+C</span></pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

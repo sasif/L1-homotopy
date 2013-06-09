@@ -1,0 +1,78 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of dwtmult2</title>
+  <meta name="keywords" content="dwtmult2">
+  <meta name="description" content="dwtmult2.m">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../../menu.html L1_homotopy_v2.0 --><!-- ../menu.html utils --><!-- menu.html utils_Wavelet -->
+<h1>dwtmult2
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>dwtmult2.m</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function w = dwtmult2(x, h0, h1, L, sym) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> dwtmult2.m
+
+ Performs multiple levels of the 2D discrete wavelet transform.
+ Usage : w = dwtmult2(x, h0, h1, L, sym)
+
+ Written by : Justin Romberg
+ Created : 6/26/2001</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="dwtlevel1.html" class="code" title="function w = dwtlevel1(x, h0, h1, sym)">dwtlevel1</a>	dwtlevel1.m</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% dwtmult2.m</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% Performs multiple levels of the 2D discrete wavelet transform.</span>
+0004 <span class="comment">% Usage : w = dwtmult2(x, h0, h1, L, sym)</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% Written by : Justin Romberg</span>
+0007 <span class="comment">% Created : 6/26/2001</span>
+0008 
+0009 <a name="_sub0" href="#_subfunctions" class="code">function w = dwtmult2(x, h0, h1, L, sym)</a>
+0010 
+0011 <span class="keyword">if</span> (nargin == 4), sym = 0; <span class="keyword">end</span>
+0012 
+0013 [Nr,Nc] = size(x);
+0014 
+0015 w = x;
+0016 <span class="keyword">for</span> ll = 1:L
+0017   <span class="comment">% rows</span>
+0018   <span class="keyword">for</span> ii = 1:(Nr*2^(-ll+1))
+0019     w(ii,1:Nc*2^(-ll+1)) = <a href="dwtlevel1.html" class="code" title="function w = dwtlevel1(x, h0, h1, sym)">dwtlevel1</a>(w(ii,1:Nc*2^(-ll+1)), h0, h1, sym);
+0020   <span class="keyword">end</span>
+0021   <span class="comment">% columns</span>
+0022   <span class="keyword">for</span> jj = 1:(Nc*2^(-ll+1))
+0023     w(1:Nr*2^(-ll+1),jj) = <a href="dwtlevel1.html" class="code" title="function w = dwtlevel1(x, h0, h1, sym)">dwtlevel1</a>(w(1:Nr*2^(-ll+1),jj)', h0, h1, sym)';
+0024   <span class="keyword">end</span>
+0025 <span class="keyword">end</span>
+0026</pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

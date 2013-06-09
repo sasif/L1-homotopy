@@ -1,0 +1,92 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of update_inverse</title>
+  <meta name="keywords" content="update_inverse">
+  <meta name="description" content="function iAtB_mod = update_inverse(AtB, Atb, atB, atb);">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../menu.html L1_homotopy_v2.0 --><!-- menu.html Pursuits_Homotopy -->
+<h1>update_inverse
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function iAtB_mod = update_inverse(AtB, Atb, atB, atb);</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function iAtB = update_inverse(AtB, iAtB_old,flag); </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> function iAtB_mod = update_inverse(AtB, Atb, atB, atb);</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../L1_homotopy_v2.0/DynamicSeq/DynamicSeq_BPDN_function.html" class="code" title="function [xp_h, gamma_xh, iter, th] = DynamicSeq_BPDN_function(A, b, AtAgx, iAtAgx, y, w, xp, gamma_x, pk, tau, chk_e0, maxiter)">DynamicSeq_BPDN_function</a>	DynamicLasso_update_function.m</li><li><a href="../../L1_homotopy_v2.0/DynamicX/DynamicX_BPDN_Visual_demo.html" class="code" title="">DynamicX_BPDN_Visual_demo</a>	Test file for LASSO (BPDN) update with dynamic change in x</li><li><a href="../../L1_homotopy_v2.0/DynamicX/DynamicX_BPDN_function.html" class="code" title="function [xp_h, gamma_xh, iter,cpu] = DynamicX_BPDN_function(A, AtAgx, iAtAgx, y, yt, xp, gamma_x, pk, tau, maxiter)">DynamicX_BPDN_function</a>	DynamicX_BPDN_function.m</li><li><a href="BPDN_homotopy_demo.html" class="code" title="">BPDN_homotopy_demo</a>	BPDN_homotopy_demo.m</li><li><a href="BPDN_homotopy_function_old.html" class="code" title="function out = BPDN_homotopy_function(A, y, in)">BPDN_homotopy_function_old</a>	BPDN_homotopy_function.m</li><li><a href="DS_homotopy_demo.html" class="code" title="">DS_homotopy_demo</a>	DS_homotopy_demo_test.m</li><li><a href="DS_homotopy_function.html" class="code" title="function [xk_1, lambdak_1, gamma_xk, gamma_lambdak, iter, th] = DS_homotopy_function(A, y, thresh, maxiter);">DS_homotopy_function</a>	DS_homotopy_function.m</li><li><a href="../../L1_homotopy_v2.0/WeightedBPDN/src/wtBPDN_homotopy_test.html" class="code" title="">wtBPDN_homotopy_test</a>	BPDN_homotopy_Weighted</li><li><a href="../../L1_homotopy_v2.0/l1decoding/DynamicSeq_REC_function.html" class="code" title="function [cp_h gamma_h iter th] = REC_homotopy_function(P, s, iPgP, cp_old, gamma_h, gamma_n, pk, tau, M, m_u, maxiter);">DynamicSeq_REC_function</a>	DynamicSeq_REC_function.m</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% function iAtB_mod = update_inverse(AtB, Atb, atB, atb);</span>
+0002 
+0003 <span class="comment">% This function uses matrix inversion lemma to update the inverse of</span>
+0004 <span class="comment">% square matrix after addition or removal of a row-column pair.</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% Written by: Salman Asif, Georgia Tech</span>
+0007 <span class="comment">% Email: sasif@ece.gatech.edu</span>
+0008 
+0009 <a name="_sub0" href="#_subfunctions" class="code">function iAtB = update_inverse(AtB, iAtB_old,flag);</a>
+0010 
+0011 n = size(AtB,1);
+0012 
+0013 <span class="comment">%A11 = AtB(1:n-1,1:n-1);</span>
+0014 A12 = AtB(1:n-1,n);
+0015 A21 = AtB(n,1:n-1);
+0016 A22 = AtB(n,n);
+0017 
+0018 <span class="comment">% add columns</span>
+0019 <span class="keyword">if</span> flag == 1
+0020     iA11 = iAtB_old;
+0021     iA11A12 = iA11*A12;
+0022     A21iA11 = A21*iA11;
+0023     S = A22-A21*iA11A12;
+0024     Q11_right = iA11A12*(A21iA11/S); 
+0025 <span class="comment">%     Q11 = iA11+ Q11_right;</span>
+0026 <span class="comment">%     Q12 = -iA11A12/S;</span>
+0027 <span class="comment">%     Q21 = -A21iA11/S;</span>
+0028 <span class="comment">%     Q22 = 1/S;</span>
+0029 
+0030     iAtB = zeros(n);
+0031     <span class="comment">%iAtB = [Q11 Q12; Q21 Q22];</span>
+0032     iAtB(1:n-1,1:n-1) = iA11+ Q11_right;
+0033     iAtB(1:n-1,n) = -iA11A12/S; 
+0034     iAtB(n,1:n-1) =  -A21iA11/S;
+0035     iAtB(n,n) = 1/S;
+0036 <span class="comment">%delete columns</span>
+0037 <span class="keyword">else</span> <span class="keyword">if</span> flag == 2
+0038         Q11 = iAtB_old(1:n-1,1:n-1);
+0039         Q12 = iAtB_old(1:n-1,n);
+0040         Q21 = iAtB_old(n,1:n-1);
+0041         Q22 = iAtB_old(n,n);
+0042         Q12Q21_Q22 = Q12*(Q21/Q22);
+0043         iAtB = Q11 - Q12Q21_Q22;
+0044         <span class="comment">%iAtB = iA11;</span>
+0045     <span class="keyword">end</span>
+0046 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

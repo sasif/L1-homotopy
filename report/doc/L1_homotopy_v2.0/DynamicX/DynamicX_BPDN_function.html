@@ -1,0 +1,263 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of DynamicX_BPDN_function</title>
+  <meta name="keywords" content="DynamicX_BPDN_function">
+  <meta name="description" content="DynamicX_BPDN_function.m">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../menu.html L1_homotopy_v2.0 --><!-- menu.html DynamicX -->
+<h1>DynamicX_BPDN_function
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>DynamicX_BPDN_function.m</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function [xp_h, gamma_xh, iter,cpu] = DynamicX_BPDN_function(A, AtAgx, iAtAgx, y, yt, xp, gamma_x, pk, tau, maxiter) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> DynamicX_BPDN_function.m
+ 
+ Solves  
+ min_x  \tau ||x||_1 + 1/2*||Ax-(1-\epsilon)y-(\epsilon)yt||_2^2
+
+ using homotopy update method while changing epsilon from 0 to 1.
+
+ [xp_h, gamma_xh, iter, cpu] = DynamicX_BPDN_function(A, AtAgx, iAtAgx, y, yt, xp, gamma_x, pk, tau, maxiter)
+
+ A: mxn matrix
+ AtAgx: AtA submatrix at row and column indices at gamma_x.
+ iAtAgx: inv(AtAgx)
+ y: old set of measurements
+ yt: new measurements
+ xp: old solution
+ gamma_x: old support
+ pk: old constraints
+ tau: threshold parameter. 
+ cpu: CPU time</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../L1_homotopy_v2.0/Pursuits_Homotopy/update_inverse.html" class="code" title="function iAtB = update_inverse(AtB, iAtB_old,flag);">update_inverse</a>	function iAtB_mod = update_inverse(AtB, Atb, atB, atb);</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="DynamicX_BPDN_demo.html" class="code" title="">DynamicX_BPDN_demo</a>	BPDN/LASSO update homotopy comparison</li><li><a href="Simulation_DynamicX_BPDN.html" class="code" title="">Simulation_DynamicX_BPDN</a>	Simulation for BPDN homotopy update of DynamicX.</li><li><a href="Simulation_DynamicX_BPDN_Pathological.html" class="code" title="">Simulation_DynamicX_BPDN_Pathological</a>	Simulation of homotopy update for signals with large dynamic range.</li><li><a href="Simulation_DynamicX_BPDN_Wavelet.html" class="code" title="">Simulation_DynamicX_BPDN_Wavelet</a>	BPDN update with dynamic change in x</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% DynamicX_BPDN_function.m</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% Solves</span>
+0004 <span class="comment">% min_x  \tau ||x||_1 + 1/2*||Ax-(1-\epsilon)y-(\epsilon)yt||_2^2</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% using homotopy update method while changing epsilon from 0 to 1.</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">% [xp_h, gamma_xh, iter, cpu] = DynamicX_BPDN_function(A, AtAgx, iAtAgx, y, yt, xp, gamma_x, pk, tau, maxiter)</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">% A: mxn matrix</span>
+0011 <span class="comment">% AtAgx: AtA submatrix at row and column indices at gamma_x.</span>
+0012 <span class="comment">% iAtAgx: inv(AtAgx)</span>
+0013 <span class="comment">% y: old set of measurements</span>
+0014 <span class="comment">% yt: new measurements</span>
+0015 <span class="comment">% xp: old solution</span>
+0016 <span class="comment">% gamma_x: old support</span>
+0017 <span class="comment">% pk: old constraints</span>
+0018 <span class="comment">% tau: threshold parameter.</span>
+0019 <span class="comment">% cpu: CPU time</span>
+0020 
+0021 <span class="comment">% LASSO update with dynamic change in x</span>
+0022 <span class="comment">% Author: Muhammad Salman Asif, Georgia Tech</span>
+0023 <span class="comment">% Email: sasif@ece.gatech.edu</span>
+0024 <span class="comment">% Created: July 2008</span>
+0025 <span class="comment">%</span>
+0026 <span class="comment">%-------------------------------------------+</span>
+0027 <span class="comment">% Copyright (c) 2009.  Muhammad Salman Asif</span>
+0028 <span class="comment">%-------------------------------------------+</span>
+0029 
+0030 <a name="_sub0" href="#_subfunctions" class="code">function [xp_h, gamma_xh, iter,cpu] = DynamicX_BPDN_function(A, AtAgx, iAtAgx, y, yt, xp, gamma_x, pk, tau, maxiter)</a>
+0031 t0 = cputime;
+0032 N = length(xp);
+0033 xp_h = xp;
+0034 gamma_xh = gamma_x;
+0035 pk_old = pk;
+0036 
+0037 iter = 0;
+0038 done = 0;
+0039 
+0040 <span class="comment">% if ~isa(A, 'function_handle')</span>
+0041 <span class="comment">%   Atf = @(x) A'*x;</span>
+0042 <span class="comment">%   Af = @(x) A*x;</span>
+0043 <span class="comment">%   AtAf = @(x)Atf(Af(x));</span>
+0044 <span class="comment">% end</span>
+0045 warning(<span class="string">'off'</span>,<span class="string">'MATLAB:divideByZero'</span>);
+0046 
+0047 e0 = 0;
+0048 itheta = [];
+0049 d = A'*(y-yt);
+0050 
+0051 <span class="keyword">while</span> iter &lt; maxiter
+0052     iter = iter +1 ;
+0053 
+0054     delx = -iAtAgx*d(gamma_xh);
+0055     delx_vec = zeros(N,1);
+0056     delx_vec(gamma_xh) = delx;
+0057 
+0058     pk = pk_old;
+0059     <span class="comment">%dk = A'*(A*delx_vec+y-yt);</span>
+0060     <span class="comment">% Agx = A(:,gamma_xh);</span>
+0061     Ag_delx = A(:,gamma_xh)*delx;
+0062     AtAg_delx = A'*Ag_delx;
+0063     dk = AtAg_delx+d;
+0064     <span class="comment">%dk = AtAf(delx_vec)+d;</span>
+0065     
+0066     temp_gamma = zeros(N,1);
+0067     temp_gamma(gamma_xh) = gamma_xh;
+0068     gamma_xc = find([1:N]' ~= temp_gamma);
+0069     <span class="comment">% gamma_xc = setdiff([1:N],[gamma_xh]);</span>
+0070 
+0071     b_constr1 = (tau-pk(gamma_xc))./dk(gamma_xc);
+0072     b_constr2 = (tau+pk(gamma_xc))./-dk(gamma_xc);
+0073     b_constr3 = (-xp_h(gamma_xh)./delx_vec(gamma_xh));
+0074     itheta_1 = find(b_constr1&gt;2*eps);
+0075     itheta_2 = find(b_constr2&gt;2*eps);
+0076     itheta_3 = find(b_constr3&gt;2*eps);
+0077     theta1 = min(b_constr1(itheta_1));
+0078     theta2 = min(b_constr2(itheta_2));
+0079     theta3 = min(b_constr3(itheta_3));
+0080     <span class="keyword">if</span> theta1&gt;theta2
+0081         theta = theta2;
+0082         itheta = gamma_xc(find(b_constr2==theta2));
+0083         flag = 1;
+0084     <span class="keyword">else</span>
+0085         theta = theta1;
+0086         itheta = gamma_xc(find(b_constr1==theta1));
+0087         flag = 1;
+0088     <span class="keyword">end</span>
+0089     <span class="keyword">if</span> theta3 &lt; theta
+0090         theta = theta3;
+0091         itheta = gamma_xh(find(b_constr3==theta3));
+0092         flag = 0;
+0093     <span class="keyword">end</span>
+0094 
+0095     epsilon = (theta+e0);
+0096     <span class="keyword">if</span> epsilon &lt; 0
+0097         epsilon= inf;
+0098     <span class="keyword">end</span>
+0099     
+0100     <span class="keyword">if</span> epsilon &gt;=1
+0101         theta_end = (1-e0);
+0102         xp_h = xp_h + theta_end*delx_vec;
+0103         cpu = cputime-t0;
+0104         <span class="keyword">break</span>;
+0105     <span class="keyword">end</span>
+0106     
+0107     gamma_xh_old = gamma_xh;
+0108     xp_old = xp_h;
+0109     xp_h = xp_h+theta*delx_vec;
+0110     
+0111     <span class="keyword">if</span> flag == 1
+0112         AtgxAnx = A(:,gamma_xh)'*A(:,itheta);
+0113         AtAgx_mod = [AtAgx AtgxAnx; AtgxAnx' A(:,itheta)'*A(:,itheta)];
+0114 
+0115         iAtAgx = <a href="../../L1_homotopy_v2.0/Pursuits_Homotopy/update_inverse.html" class="code" title="function iAtB = update_inverse(AtB, iAtB_old,flag);">update_inverse</a>(AtAgx_mod, iAtAgx,1);
+0116         AtAgx = AtAgx_mod;
+0117         
+0118         AtAgx_mod = [];
+0119         gamma_xh = [gamma_xh; itheta];
+0120         xp_h(itheta) = 0;
+0121     <span class="keyword">else</span>
+0122         g_old = gamma_xh;
+0123         outx_index = find(gamma_xh==itheta);
+0124         len_gamma = length(gamma_xh);
+0125         gamma_xh(outx_index) = gamma_xh(len_gamma);
+0126         gamma_xh = gamma_xh(1:len_gamma-1);
+0127         
+0128         rowi = outx_index; <span class="comment">% ith row of A is swapped with last row (out_x)</span>
+0129         colj = outx_index; <span class="comment">% jth column of A is swapped with last column (out_lambda)</span>
+0130         
+0131         AtAgx_ij = AtAgx;
+0132         temp_row = AtAgx_ij(rowi,:);
+0133         AtAgx_ij(rowi,:) = AtAgx_ij(len_gamma,:);
+0134         AtAgx_ij(len_gamma,:) = temp_row;
+0135         temp_col = AtAgx_ij(:,colj);
+0136         AtAgx_ij(:,colj) = AtAgx_ij(:,len_gamma);
+0137         AtAgx_ij(:,len_gamma) = temp_col;
+0138         
+0139         iAtAgx_ij = iAtAgx;
+0140         temp_row = iAtAgx_ij(colj,:);
+0141         iAtAgx_ij(colj,:) = iAtAgx_ij(len_gamma,:);
+0142         iAtAgx_ij(len_gamma,:) = temp_row;
+0143         temp_col = iAtAgx_ij(:,rowi);
+0144         iAtAgx_ij(:,rowi) = iAtAgx_ij(:,len_gamma);
+0145         iAtAgx_ij(:,len_gamma) = temp_col;
+0146         
+0147         AtAgx = AtAgx_ij(1:len_gamma-1,1:len_gamma-1);
+0148         iAtAgx = <a href="../../L1_homotopy_v2.0/Pursuits_Homotopy/update_inverse.html" class="code" title="function iAtB = update_inverse(AtB, iAtB_old,flag);">update_inverse</a>(AtAgx_ij, iAtAgx_ij,2);
+0149         
+0150         xp_h(itheta) = 0;
+0151     <span class="keyword">end</span>
+0152 
+0153     e0 = (theta+e0);
+0154 
+0155     pk_old = pk+theta*dk;
+0156     pk_old([gamma_xh; itheta]) = sign(pk_old([gamma_xh; itheta]))*tau;
+0157     <span class="comment">%pk_old(gamma_xh) = sign(pk_old(gamma_xh))*tau;</span>
+0158 <span class="keyword">end</span>
+0159 cpu = cputime-t0;
+0160 
+0161 <span class="comment">%</span>
+0162 <span class="comment">% function iAtB = update_inverse(AtB, iAtB_old,flag);</span>
+0163 <span class="comment">%</span>
+0164 <span class="comment">% n = size(AtB,1);</span>
+0165 <span class="comment">%</span>
+0166 <span class="comment">% %A11 = AtB(1:n-1,1:n-1);</span>
+0167 <span class="comment">% A12 = AtB(1:n-1,n);</span>
+0168 <span class="comment">% A21 = AtB(n,1:n-1);</span>
+0169 <span class="comment">% A22 = AtB(n,n);</span>
+0170 <span class="comment">%</span>
+0171 <span class="comment">% % add columns</span>
+0172 <span class="comment">% if flag == 1</span>
+0173 <span class="comment">%     iA11 = iAtB_old;</span>
+0174 <span class="comment">%     iA11A12 = iA11*A12;</span>
+0175 <span class="comment">%     A21iA11 = A21*iA11;</span>
+0176 <span class="comment">%     S = A22-A21*iA11A12;</span>
+0177 <span class="comment">%     Q11_right = iA11A12*(A21iA11/S);</span>
+0178 <span class="comment">% %     Q11 = iA11+ Q11_right;</span>
+0179 <span class="comment">% %     Q12 = -iA11A12/S;</span>
+0180 <span class="comment">% %     Q21 = -A21iA11/S;</span>
+0181 <span class="comment">% %     Q22 = 1/S;</span>
+0182 <span class="comment">%</span>
+0183 <span class="comment">%     iAtB = zeros(n);</span>
+0184 <span class="comment">%     %iAtB = [Q11 Q12; Q21 Q22];</span>
+0185 <span class="comment">%     iAtB(1:n-1,1:n-1) = iA11+ Q11_right;</span>
+0186 <span class="comment">%     iAtB(1:n-1,n) = -iA11A12/S;</span>
+0187 <span class="comment">%     iAtB(n,1:n-1) =  -A21iA11/S;</span>
+0188 <span class="comment">%     iAtB(n,n) = 1/S;</span>
+0189 <span class="comment">% %delete columns</span>
+0190 <span class="comment">% else if flag == 2</span>
+0191 <span class="comment">%         Q11 = iAtB_old(1:n-1,1:n-1);</span>
+0192 <span class="comment">%         Q12 = iAtB_old(1:n-1,n);</span>
+0193 <span class="comment">%         Q21 = iAtB_old(n,1:n-1);</span>
+0194 <span class="comment">%         Q22 = iAtB_old(n,n);</span>
+0195 <span class="comment">%         Q12Q21_Q22 = Q12*(Q21/Q22);</span>
+0196 <span class="comment">%         iAtB = Q11 - Q12Q21_Q22;</span>
+0197 <span class="comment">%         %iAtB = iA11;</span>
+0198 <span class="comment">%     end</span>
+0199 <span class="comment">% end</span></pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

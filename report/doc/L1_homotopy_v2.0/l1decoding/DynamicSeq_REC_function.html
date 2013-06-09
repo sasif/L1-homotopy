@@ -1,0 +1,254 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of DynamicSeq_REC_function</title>
+  <meta name="keywords" content="DynamicSeq_REC_function">
+  <meta name="description" content="DynamicSeq_REC_function.m">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../menu.html L1_homotopy_v2.0 --><!-- menu.html l1decoding -->
+<h1>DynamicSeq_REC_function
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>DynamicSeq_REC_function.m</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function [cp_h gamma_h iter th] = REC_homotopy_function(P, s, iPgP, cp_old, gamma_h, gamma_n, pk, tau, M, m_u, maxiter); </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> DynamicSeq_REC_function.m
+ Robust ell_1 decoding with homotopy update scheme for new measurements.
+
+ [cp_h gamma_h iter th] = DynamicSeq_REC_function(P, s, iPgP, cp_old, gamma_h, gamma_n, pk, tau, M, m_u, maxiter);
+
+ Outputs:
+ cp_h: sparse error estimate
+ gamma_h: support of sparse errors
+ iter: number of homotopy steps taken
+
+ Inputs
+ P: I-F*inv(F'F)*F'
+ s: [y; w]
+ iPgP: inv(PgP) where PgP = P(gamma_xh,gamma_xh)
+ cp_old: Old estimate of error (includes the estimate for new measurements)
+ gamma_h: support of cp_old
+ gamma_n: support of estimated errors in new measurements
+ pk: P*(cp_old-s)
+ tau: regularization parameter
+ M: Number of old measurements
+ m_u: Number of new measurements
+ maxiter: Maximum allowed iterations
+
+ Created by Salman Asif @ Georgia Tech
+ February 2009
+
+-------------------------------------------+
+ Copyright (c) 2009.  Muhammad Salman Asif 
+-------------------------------------------+</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../L1_homotopy_v2.0/Pursuits_Homotopy/update_inverse.html" class="code" title="function iAtB = update_inverse(AtB, iAtB_old,flag);">update_inverse</a>	function iAtB_mod = update_inverse(AtB, Atb, atB, atb);</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="DynamicSeq_REC_demo.html" class="code" title="">DynamicSeq_REC_demo</a>	DynamicSeq_REC_demo.m</li><li><a href="Simulation_DynamicSeq_REC.html" class="code" title="">Simulation_DynamicSeq_REC</a>	Simulation to test the performance of REC</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% DynamicSeq_REC_function.m</span>
+0002 <span class="comment">% Robust ell_1 decoding with homotopy update scheme for new measurements.</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% [cp_h gamma_h iter th] = DynamicSeq_REC_function(P, s, iPgP, cp_old, gamma_h, gamma_n, pk, tau, M, m_u, maxiter);</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% Outputs:</span>
+0007 <span class="comment">% cp_h: sparse error estimate</span>
+0008 <span class="comment">% gamma_h: support of sparse errors</span>
+0009 <span class="comment">% iter: number of homotopy steps taken</span>
+0010 <span class="comment">%</span>
+0011 <span class="comment">% Inputs</span>
+0012 <span class="comment">% P: I-F*inv(F'F)*F'</span>
+0013 <span class="comment">% s: [y; w]</span>
+0014 <span class="comment">% iPgP: inv(PgP) where PgP = P(gamma_xh,gamma_xh)</span>
+0015 <span class="comment">% cp_old: Old estimate of error (includes the estimate for new measurements)</span>
+0016 <span class="comment">% gamma_h: support of cp_old</span>
+0017 <span class="comment">% gamma_n: support of estimated errors in new measurements</span>
+0018 <span class="comment">% pk: P*(cp_old-s)</span>
+0019 <span class="comment">% tau: regularization parameter</span>
+0020 <span class="comment">% M: Number of old measurements</span>
+0021 <span class="comment">% m_u: Number of new measurements</span>
+0022 <span class="comment">% maxiter: Maximum allowed iterations</span>
+0023 <span class="comment">%</span>
+0024 <span class="comment">% Created by Salman Asif @ Georgia Tech</span>
+0025 <span class="comment">% February 2009</span>
+0026 <span class="comment">%</span>
+0027 <span class="comment">%-------------------------------------------+</span>
+0028 <span class="comment">% Copyright (c) 2009.  Muhammad Salman Asif</span>
+0029 <span class="comment">%-------------------------------------------+</span>
+0030 
+0031 
+0032 <a name="_sub0" href="#_subfunctions" class="code">function [cp_h gamma_h iter th] = REC_homotopy_function(P, s, iPgP, cp_old, gamma_h, gamma_n, pk, tau, M, m_u, maxiter);</a>
+0033 
+0034 t0 = cputime;
+0035 cp_h = cp_old;
+0036 epsilon = 0;
+0037 e0 = 0;
+0038 pk_old = pk; <span class="comment">% last indices will be zero at the start.</span>
+0039 
+0040 pk_old([gamma_h]) = sign(pk_old([gamma_h]))*tau;
+0041 pk_old(gamma_n) = pk_old(gamma_n)*e0*tau;
+0042 
+0043 done = 0;
+0044 iter = 0;
+0045 tu0 = cputime;
+0046 outc = [];
+0047 
+0048 <span class="keyword">while</span> iter &lt; maxiter
+0049     iter = iter +1 ;
+0050 
+0051     PgP = P(gamma_h,gamma_h);
+0052 
+0053     c_k = cp_h;
+0054     len_e = length(gamma_h)-length(gamma_n);
+0055     z_d = sign(c_k(gamma_n));
+0056     igamma_n_gamma_h = zeros(length(gamma_n),1);
+0057     <span class="keyword">for</span> ii = 1:length(gamma_n)
+0058         igamma_n_gamma_h(ii) = find(gamma_n(ii) == gamma_h);
+0059     <span class="keyword">end</span>
+0060     temp_vec = zeros(length(gamma_h),1);
+0061     temp_vec(igamma_n_gamma_h) = z_d;
+0062     delc = -iPgP*temp_vec;
+0063     <span class="comment">% figure(102); imagesc(iPgP-inv(P(gamma_h,gamma_h))); colorbar; shg</span>
+0064     <span class="comment">% delc = -inv(P(gamma_h,gamma_h))*temp_vec;</span>
+0065     
+0066     delc_vec = zeros(M+m_u,1);
+0067     delc_vec(gamma_h) = delc;
+0068     pk = pk_old;
+0069     dk = P(:,gamma_h)*delc;
+0070     outc = [];
+0071     temp_gamma = zeros(M+m_u,1);
+0072     temp_gamma(gamma_h) = gamma_h;
+0073     gamma_hc = find([1:M+m_u]' ~= temp_gamma);
+0074 
+0075     b_constr1 = (tau-pk(gamma_hc))./dk(gamma_hc);
+0076     b_constr2 = (tau+pk(gamma_hc))./-dk(gamma_hc);
+0077     b_constr3 = (-c_k(gamma_h)./delc_vec(gamma_h));
+0078     itheta_1 = find(b_constr1&gt;2*eps);
+0079     itheta_2 = find(b_constr2&gt;2*eps);
+0080     itheta_3 = find(b_constr3&gt;2*eps);
+0081     theta1 = min(b_constr1(itheta_1));
+0082     theta2 = min(b_constr2(itheta_2));
+0083     theta3 = min(b_constr3(itheta_3));
+0084     <span class="keyword">if</span> theta1&gt;theta2
+0085         theta = theta2;
+0086         itheta = gamma_hc(find(b_constr2==theta2));
+0087         flag = 1;
+0088     <span class="keyword">else</span>
+0089         theta = theta1;
+0090         itheta = gamma_hc(find(b_constr1==theta1));
+0091         flag = 1;
+0092     <span class="keyword">end</span>
+0093 
+0094     <span class="keyword">if</span> theta3 &lt; theta
+0095         theta = theta3;
+0096         itheta = gamma_h(find(b_constr3==theta3));
+0097         outc = itheta;
+0098         flag = 0;
+0099     <span class="keyword">end</span>
+0100     
+0101     <span class="keyword">if</span> length(gamma_h)&gt;=M+m_u-128 &amp; flag ==1
+0102         stp = 1;
+0103     <span class="keyword">end</span>
+0104 
+0105     epsilon = theta/tau + e0;
+0106 
+0107     <span class="keyword">if</span> epsilon &lt; 0
+0108         epsilon= inf;
+0109     <span class="keyword">end</span>
+0110     gamma_h_old = gamma_h;
+0111     gamma_n_old = gamma_n;
+0112     cp_old = c_k;
+0113     cp_h = c_k+theta*delc_vec;
+0114 
+0115     <span class="keyword">if</span> epsilon &gt;=1
+0116         theta_end = tau*(1-e0);
+0117         cp_h = cp_old + theta_end*delc_vec;
+0118         gamma_h = gamma_h_old;
+0119         pk_old = pk+theta_end*dk;
+0120         <span class="keyword">break</span>;
+0121     <span class="keyword">end</span>
+0122 
+0123     <span class="keyword">if</span> flag == 1
+0124         gamma_h = [gamma_h; itheta];
+0125         cp_h(itheta) = 0;
+0126         PgP_mod = P(gamma_h,gamma_h);
+0127 
+0128         iPgP = <a href="../../L1_homotopy_v2.0/Pursuits_Homotopy/update_inverse.html" class="code" title="function iAtB = update_inverse(AtB, iAtB_old,flag);">update_inverse</a>(PgP_mod, iPgP,1);
+0129         PgP = PgP_mod;
+0130 
+0131     <span class="keyword">else</span>
+0132         outc_index = find(gamma_h==itheta);
+0133         gamma_h(outc_index) = gamma_h(end);
+0134         gamma_h(end) = itheta;
+0135         gamma_h = gamma_h(1:end-1);
+0136 
+0137         rowi = outc_index; <span class="comment">% ith row of P is swapped with last row (out_c)</span>
+0138         colj = outc_index; <span class="comment">% jth column of P is swapped with last column (out_c)</span>
+0139         PgP_ij = PgP;
+0140         temp_row = PgP_ij(rowi,:);
+0141         PgP_ij(rowi,:) = PgP_ij(<span class="keyword">end</span>,:);
+0142         PgP_ij(<span class="keyword">end</span>,:) = temp_row;
+0143         temp_col = PgP_ij(:,colj);
+0144         PgP_ij(:,colj) = PgP_ij(:,end);
+0145         PgP_ij(:,end) = temp_col;
+0146         iPgP_ij = iPgP;
+0147         temp_row = iPgP_ij(colj,:);
+0148         iPgP_ij(colj,:) = iPgP_ij(<span class="keyword">end</span>,:);
+0149         iPgP_ij(<span class="keyword">end</span>,:) = temp_row;
+0150         temp_col = iPgP_ij(:,rowi);
+0151         iPgP_ij(:,rowi) = iPgP_ij(:,end);
+0152         iPgP_ij(:,end) = temp_col;
+0153 
+0154         PgP = PgP_ij(1:end-1,1:end-1);
+0155         iPgP = <a href="../../L1_homotopy_v2.0/Pursuits_Homotopy/update_inverse.html" class="code" title="function iAtB = update_inverse(AtB, iAtB_old,flag);">update_inverse</a>(PgP_ij, iPgP_ij,2);
+0156 
+0157         cp_h(itheta) = 0;
+0158         <span class="keyword">if</span> length(find(itheta == gamma_n))
+0159             outn_index = find(gamma_n==itheta);
+0160             gamma_n(outn_index) = gamma_n(end);
+0161             gamma_n(end) = itheta;
+0162             gamma_n = gamma_n(1:end-1);
+0163             <span class="comment">% gamma_n = setdiff(gamma_n,itheta);</span>
+0164             <span class="keyword">if</span> isempty(gamma_n)
+0165                 e0_old = epsilon;
+0166                 epsilon = 1;
+0167                 pk_old = pk+theta*dk;
+0168                 <span class="keyword">break</span>;
+0169             <span class="keyword">end</span>
+0170         <span class="keyword">end</span>
+0171     <span class="keyword">end</span>
+0172 
+0173     e0 = (theta/tau+e0);
+0174 
+0175     pk_old = pk+theta*dk;
+0176     pk_old([gamma_h; itheta]) = sign(pk_old([gamma_h; itheta]))*tau;
+0177     pk_old(gamma_n_old) = pk_old(gamma_n_old)*e0;
+0178 
+0179 <span class="keyword">end</span>
+0180 th= cputime-t0;</pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

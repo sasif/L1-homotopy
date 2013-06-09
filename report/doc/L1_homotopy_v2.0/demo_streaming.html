@@ -1,0 +1,462 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of demo_streaming</title>
+  <meta name="keywords" content="demo_streaming">
+  <meta name="description" content="demo_streaming">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- menu.html L1_homotopy_v2.0 -->
+<h1>demo_streaming
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>demo_streaming</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> demo_streaming
+
+ Solves the following streaming problem
+ min_x  \sum_i \|x_i-1\|_1 + 1/2*||B_i-1 x_i-1 + A_i x_i - y_i||_2^2
+
+ by adding and removing one set of measurements at every time instant 
+
+ Applications:
+       streaming signal recovery from overlapping measurements
+
+ We can also add any other regularization operator in the reconstruction
+
+ Written by: Salman Asif, Georgia Tech
+ Email: sasif@gatech.edu
+ Created: August 2012</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="l1homotopy.html" class="code" title="function out = l1homotopy(A, y, opts)">l1homotopy</a>	l1homotopy.m</li><li><a href="../L1_homotopy_v2.0/solvers/SpaRSA_adpW.html" class="code" title="function [x,x_debias,objective,times,debias_start,mses,taus, numA, numAt]=SpaRSA_adpW(y,A,tau,varargin)">SpaRSA_adpW</a>	SpaRSA version 2.0, December 31, 2007</li><li><a href="../L1_homotopy_v2.0/solvers/soft.html" class="code" title="function y = soft(x,T)">soft</a>	</li><li><a href="../L1_homotopy_v2.0/utils/fig.html" class="code" title="function h = fig(varargin)">fig</a>	</li><li><a href="../L1_homotopy_v2.0/utils/genAmat.html" class="code" title="function A = genAmat(M,N,in);">genAmat</a>	</li><li><a href="../L1_homotopy_v2.0/utils/genSignal.html" class="code" title="function [x varargout] = genSignal(N,in)">genSignal</a>	Inputs</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% demo_streaming</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% Solves the following streaming problem</span>
+0004 <span class="comment">% min_x  \sum_i \|x_i-1\|_1 + 1/2*||B_i-1 x_i-1 + A_i x_i - y_i||_2^2</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% by adding and removing one set of measurements at every time instant</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">% Applications:</span>
+0009 <span class="comment">%       streaming signal recovery from overlapping measurements</span>
+0010 <span class="comment">%</span>
+0011 <span class="comment">% We can also add any other regularization operator in the reconstruction</span>
+0012 <span class="comment">%</span>
+0013 <span class="comment">% Written by: Salman Asif, Georgia Tech</span>
+0014 <span class="comment">% Email: sasif@gatech.edu</span>
+0015 <span class="comment">% Created: August 2012</span>
+0016 
+0017 clear
+0018 close all <span class="comment">% force</span>
+0019 
+0020 <span class="comment">% Limit the number of computational threads (for profiling)</span>
+0021 <span class="comment">% maxNumCompThreads(1);</span>
+0022 
+0023 <span class="comment">%% Setup path</span>
+0024 mname = mfilename;
+0025 mpath = mfilename(<span class="string">'fullpath'</span>);
+0026 mdir = mpath(1:end-length(mname));
+0027 cd(mdir);
+0028 
+0029 addpath utils/
+0030 addpath utils/qr/
+0031 addpath solvers
+0032 
+0033 disp([<span class="string">'--------------------'</span>,datestr(now),<span class="string">'-------------------------'</span>])
+0034 
+0035 <span class="comment">% load RandomStates</span>
+0036 <span class="comment">%</span>
+0037 rseed = 2012;
+0038 rand(<span class="string">'state'</span>,rseed);
+0039 randn(<span class="string">'state'</span>,rseed);
+0040 
+0041 <span class="comment">% simulation parameters</span>
+0042 mType = <span class="string">'sign'</span>; <span class="comment">% {'randn','orth','rdct'};</span>
+0043 sType = <span class="string">'pcwreg'</span>; <span class="comment">% {'randn','sign','highD', 'blocks','pcwPoly'}</span>
+0044 SNR = inf;       <span class="comment">% additive Gaussian noise</span>
+0045 
+0046 N = 128;   <span class="comment">% signal length</span>
+0047 M = round(N/4);    <span class="comment">% no. of measurements</span>
+0048 T = round(M/4);    <span class="comment">% sparsity level</span>
+0049 
+0050 <span class="comment">% Overlapping measurements</span>
+0051 LM = 2*N; 
+0052 
+0053 <span class="comment">% streaming window</span>
+0054 P = 4; <span class="comment">% size of the working window is P*N</span>
+0055 
+0056 <span class="comment">% remove the top-left edge of the system matrix</span>
+0057 LeftEdge_trunc = 1;
+0058 <span class="comment">% fprintf('Consider oldest set of coefficients to be fully known, and remove their contribution from the measurements... \n');</span>
+0059     
+0060 <span class="comment">% rank-1 update mode</span>
+0061 delx_mode = <span class="string">'mil'</span>; <span class="comment">% mil or qr</span>
+0062 fprintf(<span class="string">'Streaming measurements with a time-varying signal ... \n'</span>);
+0063 str0 = sprintf(<span class="string">'mType-%s, sType-%s, SNR = %d, (N,M,T) = %d, %d, %d, P = %d.'</span>, mType, sType, SNR, N, M, T, P);
+0064 disp(str0);
+0065 
+0066 <span class="comment">% Simulation parameters</span>
+0067 maxsim = 128;
+0068 SIM_stack = cell(maxsim,1);
+0069 SIM_memory = cell(maxsim,1);
+0070  
+0071 x_vec = zeros(N*maxsim,1);
+0072 xh_vec = zeros(N*maxsim,1);
+0073 sig_vec = zeros(N*maxsim,1);
+0074 sigh_vec = zeros(N*maxsim,1);
+0075 
+0076 <span class="comment">%% Signal and system Setup</span>
+0077 <span class="comment">% Generate long sequence of signal and sensing matrices</span>
+0078 
+0079 <span class="comment">% Generate a random signal</span>
+0080 in = []; in.type = sType; in.T = maxsim*T; in.randgen = 0; 
+0081 in.wType = <span class="string">'daub79'</span>; in.take_fwt = 1; in.J = 5; <span class="comment">%log2(N)-3;</span>
+0082 genSignal_h = @(N) <a href="../L1_homotopy_v2.0/utils/genSignal.html" class="code" title="function [x varargout] = genSignal(N,in)">genSignal</a>(N,in);
+0083 [x_long sig wave_struct] = <a href="../L1_homotopy_v2.0/utils/genSignal.html" class="code" title="function [x varargout] = genSignal(N,in)">genSignal</a>(maxsim*N,in);
+0084 
+0085 <span class="keyword">if</span> isempty(wave_struct)
+0086     W_h = @(z) z; iW_h = @(z) z; 
+0087 <span class="keyword">else</span> 
+0088     W_h = wave_struct.W_h;
+0089     iW_h = wave_struct.iW_h;    
+0090 <span class="keyword">end</span>
+0091 
+0092 in = []; in.type = mType;
+0093 genAmat_h = @(M,N) <a href="../L1_homotopy_v2.0/utils/genAmat.html" class="code" title="function A = genAmat(M,N,in);">genAmat</a>(M,N,in);
+0094 
+0095 x = zeros(N*P+LM-N,1);
+0096 A = zeros(M*P,N*P+LM-N);
+0097 <span class="comment">% A = sparse(M*P,N*(P+1));</span>
+0098 y = zeros(M*P,1);
+0099  
+0100 <span class="comment">% Overlapping measurements (type imagesc(At) to view the structure)</span>
+0101 <span class="comment">% LM = 2*N...</span>
+0102 s_ind = 0;
+0103 <span class="comment">% xt = [genSignal_h(N); genSignal_h(N)];</span>
+0104 xt = [W_h(sig(1:N)); W_h(sig(N+1:2*N))];
+0105 s_ind = s_ind+2*N;
+0106 
+0107 At = genAmat_h(M,LM);
+0108 sigma = sqrt(norm(At*xt)^2/10^(SNR/10)/M);
+0109 et = randn(M,1)*sigma;
+0110 yt = At*xt+et;
+0111 
+0112 x(1:2*N) = xt;
+0113 A(1:M,1:2*N) = At;
+0114 y(1:M) = yt;
+0115 
+0116 <span class="keyword">for</span> ii = 2:P
+0117     <span class="comment">% xt = genSignal_h(N);</span>
+0118     xt = W_h(sig(s_ind+1:s_ind+N));
+0119     s_ind = s_ind+N;
+0120     
+0121     x(ii*N+1:(ii+1)*N) = xt;
+0122     
+0123     At = genAmat_h(M,2*N);
+0124     A((ii-1)*M+1:ii*M,(ii-1)*N+1:(ii+1)*N) = At;
+0125     
+0126     et = randn(M,1)*sigma;
+0127     y((ii-1)*M+1:ii*M) = At*x((ii-1)*N+1:(ii+1)*N)+et;
+0128 <span class="keyword">end</span>
+0129 
+0130 <span class="comment">% parameter selection</span>
+0131 <span class="comment">% tau = sigma*sqrt(log(N));</span>
+0132 tau = max(1e-2*max(abs(A'*y)),sigma*sqrt(log(2*N)));
+0133 
+0134 
+0135 maxiter = 2*P*N;
+0136 err_fun = @(z) (norm(x-z)/norm(x))^2;
+0137 
+0138 <span class="comment">%% Initialize by solving a rwt L1 problem</span>
+0139 in = [];
+0140 in.tau = tau; W = tau;
+0141 in.delx_mode = delx_mode;
+0142 in.debias = 0;
+0143 in.verbose = 0;
+0144 in.plots = 0;
+0145 in.record = 1;
+0146 in.err_fun = err_fun;
+0147 tic 
+0148 <span class="keyword">for</span> wt_itr = 1:5
+0149     
+0150     out = <a href="l1homotopy.html" class="code" title="function out = l1homotopy(A, y, opts)">l1homotopy</a>(A,y,in);
+0151     xh = out.x_out;
+0152     iter_bpdn = out.iter;
+0153     time_bpdn = toc;
+0154     gamma_bpdn = out.gamma;
+0155     err_bpdn = out.error_table;
+0156     
+0157     <span class="comment">% Update weights</span>
+0158     xh_old = xh;
+0159     
+0160     alpha = 1; epsilon = 1;
+0161     beta = M*(norm(xh_old,2)/norm(xh_old,1))^2;
+0162     W = tau/alpha./(beta*abs(xh_old)+epsilon);
+0163     
+0164     W_old = W;
+0165     <span class="comment">% yh = A*xh_old;</span>
+0166     <span class="comment">% u = -sign(xh_old).*W_old; % out.pk;</span>
+0167     <span class="comment">% Atdyu = A'*(yh-y)-u;</span>
+0168     yh = A*xh_old;
+0169     Atr = A'*(A*xh_old-y);
+0170     u =  -W.*sign(xh_old)-Atr;
+0171     pk_old = Atr+u;
+0172     
+0173     in = out;
+0174     in.xh_old = xh_old;
+0175     in.pk_old = pk_old;
+0176     in.u = u;
+0177     in.W_old = W_old;
+0178     in.W = W;
+0179     <span class="comment">% in.Atdyu = Atdyu;</span>
+0180 <span class="keyword">end</span> 
+0181 W = W_old;
+0182 
+0183 <span class="keyword">for</span> sim = 1:maxsim
+0184     
+0185     <span class="comment">%% Update the solution after updating the measurement matrix and/or the</span>
+0186     <span class="comment">% sparse signal</span>
+0187     x_old = x;  
+0188     y_old = y; A_old = A;
+0189     
+0190     <span class="comment">% Time-varying signal setup</span>
+0191     <span class="comment">% Shift the window (apply any prediction?)</span>
+0192     x(1:end-N) = x(N+1:end); 
+0193     xt_old = x(end-N+1:end);
+0194 
+0195     <span class="comment">% xt = genSignal_h(N);</span>
+0196     <span class="keyword">if</span> s_ind+N &gt; length(sig)
+0197         <span class="keyword">break</span>;
+0198     <span class="keyword">end</span>
+0199     xt = W_h(sig(s_ind+1:s_ind+N));
+0200     s_ind = s_ind+N;
+0201     x(end-N+1:end) = xt; 
+0202     
+0203     <span class="comment">% System matrix setup...</span>
+0204     <span class="comment">% Shift up and left</span>
+0205     A(1:(P-1)*M,1:P*N) = A(M+1:<span class="keyword">end</span>,N+1:end);     
+0206     <span class="comment">% new measurement matrix</span>
+0207     At = genAmat_h(M,2*N); 
+0208     A(end-M+1:<span class="keyword">end</span>,end-2*N+1:end) = At;
+0209     
+0210     <span class="comment">% shift old measurements and add one new set of measurementts</span>
+0211     y(1:end-M) = y(M+1:end);
+0212     e = randn(M,1)*sigma;
+0213     yt = At*x(end-2*N+1:end)+e;
+0214     y(end-M+1:end) = yt;
+0215     
+0216     <span class="comment">% Update the signal estimate (for warm start)</span>
+0217     xh_old = xh;
+0218     xh_old(1:end-N) = xh(N+1:end);
+0219     xh_t = xh(end-N+1:end);
+0220     xh_old(end-N+1:end) = 0*xh_t;   
+0221     xh_old(abs(xh_old)&lt;tau/sqrt(log(P*N))) = 0;
+0222     
+0223     <span class="comment">% Remove the top-left edge of the system matrix</span>
+0224     <span class="keyword">if</span> LeftEdge_trunc
+0225         A_old = A; y_old = y;
+0226         
+0227         alpha0h = xh_old(1:N);
+0228         xh_old = xh_old(N+1:end);
+0229         y = y-A(:,1:N)*alpha0h;
+0230         
+0231         A = A(:,N+1:end);
+0232         alpha0 = x(1:N);
+0233         x = x(N+1:end);
+0234     <span class="keyword">end</span>
+0235     
+0236     <span class="comment">% Update weights</span>
+0237     alpha = 1; epsilon = 1;
+0238     beta = M*(norm(xh_old,2)/norm(xh_old,1))^1;
+0239     W = tau/alpha./(beta*abs(xh_old)+epsilon);
+0240     <span class="comment">% W(end-N+1:1) = tau;</span>
+0241     W_old = W;
+0242     
+0243     homotopy_mode = <span class="string">'dummy'</span>;
+0244     <span class="keyword">switch</span> homotopy_mode
+0245         <span class="keyword">case</span> <span class="string">'dummy'</span>
+0246             <span class="comment">% create a dummy variable...</span>
+0247             <span class="comment">% use homotopy on the measurements...</span>
+0248             <span class="comment">% in principle, we can start with any xh_old with this formulation</span>
+0249             <span class="comment">% and any starting value of tau or W...</span>
+0250             gamma = find(xh_old);
+0251             M_trunc = size(A,1); <span class="comment">% P*(M-1);</span>
+0252             <span class="keyword">if</span> length(gamma) &gt; M_trunc
+0253                 [xh_sort ind_sort] = sort(abs(xh_old),<span class="string">'descend'</span>);
+0254                 xh_old(ind_sort(M_trunc+1:end)) = 0;
+0255                 gamma = ind_sort(1:M_trunc);            
+0256             <span class="keyword">end</span>            
+0257             <span class="comment">% yh = A*xh_old;</span>
+0258             <span class="comment">% u =  -sign(xh_old).*W_old;</span>
+0259             <span class="comment">% Atdyu = A'*(yh-y)-u;</span>
+0260             
+0261             yh = A*xh_old;
+0262             Atr = A'*(A*xh_old-y);
+0263             u =  -W.*sign(xh_old)-Atr;
+0264             pk_old = Atr+u;
+0265         <span class="keyword">otherwise</span>
+0266             didp(<span class="string">'Go back ... no escape'</span>);
+0267     <span class="keyword">end</span>
+0268     
+0269     in = out;
+0270     gamma_old = gamma;
+0271     in.gamma = gamma_old;
+0272     <span class="keyword">switch</span> delx_mode
+0273         <span class="keyword">case</span> <span class="string">'mil'</span>;
+0274             <span class="comment">% in.delx_mode = 'mil';</span>
+0275             <span class="comment">% The following gram matrix and its inverse can be used from the</span>
+0276             <span class="comment">% previous homotopy. Too lazy to include that right now...</span>
+0277             <span class="comment">% wt BPDN homotopy update</span>
+0278             AtAgx = A(:,gamma_old)'*A(:,gamma_old);
+0279             iAtAgx = inv(AtAgx);
+0280             in.iAtA = iAtAgx;
+0281         <span class="keyword">case</span> {<span class="string">'qr'</span>,<span class="string">'chol'</span>};
+0282             <span class="comment">% in.delx_mode = 'qr';</span>
+0283             [Q R] = qr(A(:,gamma_old),0);
+0284             in.Q = Q; in.R = R;
+0285         <span class="keyword">case</span> <span class="string">'qrM'</span>
+0286             <span class="comment">% in.delx_mode = 'qrM';</span>
+0287             [Q0 R0] = qr(A(:,gamma_old));
+0288             in.Q0 = Q0; in.R0 = R0;
+0289     <span class="keyword">end</span>
+0290     
+0291     in.xh_old = xh_old;
+0292     in.pk_old = pk_old;
+0293     in.u = u;
+0294     <span class="comment">% in.Atdyu = Atdyu;</span>
+0295     in.W = W;
+0296     in.W_old = W_old;
+0297     in.delx_mode = delx_mode;
+0298     in.debias = 0;
+0299     in.verbose = 0;
+0300     in.plots = 0;
+0301     in.record = 1;
+0302     in.err_fun = @(z) (norm(x-z)/norm(x))^2;
+0303     tic
+0304     out = <a href="l1homotopy.html" class="code" title="function out = l1homotopy(A, y, opts)">l1homotopy</a>(A,y,in);
+0305     time_streamingRWT = toc;
+0306     xh_streamingRWT = out.x_out;
+0307     gamma_streamingRWT = out.gamma;
+0308     iter_streamingRWT = out.iter;
+0309     
+0310     xh = xh_streamingRWT;
+0311     
+0312     <span class="comment">% Check the solution using BPDN directly with l1homotopy</span>
+0313     <span class="comment">%     in = []; x_old = x;</span>
+0314     <span class="comment">%     in.W = W;</span>
+0315     <span class="comment">%     in.delx_mode = delx_mode;</span>
+0316     <span class="comment">%     in.debias = 0;</span>
+0317     <span class="comment">%     in.verbose = 0;</span>
+0318     <span class="comment">%     in.maxiter = maxiter;</span>
+0319     <span class="comment">%     in.plots = 0;</span>
+0320     <span class="comment">%     in.record = 1;</span>
+0321     <span class="comment">%     in.err_fun = err_fun;</span>
+0322     <span class="comment">%     tic</span>
+0323     <span class="comment">%     out = l1homotopy(A,y,in);</span>
+0324     <span class="comment">%     xh = out.x_out;</span>
+0325     <span class="comment">%     iter_bpdn = out.iter;</span>
+0326     <span class="comment">%     time_bpdn = toc;</span>
+0327     <span class="comment">%     gamma_bpdn = out.gamma;</span>
+0328     <span class="comment">%     err_bpdn = out.error_table;</span>
+0329     
+0330     <span class="comment">%% SpaRSA</span>
+0331     x_sparsa = xh_old; W_sparsa = W/tau;
+0332     psi_function = @(x,tau) <a href="../L1_homotopy_v2.0/solvers/soft.html" class="code" title="function y = soft(x,T)">soft</a>(x,tau*W_sparsa);
+0333     phi_function = @(x) sum(abs(W_sparsa.*x));
+0334     tic;
+0335     [x_sparsa,x_debias_SpaRSA_m,obj_SpaRSA_m_cont,<span class="keyword">...</span>
+0336         times_SpaRSA_m_cont,debias_start_SpaRSA_m,mse_SpaRSA_m,taus_SpaRSA_m, numA, numAt]= <span class="keyword">...</span>
+0337         <a href="../L1_homotopy_v2.0/solvers/SpaRSA_adpW.html" class="code" title="function [x,x_debias,objective,times,debias_start,mses,taus, numA, numAt]=SpaRSA_adpW(y,A,tau,varargin)">SpaRSA_adpW</a>(y,A,tau,<span class="keyword">...</span>
+0338         <span class="string">'Monotone'</span>,0,<span class="keyword">...</span>
+0339         <span class="string">'adp_wt'</span>,0,<span class="keyword">...</span>
+0340         <span class="string">'W_new'</span>,W_sparsa,<span class="keyword">...</span>
+0341         <span class="string">'Debias'</span>,0,<span class="keyword">...</span>
+0342         <span class="string">'Initialization'</span>,x_sparsa,<span class="keyword">...</span>
+0343         <span class="string">'StopCriterion'</span>,2,<span class="keyword">...</span>
+0344         <span class="string">'ToleranceA'</span>,1e-4,<span class="keyword">...</span>
+0345         <span class="string">'psi'</span>,psi_function,<span class="keyword">...</span>
+0346         <span class="string">'phi'</span>,phi_function,<span class="keyword">...</span>
+0347         <span class="string">'Safeguard'</span>,1,<span class="keyword">...</span>
+0348         <span class="string">'MaxiterA'</span>,maxiter,<span class="keyword">...</span>
+0349         <span class="string">'Verbose'</span>,0,<span class="keyword">...</span>
+0350         <span class="string">'True_x'</span>,x,<span class="keyword">...</span>
+0351         <span class="string">'Continuation'</span>,1,<span class="keyword">...</span>
+0352         <span class="string">'Continuationsteps'</span>,-1);
+0353     
+0354     time_sparsa = toc;
+0355     iter_sparsa = (numA+numAt)/2;    
+0356     error_sparsa = norm(x-x_sparsa)/norm(x);        
+0357     
+0358     <span class="comment">%%</span>
+0359     SIM_stack{sim} = [sim, tau, <span class="keyword">...</span>
+0360         norm(x-xh_streamingRWT)^2/norm(x)^2, sum(iter_streamingRWT,2), sum(time_streamingRWT,2), <span class="keyword">...</span><span class="comment"> </span>
+0361         norm(x-x_sparsa)^2/norm(x)^2, sum(iter_sparsa,2), sum(time_sparsa,2)];
+0362     
+0363     <span class="comment">% l1homotopy-%3.4g,%3.4g,%3.4g;</span>
+0364     <span class="comment">% norm(x-xh)^2/norm(x)^2, sum(iter_bpdn,2), sum(time_bpdn,2), ...</span>
+0365     
+0366 <span class="comment">%     fprintf('sim %d. tau = %3.4g, (err,iter,time): streamingRWT homotopy-%3.4g,%3.4g,%3.4g, SpaRSA-%3.4g,%3.4g,%3.4g. \n', ...</span>
+0367 <span class="comment">%         SIM_stack{sim});</span>
+0368 <span class="comment">%</span>
+0369     <span class="comment">%% plot sparse coeffs.</span>
+0370     <a href="../L1_homotopy_v2.0/utils/fig.html" class="code" title="function h = fig(varargin)">fig</a>(1);     
+0371     subplot(211);
+0372     plot([x xh_streamingRWT x_sparsa]); 
+0373     title(<span class="string">'Comparison betweeen the original and reconstructed signal'</span>)
+0374     drawnow;
+0375     
+0376     <span class="comment">%% Reconstructed signal</span>
+0377     <span class="keyword">if</span> LeftEdge_trunc
+0378         xh = [alpha0h; xh_streamingRWT];
+0379         x = [alpha0; x];
+0380         A = A_old; y = y_old;
+0381     <span class="keyword">else</span>
+0382         xh = xh_streamingRWT;
+0383     <span class="keyword">end</span>
+0384     x_vec((sim-1)*N+1:sim*N,1) = x(1:N);
+0385     xh_vec((sim-1)*N+1:sim*N,1) = xh(1:N); 
+0386     sig_vec((sim-1)*N+1:sim*N,1) = iW_h(x(1:N));
+0387     sigh_vec((sim-1)*N+1:sim*N,1) = iW_h(xh(1:N)); 
+0388     
+0389     <span class="comment">%% plot recovered signals</span>
+0390     subplot(212);
+0391     plot([sig_vec(1:s_ind(end)) sigh_vec(1:s_ind(end))]); 
+0392         
+0393 <span class="keyword">end</span>
+0394 mS =  mean(cell2mat(SIM_stack),1);
+0395 fprintf(<span class="string">'Average results: maxsim %d. tau = %3.4g, (err,iter,time): streamingRWT l1homotopy-%3.4g,%3.4g,%3.4g; SpaRSA-%3.4g,%3.4g,%3.4g. \n'</span>, maxsim, mS(2:end));
+0396 <span class="comment">% l1homotopy-%3.4g,%3.4g,%3.4g;</span>
+0397 
+0398 <span class="comment">% l1homotopy-%3.4g,%3.4g,%3.4g;</span>
+0399 L = N;
+0400 err_l1homotopy = norm(sig_vec(L-N+1:N*sim)-sigh_vec(L-N+1:N*sim,1))^2/norm(sig_vec(L-N+1:N*sim))^2; 
+0401 fprintf(<span class="string">'Signal error: l1homotopy-%3.4g. \n'</span>,err_l1homotopy);
+0402</pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

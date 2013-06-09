@@ -1,0 +1,114 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of genAmat</title>
+  <meta name="keywords" content="genAmat">
+  <meta name="description" content="">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../menu.html L1_homotopy_v2.0 --><!-- menu.html utils -->
+<h1>genAmat
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong></strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function A = genAmat(M,N,in); </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"></pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../L1_homotopy_v2.0/utils/utils_meas/A_n.html" class="code" title="function y = A_n(x,OMEGA,P)">A_n</a>	Takes noiselet measurements.</li><li><a href="../../L1_homotopy_v2.0/utils/utils_meas/At_n.html" class="code" title="function x = At_n(y, N, OMEGA,P)">At_n</a>	Takes transpose of noiselet measurements.</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../L1_homotopy_v2.0/WeightedBPDN/demo_wtBPDN.html" class="code" title="">demo_wtBPDN</a>	demo_wtBPDN</li><li><a href="../../L1_homotopy_v2.0/WeightedBPDN/src/script_simulation_adpWBPDN.html" class="code" title="">script_simulation_adpWBPDN</a>	partial script for running different solvers for adaptive reweighting</li><li><a href="../../L1_homotopy_v2.0/WeightedBPDN/src/script_simulation_wtBPDN.html" class="code" title="">script_simulation_wtBPDN</a>	partial script for running different solvers</li><li><a href="../../L1_homotopy_v2.0/demo_BPDN.html" class="code" title="">demo_BPDN</a>	demo_BPDN</li><li><a href="../../L1_homotopy_v2.0/demo_KalmanRWT.html" class="code" title="">demo_KalmanRWT</a>	demo_KalmanRWT</li><li><a href="../../L1_homotopy_v2.0/demo_dynamicRWT.html" class="code" title="">demo_dynamicRWT</a>	demo_dynamicRWT</li><li><a href="../../L1_homotopy_v2.0/demo_dynamicSeq.html" class="code" title="">demo_dynamicSeq</a>	demo_dynamicSeq</li><li><a href="../../L1_homotopy_v2.0/demo_dynamicX.html" class="code" title="">demo_dynamicX</a>	demo_dynamicX</li><li><a href="../../L1_homotopy_v2.0/demo_posBPDN.html" class="code" title="">demo_posBPDN</a>	demo_posBPDN</li><li><a href="../../L1_homotopy_v2.0/demo_replaceDict.html" class="code" title="">demo_replaceDict</a>	demo_replaceDict</li><li><a href="../../L1_homotopy_v2.0/demo_rwtL1.html" class="code" title="">demo_rwtL1</a>	demo_rwtL1</li><li><a href="../../L1_homotopy_v2.0/demo_streaming.html" class="code" title="">demo_streaming</a>	demo_streaming</li><li><a href="../../L1_homotopy_v2.0/demo_streamingDWT.html" class="code" title="">demo_streamingDWT</a>	demo_streamingDWT</li><li><a href="../../L1_homotopy_v2.0/demo_streamingLOT.html" class="code" title="">demo_streamingLOT</a>	demo_streamingLOT</li><li><a href="../../L1_homotopy_v2.0/utils/utils_LOT/create_PHI.html" class="code" title="function PHI = create_PHI(in);">create_PHI</a>	Inputs</li></ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function y = Afun(x,mode, N, OMEGA,P,mtype)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function A = genAmat(M,N,in);</a>
+0002 
+0003 <span class="keyword">switch</span> in.type
+0004     <span class="keyword">case</span> <span class="string">'randn'</span>
+0005         <span class="comment">% Gaussian measurements</span>
+0006         A = (randn(M,N))/sqrt(M);
+0007         <span class="comment">% A = orth(A')';   % with orthogonal rows</span>
+0008     <span class="keyword">case</span> <span class="string">'hadamard'</span>
+0009         <span class="comment">% Hadamard</span>
+0010         H = hadamard(N);
+0011         q = randperm(N);
+0012         A = H(q(1:M),:)/sqrt(M);
+0013     <span class="keyword">case</span> <span class="string">'sign'</span>
+0014         <span class="comment">% Bernoulli</span>
+0015         A = sign(randn(M,N))/sqrt(M);
+0016     <span class="keyword">case</span> <span class="string">'orth'</span>
+0017         <span class="comment">% Random Projection</span>
+0018         A = (randn(M,N))/sqrt(M);
+0019         A = orth(A')';
+0020     <span class="keyword">case</span> <span class="string">'rdct'</span>
+0021         <span class="comment">% Randomly subsampled DCT</span>
+0022         D = dct(eye(N));
+0023         q = randperm(N);
+0024         A = D(q(1:M),:);
+0025     <span class="keyword">case</span> <span class="string">'inc'</span>
+0026     <span class="keyword">case</span> {<span class="string">'noiselets'</span>,<span class="string">'rsample'</span>}
+0027         q = randperm(N);
+0028         OMEGA = q(1:M);
+0029         P = 1:N; <span class="comment">% randperm(N);</span>
+0030         P = P(:); OMEGA = OMEGA(:);
+0031         A = @(x,mode) <a href="#_sub1" class="code" title="subfunction y = Afun(x,mode, N, OMEGA,P,mtype)">Afun</a>(x,mode,N, OMEGA, P,in.type);
+0032     <span class="keyword">case</span> <span class="string">'subsample'</span>
+0033         q = randperm(N);
+0034         OMEGA = q(1:M);
+0035         A = eye(N);
+0036         A = A(OMEGA,:);
+0037     <span class="keyword">case</span> <span class="string">'streaming'</span>        
+0038         parts = in.parts;
+0039         Mp = round(M/parts);
+0040         Np = round(N/parts);
+0041         A = zeros(M,N);
+0042         <span class="keyword">for</span> ii = 1:parts
+0043             A((ii-1)*Mp+1:ii*Mp,(ii-1)*Np+1:ii*Np) = sign(randn(Mp,Np))/sqrt(Mp);
+0044         <span class="keyword">end</span>
+0045     <span class="keyword">case</span> <span class="string">'rnd-demod'</span>
+0046     <span class="keyword">case</span> <span class="string">'rnd-conv'</span>
+0047 <span class="keyword">end</span>
+0048 
+0049 <a name="_sub1" href="#_subfunctions" class="code">function y = Afun(x,mode, N, OMEGA,P,mtype)</a>
+0050 <span class="keyword">if</span> mode == 1
+0051     <span class="keyword">switch</span> mtype
+0052         <span class="keyword">case</span> <span class="string">'noiselets'</span>
+0053             y = <a href="../../L1_homotopy_v2.0/utils/utils_meas/A_n.html" class="code" title="function y = A_n(x,OMEGA,P)">A_n</a>(x,OMEGA,P);
+0054         <span class="keyword">case</span> <span class="string">'rsample'</span>
+0055             y = x(OMEGA);
+0056     <span class="keyword">end</span>
+0057 <span class="keyword">end</span>
+0058 <span class="keyword">if</span> mode == 2
+0059     <span class="keyword">switch</span> mtype
+0060         <span class="keyword">case</span> <span class="string">'noiselets'</span>
+0061             y = <a href="../../L1_homotopy_v2.0/utils/utils_meas/At_n.html" class="code" title="function x = At_n(y, N, OMEGA,P)">At_n</a>(x, N, OMEGA,P);
+0062         <span class="keyword">case</span> <span class="string">'rsample'</span>
+0063             y = zeros(N,1);
+0064             y(OMEGA) = x;
+0065     <span class="keyword">end</span>
+0066 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

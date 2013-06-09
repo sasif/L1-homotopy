@@ -1,0 +1,237 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of DynamicSeq_REC_demo</title>
+  <meta name="keywords" content="DynamicSeq_REC_demo">
+  <meta name="description" content="DynamicSeq_REC_demo.m">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../menu.html L1_homotopy_v2.0 --><!-- menu.html l1decoding -->
+<h1>DynamicSeq_REC_demo
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>DynamicSeq_REC_demo.m</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> DynamicSeq_REC_demo.m
+ Robust ell_1 decoding with homotopy update scheme for new measurements.
+
+ Created by Salman Asif @ Georgia Tech
+ February 2009
+
+ Model changes in the error patterns with new measurements and observe the
+ effect on the solution.
+
+-------------------------------------------+
+ Copyright (c) 2009.  Muhammad Salman Asif 
+-------------------------------------------+</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../L1_homotopy_v2.0/Pursuits_Homotopy/BPDN_homotopy_function.html" class="code" title="function out = BPDN_homotopy_function(A, y, in)">BPDN_homotopy_function</a>	BPDN_homotopy_function.m</li><li><a href="DynamicSeq_REC_function.html" class="code" title="function [cp_h gamma_h iter th] = REC_homotopy_function(P, s, iPgP, cp_old, gamma_h, gamma_n, pk, tau, M, m_u, maxiter);">DynamicSeq_REC_function</a>	DynamicSeq_REC_function.m</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% DynamicSeq_REC_demo.m</span>
+0002 <span class="comment">% Robust ell_1 decoding with homotopy update scheme for new measurements.</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% Created by Salman Asif @ Georgia Tech</span>
+0005 <span class="comment">% February 2009</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">% Model changes in the error patterns with new measurements and observe the</span>
+0008 <span class="comment">% effect on the solution.</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">%-------------------------------------------+</span>
+0011 <span class="comment">% Copyright (c) 2009.  Muhammad Salman Asif</span>
+0012 <span class="comment">%-------------------------------------------+</span>
+0013 
+0014 clear
+0015 close all
+0016 
+0017 <span class="comment">% % load fixed random states</span>
+0018 <span class="comment">% load RandomStates</span>
+0019 <span class="comment">% rand('state', s_rand);</span>
+0020 <span class="comment">% randn('state', s_randn);</span>
+0021   
+0022 <span class="comment">% % source length</span>
+0023 N = 256;
+0024 <span class="comment">% codeword length</span>
+0025 M = 3*N;
+0026 
+0027 <span class="comment">% number of perturbations</span>
+0028 T = round(.2*M);
+0029 
+0030 <span class="comment">% coding matrix</span>
+0031 Orth_mat = randn(M,M);
+0032 G = Orth_mat(:,1:N);
+0033 A = randn(M,N)/sqrt(M);
+0034 
+0035 <span class="comment">% Annihilating projection matrix</span>
+0036 AtA = A'*A;
+0037 iAtA = inv(AtA);
+0038 AiAtA = A*iAtA;
+0039 AiAtAAt = AiAtA*A';
+0040 Q = eye(M)-AiAtAAt;
+0041 
+0042 <span class="comment">% source word</span>
+0043 x = randn(N,1);
+0044 
+0045 <span class="comment">% channel: perturb T randomly chosen entries</span>
+0046 q = randperm(M);
+0047 e = zeros(M,1);
+0048 e(q(1:T)) = randsrc(T,1);
+0049 
+0050 <span class="comment">% Small noise</span>
+0051 x0 = randn(N,1);
+0052 Ax0 = A*x0;
+0053 sigma = median(abs(Ax0))/20; <span class="comment">% control the power in small noise</span>
+0054 q_y = randn(M,1)*sigma;
+0055 
+0056 <span class="comment">% Received codeword</span>
+0057 y = A*x+e+q_y;
+0058 figure(1); clf; plot([y e q_y]); <span class="comment">%hold on; plot(e,'g-.'); plot(q_y,'r--');</span>
+0059 title(<span class="string">'Codeword, sparse errors and small noise'</span>);
+0060 legend(<span class="string">'Codeword'</span>, <span class="string">'Sparse'</span>, <span class="string">'Noise'</span>); shg
+0061 
+0062 <span class="comment">% Regularization parameter</span>
+0063 tau = 0.01*max(abs(Q*y)); <span class="comment">% l1_ls</span>
+0064 <span class="comment">% if sigma&gt;0</span>
+0065 <span class="comment">%     tau = sigma * sqrt(log(N)*2); % BPDN</span>
+0066 <span class="comment">%     % tau = max(abs(Q'*q_y)); % ideal ???</span>
+0067 <span class="comment">% end</span>
+0068 
+0069 <span class="comment">% Data recovery</span>
+0070 t1_s = cputime;
+0071 Qy = Q*y;
+0072 [ep, gamma_e, ep_iter] =  <a href="../../L1_homotopy_v2.0/Pursuits_Homotopy/BPDN_homotopy_function.html" class="code" title="function out = BPDN_homotopy_function(A, y, in)">BPDN_homotopy_function</a>(Q, Qy, tau, 4*M);
+0073 t1_e = cputime;
+0074 t1 = t1_e-t1_s;
+0075 <span class="comment">% xp = inv(A'*A)*A'*(y-ep);</span>
+0076 xp = AiAtA'*(y-ep);
+0077 
+0078 figure(2); clf; plot(ep); hold on; plot(e,<span class="string">'ro'</span>);
+0079 title([<span class="string">'Estimated and original sparse errors with '</span>, num2str(M),<span class="string">' measurements'</span>]);
+0080 legend(<span class="string">'Estimated'</span>, <span class="string">'Original'</span>); shg
+0081 
+0082 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0083 <span class="comment">% Setup for adding m_u new observations %</span>
+0084 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0085 
+0086 <span class="comment">% No. of new observations</span>
+0087 m_u =10;
+0088 
+0089 b = randn(m_u,N)/sqrt(M); <span class="comment">% new rows in coding matrix</span>
+0090 T_new = randint(1,1,m_u/5); <span class="comment">% new gross/sparse errors</span>
+0091 d = zeros(m_u,1);
+0092 q_new = randperm(m_u);
+0093 d(q_new(1:T_new)) = randsrc(T_new,1);
+0094 q_w = randn(m_u,1)*sigma;
+0095 
+0096 w = b*x+d+q_w;
+0097 F = [A; b];
+0098 s = [y;w];
+0099 c = [e; d];
+0100 q_yw = [q_y; q_w];
+0101 
+0102 iAtAbt = iAtA*b';
+0103 biAtAbt = b*iAtAbt;
+0104 S_biAtAbt = inv(eye(m_u)+biAtAbt);
+0105 AiAtAbt = AiAtA*b';
+0106 iAtAbt_S = (iAtAbt*S_biAtAbt);
+0107 AiAtAbt_S = A*iAtAbt_S;
+0108 
+0109 FtF = AtA+b'*b; <span class="comment">%F'*F;</span>
+0110 iFtF = iAtA - iAtAbt_S*iAtAbt'; <span class="comment">% inv(FtF);</span>
+0111 FiFtF = [AiAtA - AiAtAbt_S*iAtAbt'; iAtAbt'-biAtAbt*S_biAtAbt*iAtAbt']; <span class="comment">% F*iFtF;</span>
+0112 FiFtFFt = [AiAtAAt - AiAtAbt_S*AiAtAbt' AiAtAbt-AiAtAbt_S*biAtAbt; AiAtAbt'-biAtAbt*AiAtAbt_S' biAtAbt-biAtAbt*S_biAtAbt*biAtAbt]; <span class="comment">%FiFtF*F';</span>
+0113 P = eye(M+m_u)-FiFtFFt;
+0114 
+0115 dp = w-b*xp;
+0116 z_d = sign(dp);
+0117 cp_h = [ep; dp];
+0118 gamma_n = M+find(abs(dp)&gt;2*eps);
+0119 gamma_n_old = gamma_n;
+0120 gamma_h = [gamma_e; gamma_n];
+0121 epsilon = 0;
+0122 e0 = 0;
+0123 
+0124 QgQ = Q(gamma_e,gamma_e);
+0125 PgP = P(gamma_h,gamma_h); 
+0126 uQ = AiAtAbt_S(gamma_e,:);
+0127 vQ = AiAtAbt(gamma_e,:);
+0128 QgQ_update = QgQ + uQ*vQ';
+0129 PgP_update = [[QgQ_update; P(gamma_n,gamma_e)] P(gamma_h,gamma_n)];
+0130 PgP = PgP_update;
+0131 
+0132 iQgQ = inv(QgQ);
+0133 iQgQ_update = iQgQ - (iQgQ*uQ)*(inv(eye(m_u)+vQ'*iQgQ*uQ))*(vQ'*iQgQ);
+0134 
+0135 P11 = QgQ_update;
+0136 P12 = P(gamma_e,gamma_n);
+0137 P21 = P12';
+0138 P22 = P(gamma_n,gamma_n);
+0139 S_P = inv(P22-P21*iQgQ_update*P12);
+0140 iP11_P12 = iQgQ_update*P12;
+0141 iPgP_update = [iQgQ_update+(iP11_P12*S_P)*iP11_P12' -iP11_P12*S_P; -S_P*iP11_P12' S_P];
+0142 iPgP = iPgP_update;
+0143 
+0144 pk_old = P*(cp_h-s); <span class="comment">% last indices will be zero.</span>
+0145 
+0146 <span class="comment">% REC homotopy</span>
+0147 [cp_h gamma_h cp_h_iter th] = <a href="DynamicSeq_REC_function.html" class="code" title="function [cp_h gamma_h iter th] = REC_homotopy_function(P, s, iPgP, cp_old, gamma_h, gamma_n, pk, tau, M, m_u, maxiter);">DynamicSeq_REC_function</a>(P, s, iPgP, cp_h, gamma_h, gamma_n, pk_old, tau, M, m_u, 4*M);
+0148 figure(3); clf; plot(cp_h); hold on; plot(c,<span class="string">'ro'</span>);
+0149 title([<span class="string">'Estimated and original sparse errors after new '</span>, num2str(m_u),<span class="string">' measurements'</span>]);
+0150 legend(<span class="string">'Estimated'</span>, <span class="string">'Original'</span>); shg
+0151 
+0152 <span class="comment">% % Check the solution using cvx</span>
+0153 <span class="comment">% cvx_begin</span>
+0154 <span class="comment">%     cvx_precision high</span>
+0155 <span class="comment">%     variables cp_cvx(M+m_u) zp_cvx(M+m_u) ;</span>
+0156 <span class="comment">%     minimize( tau*(norm(cp_cvx,1))+ .5*(sum(square(zp_cvx))))</span>
+0157 <span class="comment">%     subject to</span>
+0158 <span class="comment">%     zp_cvx == P*(cp_cvx-s)</span>
+0159 <span class="comment">% cvx_end</span>
+0160 <span class="comment">%</span>
+0161 <span class="comment">% % figure(103); clf; plot(cp_h); hold on; plot(cp2,'kx'); plot([cp_cvx; dp_cvx],'r.')</span>
+0162 <span class="comment">% figure(10); hold on; plot(cp_cvx-cp_h); shg</span>
+0163 
+0164 <span class="comment">% Check the solution using homotopy from scratch.</span>
+0165 [cp2, gamma_c2, cp2_iter, t2] = <a href="../../L1_homotopy_v2.0/Pursuits_Homotopy/BPDN_homotopy_function.html" class="code" title="function out = BPDN_homotopy_function(A, y, in)">BPDN_homotopy_function</a>(P, P*s, tau, 4*M);
+0166 
+0167 
+0168 pk2 = P*(cp2-s);
+0169 pk_h = P*(cp_h-s);
+0170 
+0171 <span class="comment">% [old_homotopy new_homotopy update_homotopy]</span>
+0172 disp(<span class="string">' '</span>);
+0173 disp(<span class="string">'old_homotopy , new_homotopy , update_homotopy'</span>)
+0174 time_table = [t1 t2 th]
+0175 iter_table = [ep_iter cp2_iter cp_h_iter]
+0176 
+0177 figure(4); subplot(2,1,1); hold on; plot(cp_h-cp2);
+0178 title(<span class="string">'Difference between the solution of BPDN homotopy and REC update'</span>)
+0179 subplot(2,1,2); hold on; plot(pk2-pk_h); drawnow
+0180 title(<span class="string">'Difference between the primal constraints of BPDN homotopy and REC update'</span>)</pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

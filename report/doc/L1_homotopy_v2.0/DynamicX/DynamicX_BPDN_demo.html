@@ -1,0 +1,142 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of DynamicX_BPDN_demo</title>
+  <meta name="keywords" content="DynamicX_BPDN_demo">
+  <meta name="description" content="BPDN/LASSO update homotopy comparison">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../menu.html L1_homotopy_v2.0 --><!-- menu.html DynamicX -->
+<h1>DynamicX_BPDN_demo
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>BPDN/LASSO update homotopy comparison</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> BPDN/LASSO update homotopy comparison
+ Author: Muhammad Salman Asif
+ Created: February 2009:
+
+-------------------------------------------+
+ Copyright (c) 2009.  Muhammad Salman Asif 
+-------------------------------------------+</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="DynamicX_BPDN_function.html" class="code" title="function [xp_h, gamma_xh, iter,cpu] = DynamicX_BPDN_function(A, AtAgx, iAtAgx, y, yt, xp, gamma_x, pk, tau, maxiter)">DynamicX_BPDN_function</a>	DynamicX_BPDN_function.m</li><li><a href="../../L1_homotopy_v2.0/Pursuits_Homotopy/BPDN_homotopy_function.html" class="code" title="function out = BPDN_homotopy_function(A, y, in)">BPDN_homotopy_function</a>	BPDN_homotopy_function.m</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% BPDN/LASSO update homotopy comparison</span>
+0002 <span class="comment">% Author: Muhammad Salman Asif</span>
+0003 <span class="comment">% Created: February 2009:</span>
+0004 <span class="comment">%</span>
+0005 <span class="comment">%-------------------------------------------+</span>
+0006 <span class="comment">% Copyright (c) 2009.  Muhammad Salman Asif</span>
+0007 <span class="comment">%-------------------------------------------+</span>
+0008 
+0009 clear; clc;
+0010 
+0011 <span class="comment">% % load fixed random states</span>
+0012 <span class="comment">% load RandomStates</span>
+0013 <span class="comment">% randn('state',s_randn);</span>
+0014 <span class="comment">% rand('state',s_rand);</span>
+0015 
+0016 <span class="comment">% signal length</span>
+0017 N = 512;
+0018 <span class="comment">% number of spikes to put down</span>
+0019 T = 40;
+0020 <span class="comment">% number of observations to make</span>
+0021 M = 350;
+0022 
+0023 <span class="comment">% random +/- 1 signal</span>
+0024 x = zeros(N,1);
+0025 q = randperm(N);
+0026 x(q(1:T)) = randn(T,1);<span class="comment">%sign(randn(T,1)).*randint(T,1,256);</span>
+0027 
+0028 <span class="comment">% measurement matrix</span>
+0029 A = randn(M,N)/sqrt(M);
+0030 
+0031 <span class="comment">% observations</span>
+0032 sigma = .01;
+0033 e = randn(M,1)*sigma;
+0034 y = A*x + e;
+0035 
+0036 <span class="comment">% regularization parameter</span>
+0037 tau = 0.005*max(abs(A'*y)); <span class="comment">%l1_ls</span>
+0038 <span class="keyword">if</span> sigma&gt;0
+0039     tau = sigma * sqrt(log(N)*2); <span class="comment">% BPDN</span>
+0040     <span class="comment">%tau = max(abs(A'*(A*x-y))); % ideal ???</span>
+0041 <span class="keyword">end</span>
+0042 
+0043 <span class="comment">% Initial update using BPDN</span>
+0044 [xp, gamma_x, xp_iter, t1] = <a href="../../L1_homotopy_v2.0/Pursuits_Homotopy/BPDN_homotopy_function.html" class="code" title="function out = BPDN_homotopy_function(A, y, in)">BPDN_homotopy_function</a>(A, y, tau,4*N); <span class="comment">%Lasso</span>
+0045 
+0046 <span class="comment">% Model the change in signal</span>
+0047 dx_model = 1; <span class="comment">% 0 - Perturb only non-zero locations</span>
+0048               <span class="comment">% 1 - Add some new elements (T_in) and remove some existing</span>
+0049               <span class="comment">% elements (T_out)</span>
+0050 <span class="keyword">switch</span> dx_model
+0051     <span class="keyword">case</span>  1
+0052         <span class="comment">% Add some elements (T_in) or remove some existing elements (T_out)</span>
+0053         dx  = zeros(N,1);
+0054         dx(q(1:T)) = randn*.1;
+0055         T_in = round(T/10);
+0056         T_out = round(T/10);
+0057         qin = randperm(N);
+0058 
+0059         dx(qin(1:T_in)) = (randn(T_in,1));
+0060 
+0061         qout = randperm(T);
+0062         oldx_indices = q(1:T);
+0063         dx(oldx_indices(qout(1:T_out))) = -x(oldx_indices(qout(1:T_out)));
+0064 
+0065     <span class="keyword">case</span>  2;
+0066         <span class="comment">% Perturb the current locations by Gaussian noise</span>
+0067         oldx_indices = q(1:T);
+0068         dx = zeros(N,1);
+0069         dx(oldx_indices) = randn(T,1)*.2;
+0070     <span class="keyword">otherwise</span>
+0071         disp(<span class="string">'Nooooo'</span>);
+0072 <span class="keyword">end</span>
+0073 
+0074 xt = x+dx;
+0075 yt = y+A*dx;
+0076 
+0077 <span class="comment">% Gram matrix update</span>
+0078 AtAgx = A(:,gamma_x)'*A(:,gamma_x);
+0079 iAtAgx = inv(AtAgx);
+0080 pk = A'*(A*xp-y);
+0081 
+0082 [xp_h, gamma_xh, xp_h_iter, th] =  <a href="DynamicX_BPDN_function.html" class="code" title="function [xp_h, gamma_xh, iter,cpu] = DynamicX_BPDN_function(A, AtAgx, iAtAgx, y, yt, xp, gamma_x, pk, tau, maxiter)">DynamicX_BPDN_function</a>(A, AtAgx, iAtAgx, y, yt, xp, gamma_x, pk, tau, 4*N);
+0083 
+0084 [xp2, gamma_x2, xp2_iter, t2] = <a href="../../L1_homotopy_v2.0/Pursuits_Homotopy/BPDN_homotopy_function.html" class="code" title="function out = BPDN_homotopy_function(A, y, in)">BPDN_homotopy_function</a>(A, yt, tau, 4*N); <span class="comment">%Lasso</span>
+0085 
+0086 <span class="comment">% [old_homotopy new_homotopy update_homotopy]</span>
+0087 Cputime_comparison = [t1 t2 th]
+0088 Iteration_comparison = [xp_iter xp2_iter xp_h_iter]
+0089 
+0090 <span class="comment">% figure(2); plot(xp_h-xp2); shg</span></pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

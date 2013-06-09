@@ -1,0 +1,14 @@
+/* Created by mdot for Matlab */
+digraph m2html {
+  apply_LOT -> create_LOT;
+  create_LOT -> lotwin;
+  create_PSI -> create_LOT;
+  lotwin -> betaedge;
+
+  apply_LOT [URL="apply_LOT.html"];
+  betaedge [URL="betaedge.html"];
+  create_LOT [URL="create_LOT.html"];
+  create_PHI [URL="create_PHI.html"];
+  create_PSI [URL="create_PSI.html"];
+  lotwin [URL="lotwin.html"];
+}

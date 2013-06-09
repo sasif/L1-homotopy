@@ -1,0 +1,67 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of setup_path</title>
+  <meta name="keywords" content="setup_path">
+  <meta name="description" content="Run this file to set up MATLAB paths to all the sub-directories.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- menu.html L1_homotopy_v2.0 -->
+<h1>setup_path
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>Run this file to set up MATLAB paths to all the sub-directories.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> Run this file to set up MATLAB paths to all the sub-directories.
+
+ Alternatively you can directly add L1_homotopy folder along with all the 
+ subfolders, using MATLAB menu as
+ (File --&gt; Set Path --&gt; Add with subfolders --&gt;...)</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% Run this file to set up MATLAB paths to all the sub-directories.</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% Alternatively you can directly add L1_homotopy folder along with all the</span>
+0004 <span class="comment">% subfolders, using MATLAB menu as</span>
+0005 <span class="comment">% (File --&gt; Set Path --&gt; Add with subfolders --&gt;...)</span>
+0006 
+0007 <span class="comment">% file_name = mfilename('fullpath');</span>
+0008 <span class="comment">% dbs = dbstack;</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">% addpath(genpath(file_name(1:length(file_name)-length(dbs.name))));</span>
+0011 
+0012 mname = mfilename;
+0013 mpath = mfilename(<span class="string">'fullpath'</span>);
+0014 mdir = mpath(1:end-length(mname));
+0015 cd(mdir);
+0016 
+0017 addpath(genpath(mdir))</pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

@@ -1,0 +1,315 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of BPDN_homotopy_function</title>
+  <meta name="keywords" content="BPDN_homotopy_function">
+  <meta name="description" content="BPDN_homotopy_function.m">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../menu.html L1_homotopy_v2.0 --><!-- menu.html Pursuits_Homotopy -->
+<h1>BPDN_homotopy_function
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>BPDN_homotopy_function.m</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function out = BPDN_homotopy_function(A, y, in) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> BPDN_homotopy_function.m
+
+ Solves the following basis pursuit denoising (BPDN) problem
+ min_x  \tau ||x||_1 + 1/2*||y-Ax||_2^2
+
+ Inputs:
+ A - m x n measurement matrix
+ y - measurement vector
+ in - input parameters 
+         tau - final value of regularization parameter
+         maxiter - maximum number of homotopy iterations
+         x_orig - original signal for error computation
+         record - for recording history
+         delx_mode - rank-one update using matrix inversion lemma (mil) or qr factorization (qr)
+         Te - maximum number of non-zero elements allowed
+
+ Outputs: 
+   out
+     x_out - output for BPDN
+     gamma - support of the solution
+     iter - number of homotopy iterations taken by the solver
+     time - time taken by the solver
+
+ Example usage: 
+     in = [];
+     in.tau = tau; % regularization parameter
+     in.maxiter = maxiter; % maximum allowed iterations
+     in.x_orig = x; % original signal for error computation
+     in.record = 1; % to record history
+     in.delx_mode = 'mil'; % rank-one update using matrix inversion lemma (mil) or qr factorization (qr)
+     in.Te = Te; % maximum number of non-zero elements allowed
+     out = BPDN_homotopy_function(A, y, in); % solve BPDN using matrix A and measurements y
+     xh = out.x_out; % output solution
+     gamma = out.gamma; % support of the solution
+     iter = out.iter; % number of homotopy iterations used
+     time = out.time; % computation time
+
+ Written by: Salman Asif, Georgia Tech
+ Email: sasif@gatech.edu
+
+ Modified
+ May 2012: Added qr update feature
+
+-------------------------------------------+
+ Copyright (c) 2007.  Muhammad Salman Asif
+-------------------------------------------+</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../L1_homotopy_v2.0/utils/compute_delta.html" class="code" title="function out = compute_delta(in)">compute_delta</a>	</li><li><a href="../../L1_homotopy_v2.0/utils/update_delx.html" class="code" title="">update_delx</a>	script to ubpdate delx</li><li><a href="../../L1_homotopy_v2.0/utils/update_supp.html" class="code" title="">update_supp</a>	script to update support</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../L1_homotopy_v2.0/DynamicSeq/DynamicSeq_BPDN_demo.html" class="code" title="">DynamicSeq_BPDN_demo</a>	BPDN update with sequential measurements homotopy comparison</li><li><a href="../../L1_homotopy_v2.0/DynamicSeq/Simulation_DynamicSeq_BPDN.html" class="code" title="">Simulation_DynamicSeq_BPDN</a>	Simulation for dynamic update with sequential measurements.</li><li><a href="../../L1_homotopy_v2.0/DynamicX/DynamicX_BPDN_Visual_demo.html" class="code" title="">DynamicX_BPDN_Visual_demo</a>	Test file for LASSO (BPDN) update with dynamic change in x</li><li><a href="../../L1_homotopy_v2.0/DynamicX/DynamicX_BPDN_demo.html" class="code" title="">DynamicX_BPDN_demo</a>	BPDN/LASSO update homotopy comparison</li><li><a href="../../L1_homotopy_v2.0/DynamicX/Simulation_DynamicX_BPDN.html" class="code" title="">Simulation_DynamicX_BPDN</a>	Simulation for BPDN homotopy update of DynamicX.</li><li><a href="../../L1_homotopy_v2.0/DynamicX/Simulation_DynamicX_BPDN_Pathological.html" class="code" title="">Simulation_DynamicX_BPDN_Pathological</a>	Simulation of homotopy update for signals with large dynamic range.</li><li><a href="../../L1_homotopy_v2.0/DynamicX/Simulation_DynamicX_BPDN_Wavelet.html" class="code" title="">Simulation_DynamicX_BPDN_Wavelet</a>	BPDN update with dynamic change in x</li><li><a href="../../L1_homotopy_v2.0/WeightedBPDN/demo_wtBPDN.html" class="code" title="">demo_wtBPDN</a>	demo_wtBPDN</li><li><a href="../../L1_homotopy_v2.0/WeightedBPDN/src/script_rwtBPDN_iterative.html" class="code" title="function out = script_rwtBPDN_iterative(in);">script_rwtBPDN_iterative</a>	BPDN rwt update (initialize with standard homotopy)</li><li><a href="../../L1_homotopy_v2.0/WeightedBPDN/src/script_simulation_adpWBPDN.html" class="code" title="">script_simulation_adpWBPDN</a>	partial script for running different solvers for adaptive reweighting</li><li><a href="../../L1_homotopy_v2.0/WeightedBPDN/src/script_simulation_wtBPDN.html" class="code" title="">script_simulation_wtBPDN</a>	partial script for running different solvers</li><li><a href="../../L1_homotopy_v2.0/l1decoding/DynamicSeq_REC_demo.html" class="code" title="">DynamicSeq_REC_demo</a>	DynamicSeq_REC_demo.m</li><li><a href="../../L1_homotopy_v2.0/l1decoding/Simulation_DynamicSeq_REC.html" class="code" title="">Simulation_DynamicSeq_REC</a>	Simulation to test the performance of REC</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% BPDN_homotopy_function.m</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% Solves the following basis pursuit denoising (BPDN) problem</span>
+0004 <span class="comment">% min_x  \tau ||x||_1 + 1/2*||y-Ax||_2^2</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% Inputs:</span>
+0007 <span class="comment">% A - m x n measurement matrix</span>
+0008 <span class="comment">% y - measurement vector</span>
+0009 <span class="comment">% in - input parameters</span>
+0010 <span class="comment">%         tau - final value of regularization parameter</span>
+0011 <span class="comment">%         maxiter - maximum number of homotopy iterations</span>
+0012 <span class="comment">%         x_orig - original signal for error computation</span>
+0013 <span class="comment">%         record - for recording history</span>
+0014 <span class="comment">%         delx_mode - rank-one update using matrix inversion lemma (mil) or qr factorization (qr)</span>
+0015 <span class="comment">%         Te - maximum number of non-zero elements allowed</span>
+0016 <span class="comment">%</span>
+0017 <span class="comment">% Outputs:</span>
+0018 <span class="comment">%   out</span>
+0019 <span class="comment">%     x_out - output for BPDN</span>
+0020 <span class="comment">%     gamma - support of the solution</span>
+0021 <span class="comment">%     iter - number of homotopy iterations taken by the solver</span>
+0022 <span class="comment">%     time - time taken by the solver</span>
+0023 <span class="comment">%</span>
+0024 <span class="comment">% Example usage:</span>
+0025 <span class="comment">%     in = [];</span>
+0026 <span class="comment">%     in.tau = tau; % regularization parameter</span>
+0027 <span class="comment">%     in.maxiter = maxiter; % maximum allowed iterations</span>
+0028 <span class="comment">%     in.x_orig = x; % original signal for error computation</span>
+0029 <span class="comment">%     in.record = 1; % to record history</span>
+0030 <span class="comment">%     in.delx_mode = 'mil'; % rank-one update using matrix inversion lemma (mil) or qr factorization (qr)</span>
+0031 <span class="comment">%     in.Te = Te; % maximum number of non-zero elements allowed</span>
+0032 <span class="comment">%     out = BPDN_homotopy_function(A, y, in); % solve BPDN using matrix A and measurements y</span>
+0033 <span class="comment">%     xh = out.x_out; % output solution</span>
+0034 <span class="comment">%     gamma = out.gamma; % support of the solution</span>
+0035 <span class="comment">%     iter = out.iter; % number of homotopy iterations used</span>
+0036 <span class="comment">%     time = out.time; % computation time</span>
+0037 <span class="comment">%</span>
+0038 <span class="comment">% Written by: Salman Asif, Georgia Tech</span>
+0039 <span class="comment">% Email: sasif@gatech.edu</span>
+0040 <span class="comment">%</span>
+0041 <span class="comment">% Modified</span>
+0042 <span class="comment">% May 2012: Added qr update feature</span>
+0043 <span class="comment">%</span>
+0044 <span class="comment">%-------------------------------------------+</span>
+0045 <span class="comment">% Copyright (c) 2007.  Muhammad Salman Asif</span>
+0046 <span class="comment">%-------------------------------------------+</span>
+0047 
+0048 <a name="_sub0" href="#_subfunctions" class="code">function out = BPDN_homotopy_function(A, y, in)</a>
+0049 
+0050 <span class="comment">% fprintf('Rewrite this function to add qrupdate \n');</span>
+0051 
+0052 t0 = cputime;
+0053 N = size(A,2);
+0054 M = size(A,1);
+0055 
+0056 tau = in.tau;
+0057 Te = inf;
+0058 <span class="keyword">if</span> isfield(in,<span class="string">'Te'</span>)
+0059     Te = in.Te;
+0060 <span class="keyword">end</span>
+0061 maxiter = 4*N;
+0062 <span class="keyword">if</span> isfield(in,<span class="string">'maxiter'</span>);
+0063     maxiter = in.maxiter;
+0064 <span class="keyword">end</span>
+0065 early_terminate = 0;
+0066 <span class="keyword">if</span> isfield(in,<span class="string">'early_terminate'</span>)
+0067     early_terminate = in.early_terminate;
+0068 <span class="keyword">end</span>
+0069 x_orig = in.x_orig;
+0070 err_record = in.record;
+0071 
+0072 <span class="comment">% Initialization of sign and support</span>
+0073 xk_1 = zeros(N,1);
+0074 pk_old = -A'*y;
+0075 [c idelta] = max(abs(pk_old));
+0076 
+0077 gamma_xh = idelta;
+0078 temp_gamma = zeros(N,1);
+0079 temp_gamma(gamma_xh) = gamma_xh;
+0080 gamma_xc = find([1:N]' ~= temp_gamma);
+0081 
+0082 epsilon = c;
+0083 z_x = zeros(N,1);
+0084 z_x(gamma_xh) = -sign(pk_old(gamma_xh));
+0085 pk_old(gamma_xh) = sign(pk_old(gamma_xh))*epsilon;
+0086 
+0087 <span class="comment">% loop parameters</span>
+0088 done = 0;
+0089 iter = 0;
+0090 itr_history = [];
+0091 error_table = [];
+0092 obj = [];
+0093 
+0094 <span class="comment">% initialize delx</span>
+0095 in_delx = [];
+0096 delx_mode = in.delx_mode;
+0097 update_mode = <span class="string">'init0'</span>;
+0098 rhs = z_x;
+0099 <a href="../../L1_homotopy_v2.0/utils/update_delx.html" class="code" title="">update_delx</a>;
+0100 
+0101 <span class="keyword">if</span> err_record
+0102     error_table = [epsilon norm(xk_1-x_orig)/norm(x_orig) 1];
+0103     <span class="comment">% obj = 1/2*norm(A*xk_1-y)^2+epsilon*norm(xk_1,1);</span>
+0104 <span class="keyword">end</span>
+0105 
+0106 <span class="keyword">while</span> iter &lt; maxiter
+0107     iter = iter+1;
+0108     <span class="comment">% warning('off','MATLAB:divideByZero')</span>
+0109     
+0110     x_k = xk_1;
+0111     
+0112     <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0113     <span class="comment">%%%% update support of x %%%%</span>
+0114     <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0115     <span class="comment">% update direction</span>
+0116     delx_vec = zeros(N,1);
+0117     delx_vec(gamma_xh) = delx;
+0118     
+0119     <span class="keyword">if</span> sign(delx_vec(idelta)) == sign(pk_old(idelta)) &amp;&amp; iter &gt; 1
+0120         delta = 0; flag = 0;
+0121     <span class="keyword">else</span>
+0122         pk = pk_old;
+0123         <span class="comment">% dk = A'*(A(:,gamma_xh)*delx);</span>
+0124         dk = A'*(A*delx_vec);
+0125         
+0126         <span class="comment">%%%--- compute step size</span>
+0127         in = [];
+0128         
+0129         <span class="comment">% Setting shrinkage_flag to zero shrinks new active constraint towards the</span>
+0130         <span class="comment">% final value instantly if doing so doesn't disturb the active set</span>
+0131         in.delta_flag = 2;
+0132         in.pk = pk; in.dk = dk;
+0133         in.ak = epsilon; in.bk = -1;
+0134         in.gamma = gamma_xh; in.gamma_c = gamma_xc;
+0135         in.delx_vec = delx_vec; in.x = xk_1;
+0136         out = <a href="../../L1_homotopy_v2.0/utils/compute_delta.html" class="code" title="function out = compute_delta(in)">compute_delta</a>(in);
+0137         delta = out.delta; idelta = out.idelta;
+0138         flag = out.flag;
+0139     <span class="keyword">end</span>
+0140     
+0141     xk_1 = x_k+delta*delx_vec;
+0142     pk_old = pk+delta*dk;
+0143     epsilon_old = epsilon;
+0144     epsilon = epsilon-delta;
+0145     
+0146     <span class="keyword">if</span> epsilon &lt;= tau;
+0147         xk_1 = x_k + (epsilon_old-tau)*delx_vec;
+0148         total_time= cputime-t0;
+0149         <span class="keyword">break</span>;
+0150     <span class="keyword">end</span>
+0151     <span class="keyword">if</span> length(gamma_xh) &gt;= Te
+0152         total_time = cputime-t0;
+0153         <span class="keyword">break</span>;
+0154     <span class="keyword">end</span>
+0155     
+0156     <span class="comment">% disp(sprintf(['iter = %d, delta = %3.4g, idelta = %d, flag = %d'], iter, delta, idelta, flag));</span>
+0157     itr_history = [itr_history; idelta delta flag];
+0158     
+0159     <span class="comment">%% Check convergence criterion</span>
+0160     <span class="keyword">if</span> early_terminate
+0161         <span class="keyword">if</span> length(gamma_x) &lt; M/2
+0162             xhat = zeros(N,1);
+0163             rhs = A(:,gamma_xh)'*y;
+0164             update_mode = <span class="string">'recompute'</span>;
+0165             delx_update;
+0166             xhat(gamma_x) = out;
+0167             <span class="keyword">if</span> norm(y-A*xhat) &lt; tau
+0168                 xk_1 = xhat;
+0169                 <span class="keyword">break</span>;
+0170             <span class="keyword">end</span>
+0171         <span class="keyword">end</span>
+0172     <span class="keyword">end</span>
+0173     
+0174     <span class="comment">% update support</span>
+0175     <a href="../../L1_homotopy_v2.0/utils/update_supp.html" class="code" title="">update_supp</a>;
+0176     
+0177     pk_old([gamma_xh; idelta]) = sign(pk_old([gamma_xh; idelta]))*epsilon;
+0178     
+0179     <span class="comment">% update delx</span>
+0180     z_x = -sign(pk_old);
+0181     rhs = z_x;
+0182     update_mode = <span class="string">'update'</span>;
+0183     <a href="../../L1_homotopy_v2.0/utils/update_delx.html" class="code" title="">update_delx</a>;
+0184     
+0185     
+0186     constr_violation = nnz((abs(pk_old(gamma_xc))-epsilon)&gt;1e-10);
+0187     sign_violation = nnz((sign(pk_old(gamma_xh))+sign(xk_1(gamma_xh)))&gt;1);
+0188     <span class="keyword">if</span> constr_violation
+0189         chk = gamma_xc((abs(pk_old(gamma_xc))-epsilon)&gt;1e-10);
+0190         stp = 1;
+0191         fprintf(<span class="string">'problem... with constraint violation -- %s \n'</span>, mfilename);
+0192         fprintf(<span class="string">'Refactorize the matrix... recompute delx \n'</span>);
+0193         <span class="comment">% some times it comes here due to bad conditioning of AtAgx.</span>
+0194         update_mode = <span class="string">'init0'</span>;
+0195         <a href="../../L1_homotopy_v2.0/utils/update_delx.html" class="code" title="">update_delx</a>;
+0196     <span class="keyword">end</span>
+0197     <span class="keyword">if</span> sign_violation&gt;=1
+0198         chk = gamma_xh(sign(pk_old(gamma_xh))+sign(xk_1(gamma_xh))&gt;1);
+0199         stp = 1;
+0200         fprintf(<span class="string">'problem... sign mismatch -- %s \n'</span>,mfilename);
+0201         fprintf(<span class="string">'Refactorize the matrix... recompute delx \n'</span>);
+0202         update_mode = <span class="string">'init0'</span>;
+0203         <a href="../../L1_homotopy_v2.0/utils/update_delx.html" class="code" title="">update_delx</a>;
+0204     <span class="keyword">end</span>
+0205     
+0206     <span class="keyword">if</span> err_record
+0207         error_table = [error_table; epsilon norm(xk_1-x_orig)/norm(x_orig) length(gamma_xh)];
+0208         <span class="comment">% obj = [obj; 1/2*norm(A*xk_1-y)^2+epsilon*norm(xk_1,1)];</span>
+0209     <span class="keyword">end</span>
+0210 <span class="keyword">end</span>
+0211 <span class="keyword">if</span> err_record
+0212     error_table = [error_table; epsilon norm(xk_1-x_orig)/norm(x_orig) length(gamma_xh)];
+0213     <span class="comment">% obj = [obj; 1/2*norm(A*xk_1-y)^2+epsilon*norm(xk_1,1)];</span>
+0214 <span class="keyword">end</span>
+0215 total_iter = iter;
+0216 total_time = cputime-t0;
+0217 
+0218 out = [];
+0219 out.x_out = xk_1;
+0220 out.gamma = gamma_xh;
+0221 out.iter = total_iter;
+0222 out.time = total_time;
+0223 out.error_table = error_table;
+0224 <span class="comment">% out.obj = obj;</span></pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

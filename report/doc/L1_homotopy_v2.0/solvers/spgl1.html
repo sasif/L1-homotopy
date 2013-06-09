@@ -1,0 +1,1005 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of spgl1</title>
+  <meta name="keywords" content="spgl1">
+  <meta name="description" content="SPGL1  Solve basis pursuit, basis pursuit denoise, and LASSO">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../menu.html L1_homotopy_v2.0 --><!-- menu.html solvers -->
+<h1>spgl1
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>SPGL1  Solve basis pursuit, basis pursuit denoise, and LASSO</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function [x,r,g,info] = spgl1( A, b, tau, sigma, x, options ) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">SPGL1  Solve basis pursuit, basis pursuit denoise, and LASSO
+
+ [x, r, g, info] = spgl1(A, b, tau, sigma, x0, options)
+
+ ---------------------------------------------------------------------
+ Solve the basis pursuit denoise (BPDN) problem
+
+ (BPDN)   minimize  ||x||_1  subj to  ||Ax-b||_2 &lt;= sigma,
+
+ or the l1-regularized least-squares problem
+
+ (LASSO)  minimize  ||Ax-b||_2  subj to  ||x||_1 &lt;= tau.
+ ---------------------------------------------------------------------
+
+ INPUTS
+ ======
+ A        is an m-by-n matrix, explicit or an operator.
+          If A is a function, then it must have the signature
+
+          y = A(x,mode)   if mode == 1 then y = A x  (y is m-by-1);
+                          if mode == 2 then y = A'x  (y is n-by-1).
+
+ b        is an m-vector.
+ tau      is a nonnegative scalar; see (LASSO).
+ sigma    if sigma != inf or != [], then spgl1 will launch into a
+          root-finding mode to find the tau above that solves (BPDN).
+          In this case, it's STRONGLY recommended that tau = 0.
+ x0       is an n-vector estimate of the solution (possibly all
+          zeros). If x0 = [], then SPGL1 determines the length n via
+          n = length( A'b ) and sets  x0 = zeros(n,1).
+ options  is a structure of options from spgSetParms. Any unset options
+          are set to their default value; set options=[] to use all
+          default values.
+
+ OUTPUTS
+ =======
+ x        is a solution of the problem
+ r        is the residual, r = b - Ax
+ g        is the gradient, g = -A'r
+ info     is a structure with the following information:
+          .tau     final value of tau (see sigma above)
+          .rNorm   two-norm of the optimal residual
+          .rGap    relative duality gap (an optimality measure)
+          .gNorm   Lagrange multiplier of (LASSO)
+          .stat    = 1 found a BPDN solution
+                   = 2 found a BP sol'n; exit based on small gradient
+                   = 3 found a BP sol'n; exit based on small residual
+                   = 4 found a LASSO solution
+                   = 5 error: too many iterations
+                   = 6 error: linesearch failed
+                   = 7 error: found suboptimal BP solution
+                   = 8 error: too many matrix-vector products
+          .time    total solution time (seconds)
+          .nProdA  number of multiplications with A
+          .nProdAt number of multiplications with A'
+
+ OPTIONS
+ =======
+ Use the options structure to control various aspects of the algorithm:
+
+ options.fid         File ID to direct log output
+        .verbosity   0=quiet, 1=some output, 2=more output.
+        .iterations  Max. number of iterations (default if 10*m).
+        .bpTol       Tolerance for identifying a basis pursuit solution.
+        .optTol      Optimality tolerance (default is 1e-4).
+        .decTol      Larger decTol means more frequent Newton updates.
+        .subspaceMin 0=no subspace minimization, 1=subspace minimization.
+
+ EXAMPLE
+ =======
+   m = 120; n = 512; k = 20; % m rows, n cols, k nonzeros.
+   p = randperm(n); x0 = zeros(n,1); x0(p(1:k)) = sign(randn(k,1));
+   A  = randn(m,n); [Q,R] = qr(A',0);  A = Q';
+   b  = A*x0 + 0.005 * randn(m,1);
+   opts = spgSetParms('optTol',1e-4);
+   [x,r,g,info] = spgl1(A, b, 0, 1e-3, [], opts); % Find BP sol'n.
+
+ AUTHORS
+ =======
+  Ewout van den Berg (ewout78@cs.ubc.ca)
+  Michael P. Friedlander (mpf@cs.ubc.ca)
+    Scientific Computing Laboratory (SCL)
+    University of British Columbia, Canada.
+
+ BUGS
+ ====
+ Please send bug reports or comments to
+            Michael P. Friedlander (mpf@cs.ubc.ca)
+            Ewout van den Berg (ewout78@cs.ubc.ca)</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="spgSetParms.html" class="code" title="function options = spgSetParms(varargin)">spgSetParms</a>	SPGSETPARMS  Set options for SPGL1</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../L1_homotopy_v2.0/WeightedBPDN/src/script_simulation_adpWBPDN.html" class="code" title="">script_simulation_adpWBPDN</a>	partial script for running different solvers for adaptive reweighting</li><li><a href="../../L1_homotopy_v2.0/WeightedBPDN/src/script_simulation_wtBPDN.html" class="code" title="">script_simulation_wtBPDN</a>	partial script for running different solvers</li></ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function z = Aprod(x,mode)</a></li><li><a href="#_sub2" class="code">function printf(varargin)</a></li><li><a href="#_sub3" class="code">function x = project(x, tau)</a></li><li><a href="#_sub4" class="code">function [nnzX,nnzG,nnzIdx,nnzDiff] = activeVars(x,g,nnzIdx,options)</a></li><li><a href="#_sub5" class="code">function z = LSQRprod(Aprod,nnzIdx,ebar,n,dx,mode)</a></li><li><a href="#_sub6" class="code">function [fNew,xNew,rNew,iter,err] = spgLine(f,x,d,gtd,fMax,Aprod,b)</a></li><li><a href="#_sub7" class="code">function [fNew,xNew,rNew,iter,step,err] =</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [x,r,g,info] = spgl1( A, b, tau, sigma, x, options )</a>
+0002 <span class="comment">%SPGL1  Solve basis pursuit, basis pursuit denoise, and LASSO</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% [x, r, g, info] = spgl1(A, b, tau, sigma, x0, options)</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% ---------------------------------------------------------------------</span>
+0007 <span class="comment">% Solve the basis pursuit denoise (BPDN) problem</span>
+0008 <span class="comment">%</span>
+0009 <span class="comment">% (BPDN)   minimize  ||x||_1  subj to  ||Ax-b||_2 &lt;= sigma,</span>
+0010 <span class="comment">%</span>
+0011 <span class="comment">% or the l1-regularized least-squares problem</span>
+0012 <span class="comment">%</span>
+0013 <span class="comment">% (LASSO)  minimize  ||Ax-b||_2  subj to  ||x||_1 &lt;= tau.</span>
+0014 <span class="comment">% ---------------------------------------------------------------------</span>
+0015 <span class="comment">%</span>
+0016 <span class="comment">% INPUTS</span>
+0017 <span class="comment">% ======</span>
+0018 <span class="comment">% A        is an m-by-n matrix, explicit or an operator.</span>
+0019 <span class="comment">%          If A is a function, then it must have the signature</span>
+0020 <span class="comment">%</span>
+0021 <span class="comment">%          y = A(x,mode)   if mode == 1 then y = A x  (y is m-by-1);</span>
+0022 <span class="comment">%                          if mode == 2 then y = A'x  (y is n-by-1).</span>
+0023 <span class="comment">%</span>
+0024 <span class="comment">% b        is an m-vector.</span>
+0025 <span class="comment">% tau      is a nonnegative scalar; see (LASSO).</span>
+0026 <span class="comment">% sigma    if sigma != inf or != [], then spgl1 will launch into a</span>
+0027 <span class="comment">%          root-finding mode to find the tau above that solves (BPDN).</span>
+0028 <span class="comment">%          In this case, it's STRONGLY recommended that tau = 0.</span>
+0029 <span class="comment">% x0       is an n-vector estimate of the solution (possibly all</span>
+0030 <span class="comment">%          zeros). If x0 = [], then SPGL1 determines the length n via</span>
+0031 <span class="comment">%          n = length( A'b ) and sets  x0 = zeros(n,1).</span>
+0032 <span class="comment">% options  is a structure of options from spgSetParms. Any unset options</span>
+0033 <span class="comment">%          are set to their default value; set options=[] to use all</span>
+0034 <span class="comment">%          default values.</span>
+0035 <span class="comment">%</span>
+0036 <span class="comment">% OUTPUTS</span>
+0037 <span class="comment">% =======</span>
+0038 <span class="comment">% x        is a solution of the problem</span>
+0039 <span class="comment">% r        is the residual, r = b - Ax</span>
+0040 <span class="comment">% g        is the gradient, g = -A'r</span>
+0041 <span class="comment">% info     is a structure with the following information:</span>
+0042 <span class="comment">%          .tau     final value of tau (see sigma above)</span>
+0043 <span class="comment">%          .rNorm   two-norm of the optimal residual</span>
+0044 <span class="comment">%          .rGap    relative duality gap (an optimality measure)</span>
+0045 <span class="comment">%          .gNorm   Lagrange multiplier of (LASSO)</span>
+0046 <span class="comment">%          .stat    = 1 found a BPDN solution</span>
+0047 <span class="comment">%                   = 2 found a BP sol'n; exit based on small gradient</span>
+0048 <span class="comment">%                   = 3 found a BP sol'n; exit based on small residual</span>
+0049 <span class="comment">%                   = 4 found a LASSO solution</span>
+0050 <span class="comment">%                   = 5 error: too many iterations</span>
+0051 <span class="comment">%                   = 6 error: linesearch failed</span>
+0052 <span class="comment">%                   = 7 error: found suboptimal BP solution</span>
+0053 <span class="comment">%                   = 8 error: too many matrix-vector products</span>
+0054 <span class="comment">%          .time    total solution time (seconds)</span>
+0055 <span class="comment">%          .nProdA  number of multiplications with A</span>
+0056 <span class="comment">%          .nProdAt number of multiplications with A'</span>
+0057 <span class="comment">%</span>
+0058 <span class="comment">% OPTIONS</span>
+0059 <span class="comment">% =======</span>
+0060 <span class="comment">% Use the options structure to control various aspects of the algorithm:</span>
+0061 <span class="comment">%</span>
+0062 <span class="comment">% options.fid         File ID to direct log output</span>
+0063 <span class="comment">%        .verbosity   0=quiet, 1=some output, 2=more output.</span>
+0064 <span class="comment">%        .iterations  Max. number of iterations (default if 10*m).</span>
+0065 <span class="comment">%        .bpTol       Tolerance for identifying a basis pursuit solution.</span>
+0066 <span class="comment">%        .optTol      Optimality tolerance (default is 1e-4).</span>
+0067 <span class="comment">%        .decTol      Larger decTol means more frequent Newton updates.</span>
+0068 <span class="comment">%        .subspaceMin 0=no subspace minimization, 1=subspace minimization.</span>
+0069 <span class="comment">%</span>
+0070 <span class="comment">% EXAMPLE</span>
+0071 <span class="comment">% =======</span>
+0072 <span class="comment">%   m = 120; n = 512; k = 20; % m rows, n cols, k nonzeros.</span>
+0073 <span class="comment">%   p = randperm(n); x0 = zeros(n,1); x0(p(1:k)) = sign(randn(k,1));</span>
+0074 <span class="comment">%   A  = randn(m,n); [Q,R] = qr(A',0);  A = Q';</span>
+0075 <span class="comment">%   b  = A*x0 + 0.005 * randn(m,1);</span>
+0076 <span class="comment">%   opts = spgSetParms('optTol',1e-4);</span>
+0077 <span class="comment">%   [x,r,g,info] = spgl1(A, b, 0, 1e-3, [], opts); % Find BP sol'n.</span>
+0078 <span class="comment">%</span>
+0079 <span class="comment">% AUTHORS</span>
+0080 <span class="comment">% =======</span>
+0081 <span class="comment">%  Ewout van den Berg (ewout78@cs.ubc.ca)</span>
+0082 <span class="comment">%  Michael P. Friedlander (mpf@cs.ubc.ca)</span>
+0083 <span class="comment">%    Scientific Computing Laboratory (SCL)</span>
+0084 <span class="comment">%    University of British Columbia, Canada.</span>
+0085 <span class="comment">%</span>
+0086 <span class="comment">% BUGS</span>
+0087 <span class="comment">% ====</span>
+0088 <span class="comment">% Please send bug reports or comments to</span>
+0089 <span class="comment">%            Michael P. Friedlander (mpf@cs.ubc.ca)</span>
+0090 <span class="comment">%            Ewout van den Berg (ewout78@cs.ubc.ca)</span>
+0091 
+0092 <span class="comment">% 15 Apr 07: First version derived from spg.m.</span>
+0093 <span class="comment">%            Michael P. Friedlander (mpf@cs.ubc.ca).</span>
+0094 <span class="comment">%            Ewout van den Berg (ewout78@cs.ubc.ca).</span>
+0095 <span class="comment">% 17 Apr 07: Added root-finding code.</span>
+0096 <span class="comment">% 18 Apr 07: sigma was being compared to 1/2 r'r, rather than</span>
+0097 <span class="comment">%            norm(r), as advertised.  Now immediately change sigma to</span>
+0098 <span class="comment">%            (1/2)sigma^2, and changed log output accordingly.</span>
+0099 <span class="comment">% 24 Apr 07: Added quadratic root-finding code as an option.</span>
+0100 <span class="comment">% 24 Apr 07: Exit conditions need to guard against small ||r||</span>
+0101 <span class="comment">%            (ie, a BP solution).  Added test1,test2,test3 below.</span>
+0102 <span class="comment">% 15 May 07: Trigger to update tau is now based on relative difference</span>
+0103 <span class="comment">%            in objective between consecutive iterations.</span>
+0104 <span class="comment">% 15 Jul 07: Added code to allow a limited number of line-search</span>
+0105 <span class="comment">%            errors.</span>
+0106 <span class="comment">% 23 Feb 08: Fixed bug in one-norm projection using weights. Thanks</span>
+0107 <span class="comment">%            to Xiangrui Meng for reporting this bug.</span>
+0108 <span class="comment">% 26 May 08: The simple call spgl1(A,b) now solves (BPDN) with sigma=0.</span>
+0109     
+0110 <span class="comment">%   spgl1.m</span>
+0111 <span class="comment">%   $Id: spgl1.m 1225 2009-01-30 20:36:31Z ewout78 $</span>
+0112 <span class="comment">%</span>
+0113 <span class="comment">%   ----------------------------------------------------------------------</span>
+0114 <span class="comment">%   This file is part of SPGL1 (Spectral Projected-Gradient for L1).</span>
+0115 <span class="comment">%</span>
+0116 <span class="comment">%   Copyright (C) 2007 Ewout van den Berg and Michael P. Friedlander,</span>
+0117 <span class="comment">%   Department of Computer Science, University of British Columbia, Canada.</span>
+0118 <span class="comment">%   All rights reserved. E-mail: &lt;{ewout78,mpf}@cs.ubc.ca&gt;.</span>
+0119 <span class="comment">%</span>
+0120 <span class="comment">%   SPGL1 is free software; you can redistribute it and/or modify it</span>
+0121 <span class="comment">%   under the terms of the GNU Lesser General Public License as</span>
+0122 <span class="comment">%   published by the Free Software Foundation; either version 2.1 of the</span>
+0123 <span class="comment">%   License, or (at your option) any later version.</span>
+0124 <span class="comment">%</span>
+0125 <span class="comment">%   SPGL1 is distributed in the hope that it will be useful, but WITHOUT</span>
+0126 <span class="comment">%   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY</span>
+0127 <span class="comment">%   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General</span>
+0128 <span class="comment">%   Public License for more details.</span>
+0129 <span class="comment">%</span>
+0130 <span class="comment">%   You should have received a copy of the GNU Lesser General Public</span>
+0131 <span class="comment">%   License along with SPGL1; if not, write to the Free Software</span>
+0132 <span class="comment">%   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301</span>
+0133 <span class="comment">%   USA</span>
+0134 <span class="comment">%   ----------------------------------------------------------------------</span>
+0135 REVISION = <span class="string">'$Revision: 1017 $'</span>;
+0136 DATE     = <span class="string">'$Date: 2008-06-16 22:43:07 -0700 (Mon, 16 Jun 2008) $'</span>;
+0137 REVISION = REVISION(11:end-1);
+0138 DATE     = DATE(35:50);
+0139 
+0140 tic;              <span class="comment">% Start your watches!</span>
+0141 m = length(b);
+0142 
+0143 <span class="comment">%----------------------------------------------------------------------</span>
+0144 <span class="comment">% Check arguments.</span>
+0145 <span class="comment">%----------------------------------------------------------------------</span>
+0146 <span class="keyword">if</span> ~exist(<span class="string">'options'</span>,<span class="string">'var'</span>), options = []; <span class="keyword">end</span>
+0147 <span class="keyword">if</span> ~exist(<span class="string">'x'</span>,<span class="string">'var'</span>), x = []; <span class="keyword">end</span>
+0148 <span class="keyword">if</span> ~exist(<span class="string">'sigma'</span>,<span class="string">'var'</span>), sigma = []; <span class="keyword">end</span>
+0149 <span class="keyword">if</span> ~exist(<span class="string">'tau'</span>,<span class="string">'var'</span>), tau = []; <span class="keyword">end</span>
+0150 
+0151 <span class="keyword">if</span> nargin &lt; 2 || isempty(b) || isempty(A)
+0152    error(<span class="string">'At least two arguments are required'</span>);
+0153 <span class="keyword">elseif</span> isempty(tau) &amp;&amp; isempty(sigma)
+0154    tau = 0;
+0155    sigma = 0;
+0156    singleTau = false;
+0157 <span class="keyword">elseif</span> isempty(sigma) <span class="comment">% &amp;&amp; ~isempty(tau)  &lt;-- implied</span>
+0158    singleTau = true;
+0159 <span class="keyword">else</span>
+0160    <span class="keyword">if</span> isempty(tau)
+0161       tau = 0;
+0162    <span class="keyword">end</span>
+0163    singleTau = false;
+0164 <span class="keyword">end</span>
+0165 
+0166 <span class="comment">%----------------------------------------------------------------------</span>
+0167 <span class="comment">% Grab input options and set defaults where needed.</span>
+0168 <span class="comment">%----------------------------------------------------------------------</span>
+0169 defaultopts = <a href="spgSetParms.html" class="code" title="function options = spgSetParms(varargin)">spgSetParms</a>(<span class="keyword">...</span>
+0170 <span class="string">'fid'</span>        ,      1 , <span class="keyword">...</span><span class="comment"> % File ID for output</span>
+0171 <span class="string">'verbosity'</span>  ,      2 , <span class="keyword">...</span><span class="comment"> % Verbosity level</span>
+0172 <span class="string">'iterations'</span> ,   10*m , <span class="keyword">...</span><span class="comment"> % Max number of iterations</span>
+0173 <span class="string">'nPrevVals'</span>  ,      3 , <span class="keyword">...</span><span class="comment"> % Number previous func values for linesearch</span>
+0174 <span class="string">'bpTol'</span>      ,  1e-06 , <span class="keyword">...</span><span class="comment"> % Tolerance for basis pursuit solution </span>
+0175 <span class="string">'optTol'</span>     ,  1e-04 , <span class="keyword">...</span><span class="comment"> % Optimality tolerance</span>
+0176 <span class="string">'decTol'</span>     ,  1e-04 , <span class="keyword">...</span><span class="comment"> % Req'd rel. change in primal obj. for Newton</span>
+0177 <span class="string">'stepMin'</span>    ,  1e-16 , <span class="keyword">...</span><span class="comment"> % Minimum spectral step</span>
+0178 <span class="string">'stepMax'</span>    ,  1e+05 , <span class="keyword">...</span><span class="comment"> % Maximum spectral step</span>
+0179 <span class="string">'rootMethod'</span> ,      2 , <span class="keyword">...</span><span class="comment"> % Root finding method: 2=quad,1=linear (not used).</span>
+0180 <span class="string">'activeSetIt'</span>,    Inf , <span class="keyword">...</span><span class="comment"> % Exit with EXIT_ACTIVE_SET if nnz same for # its.</span>
+0181 <span class="string">'subspaceMin'</span>,      0 , <span class="keyword">...</span><span class="comment"> % Use subspace minimization</span>
+0182 <span class="string">'iscomplex'</span>  ,    NaN , <span class="keyword">...</span><span class="comment"> % Flag set to indicate complex problem</span>
+0183 <span class="string">'maxMatvec'</span>  ,    Inf , <span class="keyword">...</span><span class="comment"> % Maximum matrix-vector multiplies allowed</span>
+0184 <span class="string">'weights'</span>    ,      1 , <span class="keyword">...</span><span class="comment"> % Weights W in ||Wx||_1</span>
+0185 <span class="string">'project'</span>    , @NormL1_project , <span class="keyword">...</span>
+0186 <span class="string">'primal_norm'</span>, @NormL1_primal  , <span class="keyword">...</span>
+0187 <span class="string">'dual_norm'</span>  , @NormL1_dual      <span class="keyword">...</span>
+0188    );
+0189 options = <a href="spgSetParms.html" class="code" title="function options = spgSetParms(varargin)">spgSetParms</a>(defaultopts, options);
+0190 
+0191 fid           = options.fid;
+0192 logLevel      = options.verbosity;
+0193 maxIts        = options.iterations;
+0194 nPrevVals     = options.nPrevVals;
+0195 bpTol         = options.bpTol;
+0196 optTol        = options.optTol;
+0197 decTol        = options.decTol;
+0198 stepMin       = options.stepMin;
+0199 stepMax       = options.stepMax;
+0200 activeSetIt   = options.activeSetIt;
+0201 subspaceMin   = options.subspaceMin;
+0202 maxMatvec     = max(3,options.maxMatvec);
+0203 weights       = options.weights;
+0204 
+0205 maxLineErrors = 10;     <span class="comment">% Maximum number of line-search failures.</span>
+0206 pivTol        = 1e-12;  <span class="comment">% Threshold for significant Newton step.</span>
+0207 
+0208 <span class="comment">%----------------------------------------------------------------------</span>
+0209 <span class="comment">% Initialize local variables.</span>
+0210 <span class="comment">%----------------------------------------------------------------------</span>
+0211 iter          = 0;  itnTotLSQR = 0; <span class="comment">% Total SPGL1 and LSQR iterations.</span>
+0212 nProdA        = 0;  nProdAt    = 0;
+0213 lastFv        = -inf(nPrevVals,1);  <span class="comment">% Last m function values.</span>
+0214 nLineTot      = 0;                  <span class="comment">% Total no. of linesearch steps.</span>
+0215 printTau      = false;
+0216 nNewton       = 0;
+0217 bNorm         = norm(b,2);
+0218 stat          = false;
+0219 timeProject   = 0;
+0220 timeMatProd   = 0;
+0221 nnzIter       = 0;                  <span class="comment">% No. of its with fixed pattern.</span>
+0222 nnzIdx        = [];                 <span class="comment">% Active-set indicator.</span>
+0223 subspace      = false;              <span class="comment">% Flag if did subspace min in current itn.</span>
+0224 stepG         = 1;                  <span class="comment">% Step length for projected gradient.</span>
+0225 testUpdateTau = 0;                  <span class="comment">% Previous step did not update tau</span>
+0226 
+0227 <span class="comment">% Determine initial x, vector length n, and see if problem is complex</span>
+0228 explicit = ~(isa(A,<span class="string">'function_handle'</span>));
+0229 <span class="keyword">if</span> isempty(x)
+0230    <span class="keyword">if</span> isnumeric(A)
+0231       n = size(A,2);
+0232       realx = isreal(A) &amp;&amp; isreal(b);
+0233    <span class="keyword">else</span>
+0234       x = <a href="#_sub1" class="code" title="subfunction z = Aprod(x,mode)">Aprod</a>(b,2);
+0235       n = length(x);
+0236       realx = isreal(x) &amp;&amp; isreal(b);
+0237    <span class="keyword">end</span>
+0238    x = zeros(n,1);
+0239 <span class="keyword">else</span>
+0240    n     = length(x);
+0241    realx = isreal(x) &amp;&amp; isreal(b);
+0242 <span class="keyword">end</span>
+0243 <span class="keyword">if</span> isnumeric(A), realx = realx &amp;&amp; isreal(A); <span class="keyword">end</span>;
+0244 
+0245 <span class="comment">% Override options when options.iscomplex flag is set</span>
+0246 <span class="keyword">if</span> (~isnan(options.iscomplex)), realx = (options.iscomplex == 0); <span class="keyword">end</span>
+0247 
+0248 <span class="comment">% Check if all weights (if any) are strictly positive. In previous</span>
+0249 <span class="comment">% versions we also checked if the number of weights was equal to</span>
+0250 <span class="comment">% n. In the case of multiple measurement vectors, this no longer</span>
+0251 <span class="comment">% needs to apply, so the check was removed.</span>
+0252 <span class="keyword">if</span> ~isempty(weights)
+0253   <span class="keyword">if</span> any(~isfinite(weights))
+0254      error(<span class="string">'Entries in options.weights must be finite'</span>);
+0255   <span class="keyword">end</span>
+0256   <span class="keyword">if</span> any(weights &lt;= 0)
+0257      error(<span class="string">'Entries in options.weights must be strictly positive'</span>);
+0258   <span class="keyword">end</span>
+0259 <span class="keyword">else</span>
+0260   weights = 1;
+0261 <span class="keyword">end</span>
+0262 
+0263 <span class="comment">% Quick exit if sigma &gt;= ||b||.  Set tau = 0 to short-circuit the loop.</span>
+0264 <span class="keyword">if</span> bNorm &lt;= sigma
+0265    <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">'W: sigma &gt;= ||b||.  Exact solution is x = 0.\n'</span>);
+0266    tau = 0;  singleTau = true;
+0267 <span class="keyword">end</span> 
+0268   
+0269 <span class="comment">% Don't do subspace minimization if x is complex.</span>
+0270 <span class="keyword">if</span> ~realx &amp;&amp; subspaceMin
+0271    <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">'W: Subspace minimization disabled when variables are complex.\n'</span>);
+0272    subspaceMin = false;
+0273 <span class="keyword">end</span>
+0274 
+0275 <span class="comment">% Pre-allocate iteration info vectors</span>
+0276 xNorm1 = zeros(min(maxIts,10000),1);
+0277 rNorm2 = zeros(min(maxIts,10000),1);
+0278 lambda = zeros(min(maxIts,10000),1);
+0279 
+0280 <span class="comment">% Exit conditions (constants).</span>
+0281 EXIT_ROOT_FOUND    = 1;
+0282 EXIT_BPSOL1_FOUND  = 2;
+0283 EXIT_BPSOL2_FOUND  = 3;
+0284 EXIT_OPTIMAL       = 4;
+0285 EXIT_ITERATIONS    = 5;
+0286 EXIT_LINE_ERROR    = 6;
+0287 EXIT_SUBOPTIMAL_BP = 7;
+0288 EXIT_MATVEC_LIMIT  = 8;
+0289 EXIT_ACTIVE_SET    = 9; <span class="comment">% [sic]</span>
+0290 
+0291 <span class="comment">%----------------------------------------------------------------------</span>
+0292 <span class="comment">% Log header.</span>
+0293 <span class="comment">%----------------------------------------------------------------------</span>
+0294 <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">'\n'</span>);
+0295 <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">' %s\n'</span>,repmat(<span class="string">'='</span>,1,80));
+0296 <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">' SPGL1  v.%s (%s)\n'</span>, REVISION, DATE);
+0297 <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">' %s\n'</span>,repmat(<span class="string">'='</span>,1,80));
+0298 <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">' %-22s: %8i %4s'</span>   ,<span class="string">'No. rows'</span>          ,m       ,<span class="string">''</span>);
+0299 <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">' %-22s: %8i\n'</span>     ,<span class="string">'No. columns'</span>       ,n          );
+0300 <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">' %-22s: %8.2e %4s'</span> ,<span class="string">'Initial tau'</span>       ,tau     ,<span class="string">''</span>);
+0301 <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">' %-22s: %8.2e\n'</span>   ,<span class="string">'Two-norm of b'</span>     ,bNorm      );
+0302 <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">' %-22s: %8.2e %4s'</span> ,<span class="string">'Optimality tol'</span>    ,optTol  ,<span class="string">''</span>);
+0303 <span class="keyword">if</span> singleTau
+0304    <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">' %-22s: %8.2e\n'</span>  ,<span class="string">'Target one-norm of x'</span>  ,tau       );
+0305 <span class="keyword">else</span>
+0306    <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">' %-22s: %8.2e\n'</span>,<span class="string">'Target objective'</span>  ,sigma      );
+0307 <span class="keyword">end</span>
+0308 <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">' %-22s: %8.2e %4s'</span> ,<span class="string">'Basis pursuit tol'</span> ,bpTol   ,<span class="string">''</span>);
+0309 <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">' %-22s: %8i\n'</span>     ,<span class="string">'Maximum iterations'</span>,maxIts     );
+0310 <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">'\n'</span>);
+0311 <span class="keyword">if</span> singleTau
+0312    logB = <span class="string">' %5i  %13.7e  %13.7e  %9.2e  %6.1f  %6i  %6i'</span>;
+0313    logH = <span class="string">' %5s  %13s  %13s  %9s  %6s  %6s  %6s\n'</span>;
+0314    <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(logH,<span class="string">'Iter'</span>,<span class="string">'Objective'</span>,<span class="string">'Relative Gap'</span>,<span class="string">'gNorm'</span>,<span class="string">'stepG'</span>,<span class="string">'nnzX'</span>,<span class="string">'nnzG'</span>);
+0315 <span class="keyword">else</span>
+0316    logB = <span class="string">' %5i  %13.7e  %13.7e  %9.2e  %9.3e  %6.1f  %6i  %6i'</span>;
+0317    logH = <span class="string">' %5s  %13s  %13s  %9s  %9s  %6s  %6s  %6s  %13s\n'</span>;
+0318    <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(logH,<span class="string">'Iter'</span>,<span class="string">'Objective'</span>,<span class="string">'Relative Gap'</span>,<span class="string">'Rel Error'</span>,<span class="keyword">...</span>
+0319           <span class="string">'gNorm'</span>,<span class="string">'stepG'</span>,<span class="string">'nnzX'</span>,<span class="string">'nnzG'</span>,<span class="string">'tau'</span>);
+0320 <span class="keyword">end</span>    
+0321     
+0322 <span class="comment">% Project the starting point and evaluate function and gradient.</span>
+0323 x         = <a href="#_sub3" class="code" title="subfunction x = project(x, tau)">project</a>(x,tau);
+0324 r         = b - <a href="#_sub1" class="code" title="subfunction z = Aprod(x,mode)">Aprod</a>(x,1);  <span class="comment">% r = b - Ax</span>
+0325 g         =   - <a href="#_sub1" class="code" title="subfunction z = Aprod(x,mode)">Aprod</a>(r,2);  <span class="comment">% g = -A'r</span>
+0326 f         = r'*r / 2; 
+0327 
+0328 <span class="comment">% Required for nonmonotone strategy.</span>
+0329 lastFv(1) = f;
+0330 fBest     = f;
+0331 xBest     = x;
+0332 fOld      = f;
+0333 
+0334 <span class="comment">% Compute projected gradient direction and initial steplength.</span>
+0335 dx     = <a href="#_sub3" class="code" title="subfunction x = project(x, tau)">project</a>(x - g, tau) - x;
+0336 dxNorm = norm(dx,inf);
+0337 <span class="keyword">if</span> dxNorm &lt; (1 / stepMax)
+0338    gStep = stepMax;
+0339 <span class="keyword">else</span>
+0340    gStep = min( stepMax, max(stepMin, 1/dxNorm) );
+0341 <span class="keyword">end</span>
+0342 
+0343 <span class="comment">%----------------------------------------------------------------------</span>
+0344 <span class="comment">% MAIN LOOP.</span>
+0345 <span class="comment">%----------------------------------------------------------------------</span>
+0346 <span class="keyword">while</span> 1
+0347     
+0348     <span class="comment">%------------------------------------------------------------------</span>
+0349     <span class="comment">% Test exit conditions.</span>
+0350     <span class="comment">%------------------------------------------------------------------</span>
+0351 
+0352     <span class="comment">% Compute quantities needed for log and exit conditions.</span>
+0353     gNorm   = options.dual_norm(-g,weights);
+0354     rNorm   = norm(r, 2);
+0355     gap     = r'*(r-b) + tau*gNorm;
+0356     rGap    = abs(gap) / max(1,f);
+0357     aError1 = rNorm - sigma;
+0358     aError2 = f - sigma^2 / 2;
+0359     rError1 = abs(aError1) / max(1,rNorm);
+0360     rError2 = abs(aError2) / max(1,f);
+0361 
+0362     <span class="comment">% Count number of consecutive iterations with identical support.</span>
+0363     nnzOld = nnzIdx;
+0364     [nnzX,nnzG,nnzIdx,nnzDiff] = <a href="#_sub4" class="code" title="subfunction [nnzX,nnzG,nnzIdx,nnzDiff] = activeVars(x,g,nnzIdx,options)">activeVars</a>(x,g,nnzIdx,options);
+0365 
+0366     <span class="keyword">if</span> nnzDiff
+0367        nnzIter = 0;
+0368     <span class="keyword">else</span>
+0369        nnzIter = nnzIter + 1;
+0370        <span class="keyword">if</span> nnzIter &gt;= activeSetIt, stat=EXIT_ACTIVE_SET; <span class="keyword">end</span>
+0371     <span class="keyword">end</span>
+0372     
+0373     <span class="comment">% Single tau: Check if we're optimal.</span>
+0374     <span class="comment">% The 2nd condition is there to guard against large tau.</span>
+0375     <span class="keyword">if</span> singleTau
+0376        <span class="keyword">if</span> rGap &lt;= optTol || rNorm &lt; optTol*bNorm
+0377           stat  = EXIT_OPTIMAL;
+0378        <span class="keyword">end</span>
+0379  
+0380     <span class="comment">% Multiple tau: Check if found root and/or if tau needs updating.</span>
+0381     <span class="keyword">else</span>
+0382        
+0383        <span class="keyword">if</span> rGap &lt;= max(optTol, rError2) || rError1 &lt;= optTol
+0384           <span class="comment">% The problem is nearly optimal for the current tau.</span>
+0385           <span class="comment">% Check optimality of the current root.</span>
+0386           test1 = rNorm       &lt;=   bpTol * bNorm;
+0387           test2 = gNorm       &lt;=   bpTol * rNorm;
+0388           test3 = rError1     &lt;=  optTol;
+0389           test4 = rNorm       &lt;=  sigma;
+0390           
+0391           <span class="keyword">if</span> test4, stat=EXIT_SUBOPTIMAL_BP;<span class="keyword">end</span> <span class="comment">% Found suboptimal BP sol.</span>
+0392           <span class="keyword">if</span> test3, stat=EXIT_ROOT_FOUND;   <span class="keyword">end</span> <span class="comment">% Found approx root.</span>
+0393           <span class="keyword">if</span> test2, stat=EXIT_BPSOL2_FOUND; <span class="keyword">end</span> <span class="comment">% Gradient zero -&gt; BP sol.</span>
+0394           <span class="keyword">if</span> test1, stat=EXIT_BPSOL1_FOUND; <span class="keyword">end</span> <span class="comment">% Resid minim'zd -&gt; BP sol.</span>
+0395        <span class="keyword">end</span>
+0396 
+0397        testRelChange1 = (abs(f - fOld) &lt;= decTol * f);
+0398        testRelChange2 = (abs(f - fOld) &lt;= 1e-1 * f * (abs(rNorm - sigma)));
+0399        testUpdateTau  = ((testRelChange1 &amp;&amp; rNorm &gt;  2 * sigma) || <span class="keyword">...</span>
+0400                          (testRelChange2 &amp;&amp; rNorm &lt;= 2 * sigma)) &amp;&amp; <span class="keyword">...</span>
+0401                          ~stat &amp;&amp; ~testUpdateTau;
+0402        
+0403        <span class="keyword">if</span> testUpdateTau
+0404           <span class="comment">% Update tau.</span>
+0405           tauOld   = tau;
+0406           tau      = max(0,tau + (rNorm * aError1) / gNorm);
+0407           nNewton  = nNewton + 1;
+0408           printTau = abs(tauOld - tau) &gt;= 1e-6 * tau; <span class="comment">% For log only.</span>
+0409           <span class="keyword">if</span> tau &lt; tauOld
+0410              <span class="comment">% The one-norm ball has decreased.  Need to make sure that the</span>
+0411              <span class="comment">% next iterate if feasible, which we do by projecting it.</span>
+0412              x = <a href="#_sub3" class="code" title="subfunction x = project(x, tau)">project</a>(x,tau);
+0413           <span class="keyword">end</span>
+0414        <span class="keyword">end</span>
+0415     <span class="keyword">end</span>
+0416 
+0417     <span class="comment">% Too many its and not converged.</span>
+0418     <span class="keyword">if</span> ~stat  &amp;&amp;  iter &gt;= maxIts
+0419         stat = EXIT_ITERATIONS;
+0420     <span class="keyword">end</span>
+0421 
+0422     <span class="comment">%------------------------------------------------------------------</span>
+0423     <span class="comment">% Print log, update history and act on exit conditions.</span>
+0424     <span class="comment">%------------------------------------------------------------------</span>
+0425     <span class="keyword">if</span> logLevel &gt;= 2 || singleTau || printTau || iter == 0 || stat
+0426        tauFlag = <span class="string">'              '</span>; subFlag = <span class="string">''</span>;
+0427        <span class="keyword">if</span> printTau, tauFlag = sprintf(<span class="string">' %13.7e'</span>,tau);   <span class="keyword">end</span>
+0428        <span class="keyword">if</span> subspace, subFlag = sprintf(<span class="string">' S %2i'</span>,itnLSQR); <span class="keyword">end</span>
+0429        <span class="keyword">if</span> singleTau
+0430           <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(logB,iter,rNorm,rGap,gNorm,log10(stepG),nnzX,nnzG);
+0431           <span class="keyword">if</span> subspace
+0432              <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">'  %s'</span>,subFlag);
+0433           <span class="keyword">end</span>
+0434        <span class="keyword">else</span>
+0435           <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(logB,iter,rNorm,rGap,rError1,gNorm,log10(stepG),nnzX,nnzG);
+0436           <span class="keyword">if</span> printTau || subspace
+0437              <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">' %s'</span>,[tauFlag subFlag]);
+0438           <span class="keyword">end</span>
+0439        <span class="keyword">end</span>
+0440        <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">'\n'</span>);
+0441     <span class="keyword">end</span>
+0442     printTau = false;
+0443     subspace = false;
+0444     
+0445     <span class="comment">% Update history info</span>
+0446     xNorm1(iter+1) = options.primal_norm(x,weights);
+0447     rNorm2(iter+1) = rNorm;
+0448     lambda(iter+1) = gNorm;
+0449     
+0450     <span class="keyword">if</span> stat, <span class="keyword">break</span>; <span class="keyword">end</span> <span class="comment">% Act on exit conditions.</span>
+0451         
+0452     <span class="comment">%==================================================================</span>
+0453     <span class="comment">% Iterations begin here.</span>
+0454     <span class="comment">%==================================================================</span>
+0455     iter = iter + 1;
+0456     xOld = x;  fOld = f;  gOld = g;  rOld = r;
+0457 
+0458     <span class="keyword">try</span>
+0459        <span class="comment">%---------------------------------------------------------------</span>
+0460        <span class="comment">% Projected gradient step and linesearch.</span>
+0461        <span class="comment">%---------------------------------------------------------------</span>
+0462        [f,x,r,nLine,stepG,lnErr] = <span class="keyword">...</span>
+0463            spgLineCurvy(x,gStep*g,max(lastFv),@<a href="#_sub1" class="code" title="subfunction z = Aprod(x,mode)">Aprod</a>,b,@<a href="#_sub3" class="code" title="subfunction x = project(x, tau)">project</a>,tau);
+0464        nLineTot = nLineTot + nLine;
+0465        <span class="keyword">if</span> lnErr
+0466           <span class="comment">%  Projected backtrack failed. Retry with feasible dir'n linesearch.</span>
+0467           x    = xOld;
+0468           dx   = <a href="#_sub3" class="code" title="subfunction x = project(x, tau)">project</a>(x - gStep*g, tau) - x;
+0469           gtd  = g'*dx;
+0470           [f,x,r,nLine,lnErr] = <a href="#_sub6" class="code" title="subfunction [fNew,xNew,rNew,iter,err] = spgLine(f,x,d,gtd,fMax,Aprod,b)">spgLine</a>(f,x,dx,gtd,max(lastFv),@<a href="#_sub1" class="code" title="subfunction z = Aprod(x,mode)">Aprod</a>,b);
+0471           nLineTot = nLineTot + nLine;
+0472        <span class="keyword">end</span>
+0473        <span class="keyword">if</span> lnErr
+0474        <span class="comment">%  Failed again.  Revert to previous iterates and damp max BB step.</span>
+0475           <span class="keyword">if</span> maxLineErrors &lt;= 0
+0476              stat = EXIT_LINE_ERROR;
+0477           <span class="keyword">else</span>
+0478              stepMax = stepMax / 10;
+0479              <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>([<span class="string">'W: Linesearch failed with error %i. '</span><span class="keyword">...</span>
+0480                      <span class="string">'Damping max BB scaling to %6.1e.\n'</span>],lnErr,stepMax);
+0481              maxLineErrors = maxLineErrors - 1;
+0482           <span class="keyword">end</span>
+0483        <span class="keyword">end</span>
+0484 
+0485        <span class="comment">%---------------------------------------------------------------</span>
+0486        <span class="comment">% Subspace minimization (only if active-set change is small).</span>
+0487        <span class="comment">%---------------------------------------------------------------</span>
+0488        doSubspaceMin = false;
+0489        <span class="keyword">if</span> subspaceMin
+0490           g = - <a href="#_sub1" class="code" title="subfunction z = Aprod(x,mode)">Aprod</a>(r,2);
+0491           [nnzX,nnzG,nnzIdx,nnzDiff] = <a href="#_sub4" class="code" title="subfunction [nnzX,nnzG,nnzIdx,nnzDiff] = activeVars(x,g,nnzIdx,options)">activeVars</a>(x,g,nnzOld,options);
+0492           <span class="keyword">if</span> ~nnzDiff
+0493               <span class="keyword">if</span> nnzX == nnzG, itnMaxLSQR = 20;
+0494               <span class="keyword">else</span>             itnMaxLSQR = 5;
+0495               <span class="keyword">end</span>
+0496               nnzIdx = abs(x) &gt;= optTol; 
+0497               doSubspaceMin = true;
+0498           <span class="keyword">end</span>
+0499        <span class="keyword">end</span>
+0500 
+0501        <span class="keyword">if</span> doSubspaceMin
+0502      
+0503           <span class="comment">% LSQR parameters</span>
+0504           damp       = 1e-5;
+0505           aTol       = 1e-1;
+0506           bTol       = 1e-1;
+0507           conLim     = 1e12;
+0508           showLSQR   = 0;
+0509        
+0510           ebar   = sign(x(nnzIdx));
+0511           nebar  = length(ebar);
+0512           Sprod  = @(y,mode)<a href="#_sub5" class="code" title="subfunction z = LSQRprod(Aprod,nnzIdx,ebar,n,dx,mode)">LSQRprod</a>(@<a href="#_sub1" class="code" title="subfunction z = Aprod(x,mode)">Aprod</a>,nnzIdx,ebar,n,y,mode);
+0513        
+0514           [dxbar, istop, itnLSQR] = <span class="keyword">...</span>
+0515              lsqr(m,nebar,Sprod,r,damp,aTol,bTol,conLim,itnMaxLSQR,showLSQR);
+0516               
+0517           itnTotLSQR = itnTotLSQR + itnLSQR;
+0518        
+0519           <span class="keyword">if</span> istop ~= 4  <span class="comment">% LSQR iterations successful. Take the subspace step.</span>
+0520              <span class="comment">% Push dx back into full space:  dx = Z dx.</span>
+0521              dx = zeros(n,1);
+0522              dx(nnzIdx) = dxbar - (1/nebar)*(ebar'*dxbar)*dxbar;
+0523 
+0524              <span class="comment">% Find largest step to a change in sign.</span>
+0525              block1 = nnzIdx  &amp;  x &lt; 0  &amp;  dx &gt; +pivTol;
+0526              block2 = nnzIdx  &amp;  x &gt; 0  &amp;  dx &lt; -pivTol;
+0527              alpha1 = Inf; alpha2 = Inf;
+0528              <span class="keyword">if</span> any(block1), alpha1 = min(-x(block1) ./ dx(block1)); <span class="keyword">end</span>
+0529              <span class="keyword">if</span> any(block2), alpha2 = min(-x(block2) ./ dx(block2)); <span class="keyword">end</span>
+0530              alpha = min([1  alpha1  alpha2]);
+0531              ensure(alpha &gt;= 0);
+0532              ensure(ebar'*dx(nnzIdx) &lt;= optTol);          
+0533           
+0534              <span class="comment">% Update variables.</span>
+0535              x    = x + alpha*dx;
+0536              r    = b - <a href="#_sub1" class="code" title="subfunction z = Aprod(x,mode)">Aprod</a>(x,1);
+0537              f    = r'*r / 2;
+0538              subspace = true;
+0539           <span class="keyword">end</span>
+0540        <span class="keyword">end</span>
+0541        
+0542        ensure(options.primal_norm(x,weights) &lt;= tau+optTol);
+0543 
+0544        <span class="comment">%---------------------------------------------------------------</span>
+0545        <span class="comment">% Update gradient and compute new Barzilai-Borwein scaling.</span>
+0546        <span class="comment">%---------------------------------------------------------------</span>
+0547        g    = - <a href="#_sub1" class="code" title="subfunction z = Aprod(x,mode)">Aprod</a>(r,2);
+0548        s    = x - xOld;
+0549        y    = g - gOld;
+0550        sts  = s'*s;
+0551        sty  = s'*y;
+0552        <span class="keyword">if</span>   sty &lt;= 0,  gStep = stepMax;
+0553        <span class="keyword">else</span>            gStep = min( stepMax, max(stepMin, sts/sty) );
+0554        <span class="keyword">end</span>
+0555        
+0556     <span class="keyword">catch</span> <span class="comment">% Detect matrix-vector multiply limit error</span>
+0557        err = lasterror;
+0558        <span class="keyword">if</span> strcmp(err.identifier,<span class="string">'SPGL1:MaximumMatvec'</span>)
+0559          stat = EXIT_MATVEC_LIMIT;
+0560          iter = iter - 1;
+0561          x = xOld;  f = fOld;  g = gOld;  r = rOld;
+0562          <span class="keyword">break</span>;
+0563        <span class="keyword">else</span>
+0564          rethrow(err);
+0565        <span class="keyword">end</span>
+0566     <span class="keyword">end</span>
+0567 
+0568     <span class="comment">%------------------------------------------------------------------</span>
+0569     <span class="comment">% Update function history.</span>
+0570     <span class="comment">%------------------------------------------------------------------</span>
+0571     <span class="keyword">if</span> singleTau || f &gt; sigma^2 / 2 <span class="comment">% Don't update if superoptimal.</span>
+0572        lastFv(mod(iter,nPrevVals)+1) = f;
+0573        <span class="keyword">if</span> fBest &gt; f
+0574           fBest = f;
+0575           xBest = x;
+0576        <span class="keyword">end</span>
+0577     <span class="keyword">end</span>
+0578 
+0579 <span class="keyword">end</span> <span class="comment">% while 1</span>
+0580 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0581 
+0582 <span class="comment">% Restore best solution (only if solving single problem).</span>
+0583 <span class="keyword">if</span> singleTau &amp;&amp; f &gt; fBest
+0584    rNorm = sqrt(2*fBest);
+0585    <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">'\n Restoring best iterate to objective %13.7e\n'</span>,rNorm);
+0586    x = xBest;
+0587    r = b - <a href="#_sub1" class="code" title="subfunction z = Aprod(x,mode)">Aprod</a>(x,1);
+0588    g =   - <a href="#_sub1" class="code" title="subfunction z = Aprod(x,mode)">Aprod</a>(r,2);
+0589    gNorm = options.dual_norm(g,weights);
+0590    rNorm = norm(r,  2);
+0591 <span class="keyword">end</span>
+0592 
+0593 <span class="comment">% Final cleanup before exit.</span>
+0594 info.tau         = tau;
+0595 info.rNorm       = rNorm;
+0596 info.rGap        = rGap;
+0597 info.gNorm       = gNorm;
+0598 info.rGap        = rGap;
+0599 info.stat        = stat;
+0600 info.iter        = iter;
+0601 info.nProdA      = nProdA;
+0602 info.nProdAt     = nProdAt;
+0603 info.nNewton     = nNewton;
+0604 info.timeProject = timeProject;
+0605 info.timeMatProd = timeMatProd;
+0606 info.itnLSQR     = itnTotLSQR;
+0607 info.options     = options;
+0608 info.timeTotal   = toc;
+0609 
+0610 info.xNorm1      = xNorm1(1:iter);
+0611 info.rNorm2      = rNorm2(1:iter);
+0612 info.lambda      = lambda(1:iter);
+0613 
+0614 <span class="comment">% Print final output.</span>
+0615 <span class="keyword">switch</span> (stat)
+0616    <span class="keyword">case</span> EXIT_OPTIMAL
+0617       <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">'\n EXIT -- Optimal solution found\n'</span>)
+0618    <span class="keyword">case</span> EXIT_ITERATIONS
+0619       <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">'\n ERROR EXIT -- Too many iterations\n'</span>);
+0620    <span class="keyword">case</span> EXIT_ROOT_FOUND
+0621       <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">'\n EXIT -- Found a root\n'</span>);
+0622    <span class="keyword">case</span> {EXIT_BPSOL1_FOUND, EXIT_BPSOL2_FOUND}
+0623       <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">'\n EXIT -- Found a BP solution\n'</span>);
+0624    <span class="keyword">case</span> EXIT_LINE_ERROR
+0625       <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">'\n ERROR EXIT -- Linesearch error (%i)\n'</span>,lnErr);
+0626    <span class="keyword">case</span> EXIT_SUBOPTIMAL_BP
+0627       <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">'\n EXIT -- Found a suboptimal BP solution\n'</span>);
+0628    <span class="keyword">case</span> EXIT_MATVEC_LIMIT
+0629       <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">'\n EXIT -- Maximum matrix-vector operations reached\n'</span>);
+0630    <span class="keyword">case</span> EXIT_ACTIVE_SET
+0631       <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">'\n EXIT -- Found a possible active set\n'</span>);
+0632    <span class="keyword">otherwise</span>
+0633       error(<span class="string">'Unknown termination condition\n'</span>);
+0634 <span class="keyword">end</span>
+0635 <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">'\n'</span>);
+0636 <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">' %-20s:  %6i %6s %-20s:  %6.1f\n'</span>,<span class="keyword">...</span>
+0637    <span class="string">'Products with A'</span>,nProdA,<span class="string">''</span>,<span class="string">'Total time   (secs)'</span>,info.timeTotal);
+0638 <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">' %-20s:  %6i %6s %-20s:  %6.1f\n'</span>,<span class="keyword">...</span>
+0639    <span class="string">'Products with A'''</span>,nProdAt,<span class="string">''</span>,<span class="string">'Project time (secs)'</span>,timeProject);
+0640 <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">' %-20s:  %6i %6s %-20s:  %6.1f\n'</span>,<span class="keyword">...</span>
+0641    <span class="string">'Newton iterations'</span>,nNewton,<span class="string">''</span>,<span class="string">'Mat-vec time (secs)'</span>,timeMatProd);
+0642 <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">' %-20s:  %6i %6s %-20s:  %6i\n'</span>, <span class="keyword">...</span>
+0643    <span class="string">'Line search its'</span>,nLineTot,<span class="string">''</span>,<span class="string">'Subspace iterations'</span>,itnTotLSQR);
+0644 <a href="#_sub2" class="code" title="subfunction printf(varargin)">printf</a>(<span class="string">'\n'</span>);
+0645 
+0646 
+0647 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0648 <span class="comment">% NESTED FUNCTIONS.  These share some vars with workspace above.</span>
+0649 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0650     
+0651 <a name="_sub1" href="#_subfunctions" class="code">function z = Aprod(x,mode)</a>
+0652    <span class="keyword">if</span> (nProdA + nProdAt &gt;= maxMatvec)
+0653      error(<span class="string">'SPGL1:MaximumMatvec'</span>,<span class="string">''</span>);
+0654    <span class="keyword">end</span>
+0655      
+0656    tStart = toc;
+0657    <span class="keyword">if</span> mode == 1
+0658       nProdA = nProdA + 1;
+0659       <span class="keyword">if</span>   explicit, z = A*x;
+0660       <span class="keyword">else</span>           z = A(x,1);
+0661       <span class="keyword">end</span>
+0662    <span class="keyword">elseif</span> mode == 2
+0663       nProdAt = nProdAt + 1;
+0664       <span class="keyword">if</span>   explicit, z = A'*x;
+0665       <span class="keyword">else</span>           z = A(x,2);
+0666       <span class="keyword">end</span>
+0667    <span class="keyword">else</span>
+0668       error(<span class="string">'Wrong mode!'</span>);
+0669    <span class="keyword">end</span>
+0670    timeMatProd = timeMatProd + (toc - tStart);
+0671 <span class="keyword">end</span> <span class="comment">% function Aprod</span>
+0672 
+0673 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0674 
+0675 <a name="_sub2" href="#_subfunctions" class="code">function printf(varargin)</a>
+0676   <span class="keyword">if</span> logLevel &gt; 0
+0677      fprintf(fid,varargin{:});
+0678   <span class="keyword">end</span>
+0679 <span class="keyword">end</span> <span class="comment">% function printf</span>
+0680 
+0681 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0682 
+0683 <a name="_sub3" href="#_subfunctions" class="code">function x = project(x, tau)</a>
+0684    tStart      = toc;
+0685 
+0686    x = options.project(x,weights,tau);
+0687    
+0688    timeProject = timeProject + (toc - tStart);
+0689 <span class="keyword">end</span> <span class="comment">% function project</span>
+0690 
+0691 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0692 <span class="comment">% End of nested functions.</span>
+0693 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0694 
+0695 <span class="keyword">end</span> <span class="comment">% function spg</span>
+0696 
+0697 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0698 <span class="comment">% PRIVATE FUNCTIONS.</span>
+0699 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0700 
+0701 <a name="_sub4" href="#_subfunctions" class="code">function [nnzX,nnzG,nnzIdx,nnzDiff] = activeVars(x,g,nnzIdx,options)</a>
+0702 <span class="comment">% Find the current active set.</span>
+0703 <span class="comment">% nnzX    is the number of nonzero x.</span>
+0704 <span class="comment">% nnzG    is the number of elements in nnzIdx.</span>
+0705 <span class="comment">% nnzIdx  is a vector of primal/dual indicators.</span>
+0706 <span class="comment">% nnzDiff is the no. of elements that changed in the support.</span>
+0707   xTol    = min(.1,10*options.optTol);
+0708   gTol    = min(.1,10*options.optTol);
+0709   gNorm   = options.dual_norm(g,options.weights);
+0710   nnzOld  = nnzIdx;
+0711 
+0712   <span class="comment">% Reduced costs for postive &amp; negative parts of x.</span>
+0713   z1 = gNorm + g;
+0714   z2 = gNorm - g;
+0715 
+0716   <span class="comment">% Primal/dual based indicators.</span>
+0717   xPos    = x &gt;  xTol  &amp;  z1 &lt; gTol; <span class="comment">%g &lt; gTol;%</span>
+0718   xNeg    = x &lt; -xTol  &amp;  z2 &lt; gTol; <span class="comment">%g &gt; gTol;%</span>
+0719   nnzIdx  = xPos | xNeg;
+0720 
+0721   <span class="comment">% Count is based on simple primal indicator.</span>
+0722   nnzX    = sum(abs(x) &gt;= xTol);
+0723   nnzG    = sum(nnzIdx);
+0724   
+0725   <span class="keyword">if</span> isempty(nnzOld)
+0726      nnzDiff = inf;
+0727   <span class="keyword">else</span>
+0728      nnzDiff = sum(nnzIdx ~= nnzOld);
+0729   <span class="keyword">end</span>
+0730   
+0731 <span class="keyword">end</span> <span class="comment">% function spgActiveVars</span>
+0732 
+0733 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0734 
+0735 <a name="_sub5" href="#_subfunctions" class="code">function z = LSQRprod(Aprod,nnzIdx,ebar,n,dx,mode)</a>
+0736 <span class="comment">% Matrix multiplication for subspace minimization.</span>
+0737 <span class="comment">% Only called by LSQR.</span>
+0738   nbar = length(ebar);
+0739    <span class="keyword">if</span> mode == 1
+0740       y = zeros(n,1);
+0741       y(nnzIdx) = dx - (1/nbar)*(ebar'*dx)*ebar; <span class="comment">% y(nnzIdx) = Z*dx</span>
+0742       z = <a href="#_sub1" class="code" title="subfunction z = Aprod(x,mode)">Aprod</a>(y,1);                            <span class="comment">% z = S Z dx</span>
+0743    <span class="keyword">else</span>
+0744       y = <a href="#_sub1" class="code" title="subfunction z = Aprod(x,mode)">Aprod</a>(dx,2);
+0745       z = y(nnzIdx) - (1/nbar)*(ebar'*y(nnzIdx))*ebar;
+0746    <span class="keyword">end</span>
+0747 <span class="keyword">end</span>
+0748 
+0749 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0750 
+0751 <a name="_sub6" href="#_subfunctions" class="code">function [fNew,xNew,rNew,iter,err] = spgLine(f,x,d,gtd,fMax,Aprod,b)</a>
+0752 <span class="comment">% Nonmonotone linesearch.</span>
+0753 
+0754 EXIT_CONVERGED  = 0;
+0755 EXIT_ITERATIONS = 1;
+0756 maxIts = 10;
+0757 step   = 1;
+0758 iter   = 0;
+0759 gamma  = 1e-4;
+0760 gtd    = -abs(gtd); <span class="comment">% 03 Aug 07: If gtd is complex,</span>
+0761                     <span class="comment">% then should be looking at -abs(gtd).</span>
+0762 <span class="keyword">while</span> 1
+0763 
+0764     <span class="comment">% Evaluate trial point and function value.</span>
+0765     xNew = x + step*d;
+0766     rNew = b - <a href="#_sub1" class="code" title="subfunction z = Aprod(x,mode)">Aprod</a>(xNew,1);
+0767     fNew = rNew'*rNew / 2;
+0768 
+0769     <span class="comment">% Check exit conditions.</span>
+0770     <span class="keyword">if</span> fNew &lt; fMax + gamma*step*gtd  <span class="comment">% Sufficient descent condition.</span>
+0771        err = EXIT_CONVERGED;
+0772        <span class="keyword">break</span>
+0773     <span class="keyword">elseif</span>  iter &gt;= maxIts           <span class="comment">% Too many linesearch iterations.</span>
+0774        err = EXIT_ITERATIONS;
+0775        <span class="keyword">break</span>
+0776     <span class="keyword">end</span>
+0777     
+0778     <span class="comment">% New linesearch iteration.</span>
+0779     iter = iter + 1;
+0780     
+0781     <span class="comment">% Safeguarded quadratic interpolation.</span>
+0782     <span class="keyword">if</span> step &lt;= 0.1
+0783        step  = step / 2;
+0784     <span class="keyword">else</span>
+0785        tmp = (-gtd*step^2) / (2*(fNew-f-step*gtd));
+0786        <span class="keyword">if</span> tmp &lt; 0.1 || tmp &gt; 0.9*step || isnan(tmp)
+0787           tmp = step / 2;
+0788        <span class="keyword">end</span>
+0789        step = tmp;
+0790     <span class="keyword">end</span>
+0791     
+0792 <span class="keyword">end</span> <span class="comment">% while 1</span>
+0793 
+0794 <span class="keyword">end</span> <span class="comment">% function spgLine</span>
+0795 
+0796 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0797 
+0798 <a name="_sub7" href="#_subfunctions" class="code">function [fNew,xNew,rNew,iter,step,err] = </a><span class="keyword">...</span>
+0799     spgLineCurvy(x,g,fMax,<a href="#_sub1" class="code" title="subfunction z = Aprod(x,mode)">Aprod</a>,b,<a href="#_sub3" class="code" title="subfunction x = project(x, tau)">project</a>,tau)
+0800 <span class="comment">% Projected backtracking linesearch.</span>
+0801 <span class="comment">% On entry,</span>
+0802 <span class="comment">% g  is the (possibly scaled) steepest descent direction.</span>
+0803 
+0804 EXIT_CONVERGED  = 0;
+0805 EXIT_ITERATIONS = 1;
+0806 EXIT_NODESCENT  = 2;
+0807 gamma  = 1e-4;
+0808 maxIts = 10;
+0809 step   =  1;
+0810 sNorm  =  0;
+0811 scale  =  1;      <span class="comment">% Safeguard scaling.  (See below.)</span>
+0812 nSafe  =  0;      <span class="comment">% No. of safeguarding steps.</span>
+0813 iter   =  0;
+0814 debug  =  false;  <span class="comment">% Set to true to enable log.</span>
+0815 n      =  length(x);
+0816 
+0817 <span class="keyword">if</span> debug
+0818    fprintf(<span class="string">' %5s  %13s  %13s  %13s  %8s\n'</span>,<span class="keyword">...</span>
+0819            <span class="string">'LSits'</span>,<span class="string">'fNew'</span>,<span class="string">'step'</span>,<span class="string">'gts'</span>,<span class="string">'scale'</span>);  
+0820 <span class="keyword">end</span>
+0821    
+0822 <span class="keyword">while</span> 1
+0823 
+0824     <span class="comment">% Evaluate trial point and function value.</span>
+0825     xNew     = <a href="#_sub3" class="code" title="subfunction x = project(x, tau)">project</a>(x - step*scale*g, tau);
+0826     rNew     = b - <a href="#_sub1" class="code" title="subfunction z = Aprod(x,mode)">Aprod</a>(xNew,1);
+0827     fNew     = rNew'*rNew / 2;
+0828     s        = xNew - x;
+0829     gts      = scale * g' * s;
+0830     <span class="keyword">if</span> gts &gt;= 0 <span class="comment">% Should we check real and complex parts individually?</span>
+0831        err = EXIT_NODESCENT;
+0832        <span class="keyword">break</span>
+0833     <span class="keyword">end</span>
+0834 
+0835     <span class="keyword">if</span> debug
+0836        fprintf(<span class="string">' LS %2i  %13.7e  %13.7e  %13.6e  %8.1e\n'</span>,<span class="keyword">...</span>
+0837                iter,fNew,step,gts,scale);
+0838     <span class="keyword">end</span>
+0839     
+0840     <span class="comment">% 03 Aug 07: If gts is complex, then should be looking at -abs(gts).</span>
+0841     <span class="keyword">if</span> fNew &lt; fMax - gamma*step*abs(gts)  <span class="comment">% Sufficient descent condition.</span>
+0842        err = EXIT_CONVERGED;
+0843        <span class="keyword">break</span>
+0844     <span class="keyword">elseif</span> iter &gt;= maxIts                 <span class="comment">% Too many linesearch iterations.</span>
+0845        err = EXIT_ITERATIONS;
+0846        <span class="keyword">break</span>
+0847     <span class="keyword">end</span>
+0848     
+0849     <span class="comment">% New linesearch iteration.</span>
+0850     iter = iter + 1;
+0851     step = step / 2;
+0852 
+0853     <span class="comment">% Safeguard: If stepMax is huge, then even damped search</span>
+0854     <span class="comment">% directions can give exactly the same point after projection.  If</span>
+0855     <span class="comment">% we observe this in adjacent iterations, we drastically damp the</span>
+0856     <span class="comment">% next search direction.</span>
+0857     <span class="comment">% 31 May 07: Damp consecutive safeguarding steps.</span>
+0858     sNormOld  = sNorm;
+0859     sNorm     = norm(s) / sqrt(n);
+0860     <span class="comment">%   if sNorm &gt;= sNormOld</span>
+0861     <span class="keyword">if</span> abs(sNorm - sNormOld) &lt;= 1e-6 * sNorm
+0862        gNorm = norm(g) / sqrt(n);
+0863        scale = sNorm / gNorm / (2^nSafe);
+0864        nSafe = nSafe + 1;
+0865     <span class="keyword">end</span>
+0866     
+0867 <span class="keyword">end</span> <span class="comment">% while 1</span>
+0868 
+0869 <span class="keyword">end</span> <span class="comment">% function spgLineCurvy</span></pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of irdwt1</title>
+  <meta name="keywords" content="irdwt1">
+  <meta name="description" content="irdwt1.m">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../../menu.html L1_homotopy_v2.0 --><!-- ../menu.html utils --><!-- menu.html utils_Wavelet -->
+<h1>irdwt1
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>irdwt1.m</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function x = irdwt1(w, g0, g1, nlev) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> irdwt1.m
+
+ Inverse redundant discrete wavelet transform.
+ Inverts &quot;rdwt1.m&quot;
+ Usage : x = irdwt1(w, g0, g1, nlev)
+ w - rdwt coefficients, nlev+1xN
+ g0,g1 - reconstruction filters
+ nlev - number of levels in the decomposition
+
+ Written by : Justin Romberg
+ Created : 8/10/2001</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="cconv.html" class="code" title="function y = cconv(x,h,k)">cconv</a>	cconv.m</li><li><a href="cshift.html" class="code" title="function y = cshift(x, t, dir)">cshift</a>	cshift.m</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% irdwt1.m</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% Inverse redundant discrete wavelet transform.</span>
+0004 <span class="comment">% Inverts &quot;rdwt1.m&quot;</span>
+0005 <span class="comment">% Usage : x = irdwt1(w, g0, g1, nlev)</span>
+0006 <span class="comment">% w - rdwt coefficients, nlev+1xN</span>
+0007 <span class="comment">% g0,g1 - reconstruction filters</span>
+0008 <span class="comment">% nlev - number of levels in the decomposition</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">% Written by : Justin Romberg</span>
+0011 <span class="comment">% Created : 8/10/2001</span>
+0012 
+0013 <a name="_sub0" href="#_subfunctions" class="code">function x = irdwt1(w, g0, g1, nlev)</a>
+0014 
+0015 N = size(w,2);
+0016 
+0017 w = flipud(w);
+0018 w(nlev+1,:) = fliplr(<a href="cshift.html" class="code" title="function y = cshift(x, t, dir)">cshift</a>(w(nlev+1,:), 1, <span class="string">'l'</span>));
+0019 m0 = length(g0);
+0020 m1 = length(g1);
+0021 g0i = reshape([zeros(2^(nlev-1)-1, m0); g0], [1 m0*2^(nlev-1)]);
+0022 g1i = reshape([zeros(2^(nlev-1)-1, m1); g1], [1 m1*2^(nlev-1)]);
+0023 <span class="keyword">for</span> ll = nlev:-1:1
+0024   m0i = length(g0i);
+0025   m1i = length(g1i);
+0026   zi = floor((m1i-m0i)/4)+1;
+0027   si = <a href="cshift.html" class="code" title="function y = cshift(x, t, dir)">cshift</a>(w(ll+1,:), zi, <span class="string">'r'</span>);
+0028   di = fliplr(<a href="cshift.html" class="code" title="function y = cshift(x, t, dir)">cshift</a>(w(ll,:), 1, <span class="string">'l'</span>));
+0029   w(ll,:) = (<a href="cconv.html" class="code" title="function y = cconv(x,h,k)">cconv</a>(si, g0i, floor(m1i/2)) + <a href="cconv.html" class="code" title="function y = cconv(x,h,k)">cconv</a>(di, g1i, floor(m1i/2)))/2;
+0030   g0i = g0i(2:2:end);
+0031   g1i = g1i(2:2:end);
+0032 <span class="keyword">end</span>
+0033 x = w(1,:);</pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

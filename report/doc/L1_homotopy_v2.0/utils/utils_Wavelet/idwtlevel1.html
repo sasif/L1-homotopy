@@ -1,0 +1,118 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of idwtlevel1</title>
+  <meta name="keywords" content="idwtlevel1">
+  <meta name="description" content="idwtlevel1.m">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../../menu.html L1_homotopy_v2.0 --><!-- ../menu.html utils --><!-- menu.html utils_Wavelet -->
+<h1>idwtlevel1
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>idwtlevel1.m</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function x = idwtlevel1(w, g0, g1, sym) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> idwtlevel1.m
+
+ Inverse of one level of the discrete wavelet transform (dwtlevel1).
+
+ Written by : Justin Romberg
+ Created : 5/1/2001</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="cconv.html" class="code" title="function y = cconv(x,h,k)">cconv</a>	cconv.m</li><li><a href="symext.html" class="code" title="function xe = symext(x, ln, rn, par, sym)">symext</a>	symext.m</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="idwtmult1.html" class="code" title="function x = idwtmult1(w, g0, g1, L, sym)">idwtmult1</a>	idwtmult1.m</li><li><a href="idwtmult1_conv.html" class="code" title="function x = idwtmult1_conv(w, g0, g1, J)">idwtmult1_conv</a>	idwtmult1_conv.m</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% idwtlevel1.m</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% Inverse of one level of the discrete wavelet transform (dwtlevel1).</span>
+0004 <span class="comment">%</span>
+0005 <span class="comment">% Written by : Justin Romberg</span>
+0006 <span class="comment">% Created : 5/1/2001</span>
+0007 
+0008 <a name="_sub0" href="#_subfunctions" class="code">function x = idwtlevel1(w, g0, g1, sym)</a>
+0009 
+0010 <span class="keyword">if</span> (nargin == 3), sym = 0; <span class="keyword">end</span>
+0011 
+0012 N = length(w);
+0013 m0 = length(g0);
+0014 m1 = length(g1);
+0015 
+0016 <span class="keyword">if</span> (m0 ~= m1)
+0017   error(<span class="string">'Use biorfilt to create filters'</span>);
+0018 <span class="keyword">end</span>
+0019 
+0020 
+0021 <span class="comment">% NEED TO FIX THIS SO IT WORKS LIKE BIORFILT()</span>
+0022 <span class="comment">% if the filters are uneven lengths, zero pad them</span>
+0023 <span class="comment">%if (m0 &gt; m1)</span>
+0024 <span class="comment">%  g1 = [zeros(1,(m0-m1)/2) g1 zeros(1,(m0-m1)/2)];</span>
+0025 <span class="comment">%  m1 = length(g1);</span>
+0026 <span class="comment">%elseif (m1 &gt; m0)</span>
+0027 <span class="comment">%  g0 = [zeros(1,(m1-m0)/2) g0 zeros(1,(m1-m0)/2)];</span>
+0028 <span class="comment">%  m0 = length(g0);</span>
+0029 <span class="comment">%end</span>
+0030 
+0031 <span class="comment">% center on the middle of the wavelet filter</span>
+0032 <span class="comment">% odd length - hole at (m1-1)/2</span>
+0033 <span class="comment">% even length - hole at m1/2</span>
+0034 k = floor(m1/2)-1;
+0035 <span class="keyword">if</span> (sym == 0)
+0036   <span class="comment">% upsample</span>
+0037   c0 = reshape([w(1:N/2); zeros(1,N/2)], [1 N]);
+0038   c1 = reshape([w(N/2+1:N); zeros(1,N/2)], [1 N]);
+0039   x = <a href="cconv.html" class="code" title="function y = cconv(x,h,k)">cconv</a>(c0, g0, k) + <a href="cconv.html" class="code" title="function y = cconv(x,h,k)">cconv</a>(c1, g1, k);
+0040 <span class="keyword">elseif</span> (sym == 1)
+0041   k = floor(m1/2);
+0042   <span class="comment">% symmetrically extend</span>
+0043   c0e = <a href="symext.html" class="code" title="function xe = symext(x, ln, rn, par, sym)">symext</a>(w(1:N/2), k, m1-1-k, <span class="string">'oe'</span>, <span class="string">'s'</span>);
+0044   c1e = <a href="symext.html" class="code" title="function xe = symext(x, ln, rn, par, sym)">symext</a>(w(N/2+1:N), k, m1-1-k, <span class="string">'eo'</span>, <span class="string">'s'</span>);
+0045   <span class="comment">% upsample</span>
+0046   c0 = reshape([c0e; zeros(1,N/2+m1-1)], [1 N+2*(m1-1)]);
+0047   c1 = reshape([c1e; zeros(1,N/2+m1-1)], [1 N+2*(m1-1)]);
+0048   <span class="comment">% filter</span>
+0049   x = conv2(c0(k+1:N+k+m0-1), g0, <span class="string">'valid'</span>) + <span class="keyword">...</span>
+0050       conv2(c1(k+1:N+k+m0-1), g1, <span class="string">'valid'</span>);
+0051 <span class="keyword">elseif</span> (sym == 2) 
+0052   <span class="comment">% symmetrically extend</span>
+0053   c0e = <a href="symext.html" class="code" title="function xe = symext(x, ln, rn, par, sym)">symext</a>(w(1:N/2), m1-1-k, k, <span class="string">'e'</span>, <span class="string">'s'</span>);
+0054   c1e = <a href="symext.html" class="code" title="function xe = symext(x, ln, rn, par, sym)">symext</a>(w(N/2+1:N), m1-1-k, k, <span class="string">'e'</span>, <span class="string">'a'</span>);
+0055   <span class="comment">% upsample</span>
+0056   c0 = reshape([c0e; zeros(1,N/2+m1-1)], [1 N+2*(m1-1)]);
+0057   c1 = reshape([c1e; zeros(1,N/2+m1-1)], [1 N+2*(m1-1)]);
+0058   <span class="comment">% filter</span>
+0059   x = conv2(c0(m0-k:2*(m1-1)-k+N), g0, <span class="string">'valid'</span>) + <span class="keyword">...</span>
+0060       conv2(c1(m0-k:2*(m1-1)-k+N), g1, <span class="string">'valid'</span>);
+0061 <span class="keyword">elseif</span> (sym == 3)
+0062   <span class="comment">% linear filtering (no extension)</span>
+0063   c0 = reshape([w(1:length(w)/2); zeros(1,length(w)/2)], [1 length(w)]);
+0064   c1 = reshape([w(length(w)/2+1:end); zeros(1,length(w)/2)], [1 length(w)]);
+0065   x = conv(c0, g0) + conv(c1, g1);
+0066 <span class="keyword">end</span>
+0067</pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

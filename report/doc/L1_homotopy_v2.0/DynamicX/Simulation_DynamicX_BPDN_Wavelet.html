@@ -1,0 +1,259 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of Simulation_DynamicX_BPDN_Wavelet</title>
+  <meta name="keywords" content="Simulation_DynamicX_BPDN_Wavelet">
+  <meta name="description" content="BPDN update with dynamic change in x">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../menu.html L1_homotopy_v2.0 --><!-- menu.html DynamicX -->
+<h1>Simulation_DynamicX_BPDN_Wavelet
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>BPDN update with dynamic change in x</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> BPDN update with dynamic change in x
+ Author: Salman Asif
+ Created: November 2008
+ Modified: February 2009</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="DynamicX_BPDN_function.html" class="code" title="function [xp_h, gamma_xh, iter,cpu] = DynamicX_BPDN_function(A, AtAgx, iAtAgx, y, yt, xp, gamma_x, pk, tau, maxiter)">DynamicX_BPDN_function</a>	DynamicX_BPDN_function.m</li><li><a href="DynamicX_varying_model.html" class="code" title="function sig_mod = DynamicX_varying_model(Name,n);">DynamicX_varying_model</a>	I have 'perturbed' the following function from WaveLab.</li><li><a href="../../L1_homotopy_v2.0/Pursuits_Homotopy/BPDN_homotopy_function.html" class="code" title="function out = BPDN_homotopy_function(A, y, in)">BPDN_homotopy_function</a>	BPDN_homotopy_function.m</li><li><a href="../../L1_homotopy_v2.0/utils/MakeSignal.html" class="code" title="function sig = MakeSignal(Name,n)">MakeSignal</a>	MakeSignal -- Make artificial signal</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% BPDN update with dynamic change in x</span>
+0002 <span class="comment">% Author: Salman Asif</span>
+0003 <span class="comment">% Created: November 2008</span>
+0004 <span class="comment">% Modified: February 2009</span>
+0005 
+0006 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0007 <span class="comment">% In the submitted paper</span>
+0008 <span class="comment">% 03/02/09</span>
+0009 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0010 <span class="comment">% DynamicX_..._Blocks_final_new</span>
+0011 <span class="comment">% DynamicX_..._PcwPoly_final_new</span>
+0012 <span class="comment">% DynamicX_..._Houste_final_new_Haar</span>
+0013 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0014 
+0015 <span class="comment">% Need WaveLab environment in your MATLAB path to run this simulation.</span>
+0016 
+0017 clear
+0018 close all
+0019 <span class="comment">% Model of the signal</span>
+0020 model_sig = 1; <span class="comment">% Test only 1 and 2</span>
+0021 
+0022 sim_runs = 10; <span class="comment">% Use large number of simulations for evaluations</span>
+0023 <span class="keyword">if</span> model_sig == 2
+0024     sim_runs = 255; <span class="comment">% sim_runs should be the size of image for slices of image</span>
+0025 <span class="keyword">end</span>
+0026 
+0027 stack_time=zeros(sim_runs,6);
+0028 stack_iter=zeros(sim_runs,9);
+0029 
+0030 <span class="keyword">for</span> sim_iter = 1:sim_runs
+0031 
+0032     J = 1;
+0033     <span class="keyword">if</span> model_sig == 1
+0034         <span class="comment">% Use wavelets on randomly perturbed standard signals from WaveLab</span>
+0035         <span class="comment">%  Name string: 'Blocks', 'Piece-Polynomial' (Piece-Wise 3rd degree polynomial)</span>
+0036 
+0037         <span class="comment">% signal length</span>
+0038         N = 2048;
+0039         <span class="comment">% number of observations to make</span>
+0040         m = 1024;
+0041 
+0042         Name = <span class="string">'Blocks'</span>;
+0043         sig = <a href="../../L1_homotopy_v2.0/utils/MakeSignal.html" class="code" title="function sig = MakeSignal(Name,n)">MakeSignal</a>(Name,N)';
+0044         qmf = MakeONFilter(<span class="string">'Haar'</span>);
+0045         
+0046         Name = <span class="string">'Piece-Polynomial'</span>;
+0047         sig = <a href="../../L1_homotopy_v2.0/utils/MakeSignal.html" class="code" title="function sig = MakeSignal(Name,n)">MakeSignal</a>(Name,N)';
+0048         qmf = MakeONFilter(<span class="string">'Daubechies'</span>,8);
+0049 
+0050         wc_sig  = FWT_PO(sig,J,qmf);
+0051         x = wc_sig;
+0052     <span class="keyword">elseif</span> model_sig == 2
+0053         <span class="comment">% Use strips from some image</span>
+0054         
+0055         <span class="comment">% I = imread('cameraman.tif');</span>
+0056         <span class="comment">% I = imread('pirate.tif')';</span>
+0057         <span class="comment">% I = imread('barb.gif');</span>
+0058         <span class="comment">% I = (imread('Lena.jpg'));</span>
+0059         <span class="comment">% load boats;</span>
+0060         <span class="comment">% I = boats;</span>
+0061         <span class="comment">% load blocks</span>
+0062         <span class="comment">% I = blocks;</span>
+0063         I = rgb2gray(imread(<span class="string">'house.tiff'</span>));
+0064         
+0065         N = size(I,1);
+0066         m = N/2;
+0067         sig = double(I(:,sim_iter))/256;
+0068         qmf = MakeONFilter(<span class="string">'Haar'</span>);
+0069         <span class="comment">% qmf = MakeONFilter('Daubechies',4);</span>
+0070         wc_sig  = FWT_PO(sig,J,qmf);
+0071         x = wc_sig;
+0072     <span class="keyword">else</span>
+0073         disp(<span class="string">'Do it yourself'</span>);
+0074     <span class="keyword">end</span>
+0075 
+0076 
+0077     <span class="comment">% measurement matrix</span>
+0078     G = randn(m,N)/sqrt(m);
+0079     <span class="comment">% A = (orth(G'))';</span>
+0080     A = G;
+0081 
+0082     <span class="comment">% observations</span>
+0083     sigma = .00;
+0084     e = randn(m,1)*sigma;
+0085     y = A*x + e;
+0086     <span class="comment">%figure(101); clf; plot(y); hold on; plot(e,'r');</span>
+0087 
+0088     <span class="comment">% regularization parameter</span>
+0089     tau = 0.005*max(abs(A'*y));    
+0090     <span class="comment">% tau = sigma * sqrt(log(N)*2); % BPDN</span>
+0091 
+0092     <span class="comment">% Solve for measurements y</span>
+0093     tic
+0094     [xp, gamma_x, iter_xp, t_homotopy1] = <a href="../../L1_homotopy_v2.0/Pursuits_Homotopy/BPDN_homotopy_function.html" class="code" title="function out = BPDN_homotopy_function(A, y, in)">BPDN_homotopy_function</a>(A, y, tau,4*N); <span class="comment">%BPDN</span>
+0095     t_homotopy1 = toc;
+0096     tolA_h = tau*sum(abs(xp))+1/2*(norm(A*xp-y))^2;
+0097 
+0098     <span class="comment">% GPSR</span>
+0099     pdg_scale = 1e-8;
+0100     t_BB_mono = 0;
+0101     tolA = tolA_h+pdg_scale;
+0102     stopCri=4;
+0103     debias = 0;
+0104     tic;
+0105     [x_BB_mono,x_debias_BB_mono,obj_BB_mono,<span class="keyword">...</span>
+0106         times_BB_mono,debias_start_BB_mono,mse]= <span class="keyword">...</span>
+0107         GPSR_BB(y,A,tau,<span class="keyword">...</span>
+0108         <span class="string">'Debias'</span>,debias,<span class="keyword">...</span>
+0109         <span class="string">'Monotone'</span>,1,<span class="keyword">...</span>
+0110         <span class="string">'Initialization'</span>,0,<span class="keyword">...</span>
+0111         <span class="string">'Continuation'</span>,0,<span class="keyword">...</span>
+0112         <span class="string">'StopCriterion'</span>,stopCri,<span class="keyword">...</span>
+0113         <span class="string">'Verbose'</span>, 0,<span class="keyword">...</span>
+0114         <span class="string">'MaxiterA'</span>, 1000,<span class="keyword">...</span>
+0115         <span class="string">'ToleranceA'</span>,tolA,<span class="keyword">...</span>
+0116         <span class="string">'ToleranceD'</span>,0.001);
+0117     t_BB_mono = toc;
+0118 
+0119     opts.f_value_tol = tolA;
+0120     M = [];
+0121     tic
+0122     n = N;
+0123     tic;
+0124     [x_FPC, Out_FPC] = FPC_AS(n,A,y,tau,M,opts); <span class="comment">% call FPC_AS</span>
+0125     t_FPC = toc;
+0126     
+0127     <span class="comment">% Model the change in signal</span>
+0128     <span class="keyword">if</span> model_sig == 1
+0129         <span class="comment">% Perturb the signal slightly at random</span>
+0130         sig_mod = <a href="DynamicX_varying_model.html" class="code" title="function sig_mod = DynamicX_varying_model(Name,n);">DynamicX_varying_model</a>(Name,N)';
+0131         wc_mod  = FWT_PO(sig_mod,J,qmf);
+0132         xt = wc_mod;
+0133         
+0134     <span class="keyword">elseif</span> model_sig == 2
+0135         <span class="comment">% Use strips from some image</span>
+0136         pm1 = randsrc;
+0137         sig_mod = double(I(:, sim_iter+1))/256;
+0138         wc_mod  = FWT_PO(sig_mod,J,qmf);
+0139         xt = wc_mod;
+0140     <span class="keyword">else</span>
+0141         disp(<span class="string">'hehehe...'</span>);
+0142     <span class="keyword">end</span>
+0143     dx = xt-x;
+0144     yt = A*xt;
+0145 
+0146     pk_old = A'*(A*xp-y);
+0147     AtAgx = A(:,gamma_x)'*A(:,gamma_x);
+0148     iAtAgx = inv(AtAgx);
+0149 
+0150     <span class="keyword">if</span> norm(y-yt)&gt;2*eps
+0151         tic;
+0152         [xp_h, gamma_xh, iter_xp_update, t_homotopy_update] = <a href="DynamicX_BPDN_function.html" class="code" title="function [xp_h, gamma_xh, iter,cpu] = DynamicX_BPDN_function(A, AtAgx, iAtAgx, y, yt, xp, gamma_x, pk, tau, maxiter)">DynamicX_BPDN_function</a>(A, AtAgx, iAtAgx, y, yt, xp, gamma_x, pk_old, tau, 4*N);
+0153         t_homotopy_update = toc;
+0154     <span class="keyword">else</span>
+0155         xp_h = xp;
+0156         gamma_xh = gamma_x;
+0157         iter_xp_update = 0;
+0158         t_homotopy_update = 0;
+0159     <span class="keyword">end</span>
+0160     tolA_h = tau*sum(abs(xp_h))+1/2*(norm(A*xp_h-yt))^2;
+0161 
+0162     <span class="comment">% GPSR</span>
+0163     tolA = tolA_h+pdg_scale;
+0164     stopCri=4;
+0165     debias = 0;
+0166     tic;
+0167     <span class="comment">% PUTTING CONTINUATION IN HERE MAKES THINGS WORSE</span>
+0168     [x_BB_mono_update,x_debias_BB_mono,obj_BB_mono,<span class="keyword">...</span>
+0169         times_BB_mono,debias_start_BB_mono,mse]= <span class="keyword">...</span>
+0170         GPSR_BB(yt,A,tau,<span class="keyword">...</span>
+0171         <span class="string">'Debias'</span>,debias,<span class="keyword">...</span>
+0172         <span class="string">'Monotone'</span>,1,<span class="keyword">...</span>
+0173         <span class="string">'Initialization'</span>,x_BB_mono,<span class="keyword">...</span>
+0174         <span class="string">'StopCriterion'</span>,stopCri,<span class="keyword">...</span>
+0175         <span class="string">'ToleranceA'</span>,tolA,<span class="keyword">...</span>
+0176         <span class="string">'MaxiterA'</span>, 1000,<span class="keyword">...</span>
+0177         <span class="string">'Verbose'</span>, 0,<span class="keyword">...</span>
+0178         <span class="string">'ToleranceD'</span>,0.001);
+0179     t_BB_mono_update = toc;
+0180 
+0181     opts.x0 = x_FPC;
+0182     opts.f_value_tol = tolA;
+0183     M = [];
+0184     tic
+0185     [x_FPC_update, Out_FPC_update] = FPC_AS(n,A,yt,tau,M,opts); <span class="comment">% call FPC_AS</span>
+0186     t_FPC_update = toc;
+0187     
+0188     stack_time(sim_iter,:) = [t_homotopy1 t_BB_mono t_FPC t_homotopy_update t_BB_mono_update t_FPC_update];
+0189     <span class="comment">% For old DynamicX_GPSR_Blocks_final or similar</span>
+0190     <span class="comment">%stack_iter(sim_iter,:) = [iter_xp iter_xp_update norm(dx) norm(xt-xp_h)/norm(xt) norm(xt-x_BB_mono_update)/norm(xt) tau length(gamma_x)];</span>
+0191 
+0192     <span class="comment">% For new mat files</span>
+0193     stack_iter(sim_iter,:) = [iter_xp iter_xp_update length(times_BB_mono) (Out_FPC_update.nProdA+Out_FPC_update.nProdAt)/2 norm(xt-xp_h)/norm(xt) norm(xp_h-x_BB_mono_update)/norm(xt) norm(xt-x_FPC_update)/norm(xt) tau length(gamma_x)];
+0194     <span class="comment">% I_rec(:,sim_iter) = IWT_PO(xp,J,qmf);</span>
+0195 <span class="keyword">end</span>
+0196 
+0197 <span class="comment">% Generate table for performance</span>
+0198 disp([<span class="string">'       DynamicX          BPDN homotopy           GPSR            FPC_AS'</span>]);
+0199 disp([<span class="string">'   nProdAtA    CPU     nProdAtA    CPU    nProdAtA   CPU    nProdAtA   CPU'</span>]);
+0200 outer_iterations = 1;
+0201 table_stats = zeros(1,8);
+0202 table_stats(:,3) = mean(reshape(stack_iter(:,1),sim_runs,outer_iterations));
+0203 table_stats(:,1) = mean(reshape(stack_iter(:,2),sim_runs,outer_iterations));
+0204 table_stats(:,5) = mean(reshape(stack_iter(:,3),sim_runs,outer_iterations));
+0205 table_stats(:,7) = mean(reshape(stack_iter(:,4),sim_runs,outer_iterations));
+0206 table_stats(:,4) = mean(reshape(stack_time(:,1),sim_runs,outer_iterations));
+0207 table_stats(:,2) = mean(reshape(stack_time(:,4),sim_runs,outer_iterations));
+0208 table_stats(:,6) = mean(reshape(stack_time(:,5),sim_runs,outer_iterations));
+0209 table_stats(:,8) = mean(reshape(stack_time(:,6),sim_runs,outer_iterations));
+0210 table_stats</pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

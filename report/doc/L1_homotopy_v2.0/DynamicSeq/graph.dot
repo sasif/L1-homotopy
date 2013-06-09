@@ -1,0 +1,12 @@
+/* Created by mdot for Matlab */
+digraph m2html {
+  DynamicSeq_BPDN_demo -> DynamicSeq_BPDN_function;
+  DynamicSeq_DS_demo -> DynamicSeq_DS_function;
+  Simulation_DynamicSeq_BPDN -> DynamicSeq_BPDN_function;
+
+  DynamicSeq_BPDN_demo [URL="DynamicSeq_BPDN_demo.html"];
+  DynamicSeq_BPDN_function [URL="DynamicSeq_BPDN_function.html"];
+  DynamicSeq_DS_demo [URL="DynamicSeq_DS_demo.html"];
+  DynamicSeq_DS_function [URL="DynamicSeq_DS_function.html"];
+  Simulation_DynamicSeq_BPDN [URL="Simulation_DynamicSeq_BPDN.html"];
+}

@@ -1,0 +1,333 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of MakeSignal</title>
+  <meta name="keywords" content="MakeSignal">
+  <meta name="description" content="MakeSignal -- Make artificial signal">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../menu.html L1_homotopy_v2.0 --><!-- menu.html utils -->
+<h1>MakeSignal
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>MakeSignal -- Make artificial signal</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function sig = MakeSignal(Name,n) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> MakeSignal -- Make artificial signal
+  Usage
+    sig = MakeSignal(Name,n)
+  Inputs
+    Name string: 'HeaviSine', 'Bumps', 'Blocks',
+            'Doppler', 'Ramp', 'Cusp', 'Sing', 'HiSine',
+            'LoSine', 'LinChirp', 'TwoChirp', 'QuadChirp',
+            'MishMash', 'WernerSorrows' (Heisenberg),
+            'Leopold' (Kronecker), 'Piece-Regular' (Piece-Wise Smooth),
+         'Riemann','HypChirps','LinChirps', 'Chirps', 'Gabor'
+         'sineoneoverx','Cusp2','SmoothCusp','Gaussian'
+         'Piece-Polynomial' (Piece-Wise 3rd degree polynomial)
+    n      desired signal length
+  Outputs
+    sig    1-d signal
+
+  References
+    Various articles of D.L. Donoho and I.M. Johnstone</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="MakeSignal.html" class="code" title="function sig = MakeSignal(Name,n)">MakeSignal</a>	MakeSignal -- Make artificial signal</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../L1_homotopy_v2.0/DynamicX/DynamicX_varying_model.html" class="code" title="function sig_mod = DynamicX_varying_model(Name,n);">DynamicX_varying_model</a>	I have 'perturbed' the following function from WaveLab.</li><li><a href="../../L1_homotopy_v2.0/DynamicX/Simulation_DynamicX_BPDN_Wavelet.html" class="code" title="">Simulation_DynamicX_BPDN_Wavelet</a>	BPDN update with dynamic change in x</li><li><a href="MakeSignal.html" class="code" title="function sig = MakeSignal(Name,n)">MakeSignal</a>	MakeSignal -- Make artificial signal</li><li><a href="genSignal.html" class="code" title="function [x varargout] = genSignal(N,in)">genSignal</a>	Inputs</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function sig = MakeSignal(Name,n)</a>
+0002 <span class="comment">% MakeSignal -- Make artificial signal</span>
+0003 <span class="comment">%  Usage</span>
+0004 <span class="comment">%    sig = MakeSignal(Name,n)</span>
+0005 <span class="comment">%  Inputs</span>
+0006 <span class="comment">%    Name string: 'HeaviSine', 'Bumps', 'Blocks',</span>
+0007 <span class="comment">%            'Doppler', 'Ramp', 'Cusp', 'Sing', 'HiSine',</span>
+0008 <span class="comment">%            'LoSine', 'LinChirp', 'TwoChirp', 'QuadChirp',</span>
+0009 <span class="comment">%            'MishMash', 'WernerSorrows' (Heisenberg),</span>
+0010 <span class="comment">%            'Leopold' (Kronecker), 'Piece-Regular' (Piece-Wise Smooth),</span>
+0011 <span class="comment">%         'Riemann','HypChirps','LinChirps', 'Chirps', 'Gabor'</span>
+0012 <span class="comment">%         'sineoneoverx','Cusp2','SmoothCusp','Gaussian'</span>
+0013 <span class="comment">%         'Piece-Polynomial' (Piece-Wise 3rd degree polynomial)</span>
+0014 <span class="comment">%    n      desired signal length</span>
+0015 <span class="comment">%  Outputs</span>
+0016 <span class="comment">%    sig    1-d signal</span>
+0017 <span class="comment">%</span>
+0018 <span class="comment">%  References</span>
+0019 <span class="comment">%    Various articles of D.L. Donoho and I.M. Johnstone</span>
+0020 <span class="comment">%</span>
+0021    <span class="keyword">if</span> nargin &gt; 1,
+0022     t = (1:n) ./n;
+0023    <span class="keyword">end</span>
+0024     <span class="keyword">if</span> strcmp(Name,<span class="string">'HeaviSine'</span>),
+0025         sig = 4.*sin(4*pi.*t);
+0026         sig = sig - sign(t - .3) - sign(.72 - t);
+0027     <span class="keyword">elseif</span> strcmp(Name,<span class="string">'Bumps'</span>),
+0028         pos = [ .1 .13 .15 .23 .25 .40 .44 .65  .76 .78 .81];
+0029         hgt = [ 4  5   3   4  5  4.2 2.1 4.3  3.1 5.1 4.2];
+0030         wth = [.005 .005 .006 .01 .01 .03 .01 .01  .005 .008 .005];
+0031         sig = zeros(size(t));
+0032         <span class="keyword">for</span> j =1:length(pos)
+0033            sig = sig + hgt(j)./( 1 + abs((t - pos(j))./wth(j))).^4;
+0034         <span class="keyword">end</span> 
+0035     <span class="keyword">elseif</span> strcmp(Name,<span class="string">'Blocks'</span>),
+0036         pos = [ .1 .13 .15 .23 .25 .40 .44 .65  .76 .78 .81];
+0037         hgt = [4 (-5) 3 (-4) 5 (-4.2) 2.1 4.3  (-3.1) 2.1 (-4.2)];
+0038         sig = zeros(size(t));
+0039         <span class="keyword">for</span> j=1:length(pos)
+0040             sig = sig + (1 + sign(t-pos(j))).*(hgt(j)/2) ;
+0041         <span class="keyword">end</span>
+0042     <span class="keyword">elseif</span> strcmp(Name,<span class="string">'Doppler'</span>),
+0043         sig = sqrt(t.*(1-t)).*sin((2*pi*1.05) ./(t+.05));
+0044     <span class="keyword">elseif</span> strcmp(Name,<span class="string">'Ramp'</span>),
+0045         sig = t - (t &gt;= .37);
+0046     <span class="keyword">elseif</span> strcmp(Name,<span class="string">'Cusp'</span>),
+0047         sig = sqrt(abs(t - .37));
+0048     <span class="keyword">elseif</span> strcmp(Name,<span class="string">'Sing'</span>),
+0049         k = floor(n * .37);
+0050         sig = 1 ./abs(t - (k+.5)/n);
+0051     <span class="keyword">elseif</span> strcmp(Name,<span class="string">'HiSine'</span>),
+0052         sig = sin( pi * (n * .6902) .* t);
+0053     <span class="keyword">elseif</span> strcmp(Name,<span class="string">'LoSine'</span>),
+0054         sig = sin( pi * (n * .3333) .* t);
+0055     <span class="keyword">elseif</span> strcmp(Name,<span class="string">'LinChirp'</span>), 
+0056         <span class="comment">% SAL comment: linear chirp with frequency sweep from 0 to n/2 Hz,</span>
+0057         <span class="comment">% sampled at critical frequency of n samples per second</span>
+0058         <span class="comment">% Matlab chrip command is cos(2*pi*[f0 t + k/2 t^2])</span>
+0059         sig = sin(pi .* t .* ((n .* .500) .* t));
+0060     <span class="keyword">elseif</span> strcmp(Name,<span class="string">'TwoChirp'</span>),
+0061         sig = sin(pi .* t .* (n .* t)) + sin((pi/3) .* t .* (n .* t));
+0062     <span class="keyword">elseif</span> strcmp(Name,<span class="string">'QuadChirp'</span>),
+0063         sig = sin( (pi/3) .* t .* (n .* t.^2));
+0064     <span class="keyword">elseif</span> strcmp(Name,<span class="string">'MishMash'</span>),  <span class="comment">% QuadChirp + LinChirp + HiSine</span>
+0065         sig = sin( (pi/3) .* t .* (n .* t.^2)) ;
+0066         sig = sig +  sin( pi * (n * .6902) .* t);
+0067         sig = sig +  sin(pi .* t .* (n .* .125 .* t));
+0068     <span class="keyword">elseif</span> strcmp(Name,<span class="string">'WernerSorrows'</span>),
+0069         sig = sin( pi .* t .* (n/2 .* t.^2)) ;
+0070         sig = sig +  sin( pi * (n * .6902) .* t);
+0071         sig = sig +  sin(pi .* t .* (n .* t));
+0072         pos = [ .1 .13 .15 .23 .25 .40 .44 .65  .76 .78 .81];
+0073         hgt = [ 4  5   3   4  5  4.2 2.1 4.3  3.1 5.1 4.2];
+0074         wth = [.005 .005 .006 .01 .01 .03 .01 .01  .005 .008 .005];
+0075         <span class="keyword">for</span> j =1:length(pos)
+0076            sig = sig + hgt(j)./( 1 + abs((t - pos(j))./wth(j))).^4;
+0077         <span class="keyword">end</span> 
+0078     <span class="keyword">elseif</span> strcmp(Name,<span class="string">'Leopold'</span>),
+0079         sig = (t == floor(.37 * n)/n);  <span class="comment">% Kronecker</span>
+0080     <span class="keyword">elseif</span> strcmp(Name,<span class="string">'Riemann'</span>),
+0081         sqn = round(sqrt(n));
+0082         sig = t .* 0;  <span class="comment">% Riemann's Non-differentiable Function</span>
+0083         sig((1:sqn).^2) = 1. ./ (1:sqn);
+0084         sig = real(ifft(sig));
+0085     <span class="keyword">elseif</span> strcmp(Name,<span class="string">'HypChirps'</span>), <span class="comment">% Hyperbolic Chirps of Mallat's book</span>
+0086         alpha    = 15*n*pi/1024;
+0087         beta    = 5*n*pi/1024;
+0088         t      = (1.001:1:n+.001)./n; 
+0089         f1      = zeros(1,n);
+0090         f2      = zeros(1,n);    
+0091         f1      = sin(alpha./(.8-t)).*(0.1&lt;t).*(t&lt;0.68);
+0092         f2      = sin(beta./(.8-t)).*(0.1&lt;t).*(t&lt;0.75);
+0093         M      = round(0.65*n);
+0094         P     = floor(M/4);
+0095         enveloppe = ones(1,M); <span class="comment">% the rising cutoff function</span>
+0096             enveloppe(1:P) = (1+sin(-pi/2+((1:P)-ones(1,P))./(P-1)*pi))/2;
+0097             enveloppe(M-P+1:M) = fliplr(enveloppe(1:P));
+0098           env     = zeros(1,n);
+0099           env(ceil(n/10):M+ceil(n/10)-1) = enveloppe(1:M);
+0100         sig     = (f1+f2).*env;
+0101     <span class="keyword">elseif</span> strcmp(Name,<span class="string">'LinChirps'</span>), <span class="comment">% Linear Chirps of Mallat's book</span>
+0102         b     = 100*n*pi/1024;
+0103         a     = 250*n*pi/1024;
+0104         t     = (1:n)./n; 
+0105         A1     = sqrt((t-1/n).*(1-t));
+0106         sig    = A1.*(cos((a*(t).^2)) + cos((b*t+a*(t).^2)));
+0107     <span class="keyword">elseif</span> strcmp(Name,<span class="string">'Chirps'</span>), <span class="comment">% Mixture of Chirps of Mallat's book</span>
+0108         t     = (1:n)./n.*10.*pi;  
+0109           f1     = cos(t.^2*n/1024);
+0110         a     = 30*n/1024;
+0111           t     = (1:n)./n.*pi;  
+0112           f2     = cos(a.*(t.^3));
+0113           f2     = fliplr(f2);
+0114         ix     = (-n:n)./n.*20;
+0115          g     = exp(-ix.^2*4*n/1024);
+0116         i1     = (n/2+1:n/2+n);
+0117         i2     = (n/8+1:n/8+n);
+0118         j      = (1:n)/n;
+0119             f3     = g(i1).*cos(50.*pi.*j*n/1024);
+0120         f4     = g(i2).*cos(350.*pi.*j*n/1024);
+0121         sig     = f1+f2+f3+f4;
+0122         enveloppe = ones(1,n); <span class="comment">% the rising cutoff function</span>
+0123        enveloppe(1:n/8) = (1+sin(-pi/2+((1:n/8)-ones(1,n/8))./(n/8-1)*pi))/2;
+0124        enveloppe(7*n/8+1:n) = fliplr(enveloppe(1:n/8));
+0125          sig     = sig.*enveloppe;
+0126         <span class="keyword">elseif</span> strcmp(Name,<span class="string">'Gabor'</span>), <span class="comment">% two modulated Gabor functions in</span>
+0127                      <span class="comment">% Mallat's book</span>
+0128         N = 512;    
+0129            t = (-N:N)*5/N;
+0130             j = (1:N)./N;
+0131         g = exp(-t.^2*20);
+0132         i1 = (2*N/4+1:2*N/4+N);
+0133         i2 = (N/4+1:N/4+N);
+0134         sig1 = 3*g(i1).*exp(i*N/16.*pi.*j);
+0135         sig2 = 3*g(i2).*exp(i*N/4.*pi.*j);
+0136            sig = sig1+sig2;
+0137     <span class="keyword">elseif</span> strcmp(Name,<span class="string">'sineoneoverx'</span>), <span class="comment">% sin(1/x) in Mallat's book</span>
+0138         N = 1024;
+0139         i1 = (-N+1:N);
+0140         i1(N) = 1/100;
+0141         i1 = i1./(N-1);
+0142         sig = sin(1.5./(i1));
+0143         sig = sig(513:1536);
+0144     <span class="keyword">elseif</span> strcmp(Name,<span class="string">'Cusp2'</span>),
+0145         N = 64;
+0146         i1 = (1:N)./N;
+0147         x = (1-sqrt(i1)) + i1/2 -.5;
+0148         M = 8*N;
+0149         sig = zeros(1,M);
+0150         sig(M-1.5.*N+1:M-.5*N) = x;
+0151         sig(M-2.5*N+2:M-1.5.*N+1) = fliplr(x);
+0152         sig(3*N+1:3*N + N) = .5*ones(1,N);
+0153     <span class="keyword">elseif</span> strcmp(Name,<span class="string">'SmoothCusp'</span>),
+0154         sig = <a href="MakeSignal.html" class="code" title="function sig = MakeSignal(Name,n)">MakeSignal</a>(<span class="string">'Cusp2'</span>);
+0155         N = 64;
+0156         M = 8*N;
+0157         t = (1:M)/M;
+0158         sigma = 0.01;
+0159         g = exp(-.5.*(abs(t-.5)./sigma).^2)./sigma./sqrt(2*pi);
+0160         g = fftshift(g);
+0161         sig2 = iconv(g',sig)'/M; 
+0162        <span class="keyword">elseif</span> strcmp(Name,<span class="string">'Piece-Regular'</span>),
+0163         sig1=-15*<a href="MakeSignal.html" class="code" title="function sig = MakeSignal(Name,n)">MakeSignal</a>(<span class="string">'Bumps'</span>,n);
+0164         t = (1:fix(n/12)) ./fix(n/12);
+0165         sig2=-exp(4*t);
+0166         t = (1:fix(n/7)) ./fix(n/7);
+0167         sig5=exp(4*t)-exp(4);
+0168         t = (1:fix(n/3)) ./fix(n/3);
+0169         sigma=6/40;
+0170         sig6=-70*exp(-((t-1/2).*(t-1/2))/(2*sigma^2));
+0171         sig(1:fix(n/7))= sig6(1:fix(n/7));
+0172         sig((fix(n/7)+1):fix(n/5))=0.5*sig6((fix(n/7)+1):fix(n/5));
+0173         sig((fix(n/5)+1):fix(n/3))=sig6((fix(n/5)+1):fix(n/3));
+0174         sig((fix(n/3)+1):fix(n/2))=sig1((fix(n/3)+1):fix(n/2));
+0175         sig((fix(n/2)+1):(fix(n/2)+fix(n/12)))=sig2;
+0176         sig((fix(n/2)+2*fix(n/12)):-1:(fix(n/2)+fix(n/12)+1))=sig2;
+0177 sig(fix(n/2)+2*fix(n/12)+fix(n/20)+1:(fix(n/2)+2*fix(n/12)+3*fix(n/20)))=<span class="keyword">...</span>
+0178 -ones(1,fix(n/2)+2*fix(n/12)+3*fix(n/20)-fix(n/2)-2*fix(n/12)-fix(n/20))*25;
+0179         k=fix(n/2)+2*fix(n/12)+3*fix(n/20);
+0180         sig((k+1):(k+fix(n/7)))=sig5;
+0181         diff=n-5*fix(n/5);
+0182         sig(5*fix(n/5)+1:n)=sig(diff:-1:1);
+0183         <span class="comment">% zero-mean</span>
+0184         bias=sum(sig)/n;
+0185         sig=bias-sig;
+0186        <span class="keyword">elseif</span> strcmp(Name,<span class="string">'Piece-Polynomial'</span>),
+0187         t = (1:fix(n/5)) ./fix(n/5);
+0188         sig1=20*(t.^3+t.^2+4);
+0189         sig3=40*(2.*t.^3+t) + 100;
+0190         sig2=10.*t.^3 + 45;
+0191         sig4=16*t.^2+8.*t+16;
+0192         sig5=20*(t+4);
+0193         sig6(1:fix(n/10))=ones(1,fix(n/10));
+0194         sig6=sig6*20;
+0195         sig(1:fix(n/5))=sig1;
+0196         sig(2*fix(n/5):-1:(fix(n/5)+1))=sig2;
+0197         sig((2*fix(n/5)+1):3*fix(n/5))=sig3;
+0198         sig((3*fix(n/5)+1):4*fix(n/5))=sig4;
+0199         sig((4*fix(n/5)+1):5*fix(n/5))=sig5(fix(n/5):-1:1);
+0200         diff=n-5*fix(n/5);
+0201         sig(5*fix(n/5)+1:n)=sig(diff:-1:1);
+0202         <span class="comment">%sig((fix(n/20)+1):(fix(n/20)+fix(n/10)))=-ones(1,fix(n/10))*20;</span>
+0203         sig((fix(n/20)+1):(fix(n/20)+fix(n/10)))=ones(1,fix(n/10))*10;
+0204         sig((n-fix(n/10)+1):(n+fix(n/20)-fix(n/10)))=ones(1,fix(n/20))*150;
+0205         <span class="comment">% zero-mean</span>
+0206         bias=sum(sig)/n;
+0207         sig=sig-bias;
+0208        <span class="keyword">elseif</span> strcmp(Name,<span class="string">'Gaussian'</span>),
+0209         sig=GWN(n,beta);
+0210         g=zeros(1,n);
+0211         lim=alpha*n;
+0212         mult=pi/(2*alpha*n);
+0213         g(1:lim)=(cos(mult*(1:lim))).^2;
+0214         g((n/2+1):n)=g((n/2):-1:1);
+0215         g = rnshift(g,n/2);
+0216         g=g/norm(g);
+0217         sig=iconv(g,sig);
+0218        <span class="keyword">else</span>
+0219         disp(sprintf(<span class="string">'MakeSignal: I don*t recognize &lt;&lt;%s&gt;&gt;'</span>,Name))
+0220         disp(<span class="string">'Allowable Names are:'</span>)
+0221            disp(<span class="string">'HeaviSine'</span>),
+0222            disp(<span class="string">'Bumps'</span>),
+0223            disp(<span class="string">'Blocks'</span>),
+0224            disp(<span class="string">'Doppler'</span>),
+0225            disp(<span class="string">'Ramp'</span>),
+0226            disp(<span class="string">'Cusp'</span>),
+0227            disp(<span class="string">'Crease'</span>),
+0228            disp(<span class="string">'Sing'</span>),
+0229            disp(<span class="string">'HiSine'</span>),
+0230            disp(<span class="string">'LoSine'</span>),
+0231            disp(<span class="string">'LinChirp'</span>),
+0232            disp(<span class="string">'TwoChirp'</span>),
+0233            disp(<span class="string">'QuadChirp'</span>),
+0234            disp(<span class="string">'MishMash'</span>),
+0235            disp(<span class="string">'WernerSorrows'</span>),
+0236            disp(<span class="string">'Leopold'</span>),
+0237            disp(<span class="string">'Sing'</span>),
+0238            disp(<span class="string">'HiSine'</span>),
+0239            disp(<span class="string">'LoSine'</span>),
+0240            disp(<span class="string">'LinChirp'</span>),
+0241            disp(<span class="string">'TwoChirp'</span>),
+0242            disp(<span class="string">'QuadChirp'</span>),
+0243            disp(<span class="string">'MishMash'</span>),
+0244            disp(<span class="string">'WernerSorrows'</span>),
+0245            disp(<span class="string">'Leopold'</span>),
+0246            disp(<span class="string">'Riemann'</span>),
+0247            disp(<span class="string">'HypChirps'</span>),
+0248            disp(<span class="string">'LinChirps'</span>),
+0249            disp(<span class="string">'Chirps'</span>),
+0250            disp(<span class="string">'sineoneoverx'</span>),
+0251            disp(<span class="string">'Cusp2'</span>),
+0252            disp(<span class="string">'SmoothCusp'</span>),
+0253            disp(<span class="string">'Gabor'</span>),
+0254            disp(<span class="string">'Piece-Regular'</span>);
+0255            disp(<span class="string">'Piece-Polynomial'</span>);
+0256            disp(<span class="string">'Gaussian'</span>);
+0257     <span class="keyword">end</span>
+0258     
+0259 <span class="comment">%</span>
+0260 <span class="comment">% Originally made by David L. Donoho.</span>
+0261 <span class="comment">% Function has been enhanced.</span>
+0262     
+0263  
+0264  
+0265 <span class="comment">%</span>
+0266 <span class="comment">%  Part of Wavelab Version 850</span>
+0267 <span class="comment">%  Built Tue Jan  3 13:20:39 EST 2006</span>
+0268 <span class="comment">%  This is Copyrighted Material</span>
+0269 <span class="comment">%  For Copying permissions see COPYING.m</span>
+0270 <span class="comment">%  Comments? e-mail wavelab@stat.stanford.edu</span></pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

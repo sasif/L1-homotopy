@@ -1,0 +1,336 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of l1Decode_homotopy_qr</title>
+  <meta name="keywords" content="l1Decode_homotopy_qr">
+  <meta name="description" content="l1Decode_homotopy_fast.m">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../menu.html L1_homotopy_v2.0 --><!-- menu.html l1decoding -->
+<h1>l1Decode_homotopy_qr
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>l1Decode_homotopy_fast.m</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> l1Decode_homotopy_fast.m
+
+ Test out l1 decoding with homotopy update scheme
+ Keeps adding new measurements until the original signal is recovered
+ exactly.
+
+ In this script, we start the decoding with $m=n$ measurements and
+ sequentially add m_u new measurements and solve using homotopy.
+
+ Created by Salman Asif @ Georgia Tech
+
+-------------------------------------------+
+ Copyright (c) 2009.  Muhammad Salman Asif 
+-------------------------------------------+</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% l1Decode_homotopy_fast.m</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% Test out l1 decoding with homotopy update scheme</span>
+0004 <span class="comment">% Keeps adding new measurements until the original signal is recovered</span>
+0005 <span class="comment">% exactly.</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">% In this script, we start the decoding with $m=n$ measurements and</span>
+0008 <span class="comment">% sequentially add m_u new measurements and solve using homotopy.</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">% Created by Salman Asif @ Georgia Tech</span>
+0011 <span class="comment">%</span>
+0012 <span class="comment">%-------------------------------------------+</span>
+0013 <span class="comment">% Copyright (c) 2009.  Muhammad Salman Asif</span>
+0014 <span class="comment">%-------------------------------------------+</span>
+0015 
+0016 
+0017 <span class="comment">% Modification history :</span>
+0018 <span class="comment">% 09/29/08</span>
+0019 <span class="comment">% 10/02/08 : multiple measurements</span>
+0020 <span class="comment">% 02/15/09 : fast update of inverse matrix</span>
+0021 <span class="comment">% 06/21/09 : Solve using qr factorization</span>
+0022 
+0023 close all
+0024 clear
+0025 
+0026 <span class="comment">% % load fixed random states</span>
+0027 <span class="comment">% load RandomStates</span>
+0028 <span class="comment">% rand('state', s_rand);</span>
+0029 <span class="comment">% randn('state', s_randn);</span>
+0030 
+0031 <span class="comment">% source length</span>
+0032 N = 256;
+0033 
+0034 <span class="comment">% codeword length</span>
+0035 M = 4*N;
+0036 
+0037 <span class="comment">% number of perturbations</span>
+0038 T = round(.3*N);
+0039 
+0040 <span class="comment">% coding matrix</span>
+0041 Orth_mat = randn(M,M);
+0042 Orth_mat = randsrc(M,M);
+0043 <span class="comment">% Orth_mat = orth(Orth_mat);</span>
+0044 G_mat = Orth_mat(:,1:N);
+0045 
+0046 <span class="comment">% Homotopy setup</span>
+0047 m_st = N;   <span class="comment">% number of measurements to start with</span>
+0048 A = G_mat(1:m_st,:);
+0049 B_stack = G_mat(m_st+1:<span class="keyword">end</span>,:);
+0050 
+0051 <span class="comment">% source word</span>
+0052 x = randn(N,1);
+0053 
+0054 <span class="comment">% channel: perturb T randomly chosen entries</span>
+0055 q = randperm(m_st-1);
+0056 c = zeros(m_st,1);
+0057 c(q(1:T)) = randn(T,1);
+0058 y = A*x-c;
+0059 err_loc = (rand(M-N,1)&gt;=.9);
+0060 err_new = err_loc.*randn(M-N,1);
+0061 w_vec = B_stack*x-err_new;
+0062 figure(1); clf; plot([y c]);
+0063 title(<span class="string">'Codeword and sparse errors'</span>);
+0064 legend(<span class="string">'Codeword'</span>, <span class="string">'Sparse'</span>); shg
+0065 
+0066 
+0067 <span class="comment">% initial estimate of x</span>
+0068 <span class="comment">% l1_min or direct solution (LS) depending on n_st</span>
+0069 <span class="comment">% iA = inv(A);</span>
+0070 <span class="comment">% x0 = iA*y;</span>
+0071 [Qg Rg] = qr(A');
+0072 x0 = Qg*(Rg'\y);
+0073 e0 = A*x0-y;
+0074 lambda_0 = zeros(m_st,1);
+0075 
+0076 A_old = A;
+0077 y_old = y;
+0078 x_old = x0;
+0079 c_old = e0;
+0080 lambda_old = lambda_0;
+0081 gamma_old = []; <span class="comment">%find(A*x0-y) or find(abs(lambda_0)==1);</span>
+0082 m_old = m_st;
+0083 all_done = 0;
+0084 cond_list = [];
+0085 cond_iter = 1;
+0086 gamma_kc_new = [1:N]';
+0087 <span class="comment">% iGg_new = iA';</span>
+0088 
+0089 m_u = 4; <span class="comment">% number of new measurements added at a time</span>
+0090 
+0091 total_iter = 0;
+0092 
+0093 <span class="keyword">for</span> iter_mat = 1:m_u:M-m_st
+0094     m_new = m_old + m_u;
+0095     x_k = x_old;
+0096     lambda_k = lambda_old;
+0097     gamma_k = gamma_old;
+0098     <span class="comment">%     gamma_kc = gamma_kc_old;</span>
+0099 
+0100     B = B_stack(iter_mat:iter_mat+m_u-1,:);
+0101     G = [A_old' B'];
+0102     w = w_vec(iter_mat:iter_mat+m_u-1);
+0103     q = [y_old; w];
+0104     c_original = [c; err_new(1:iter_mat+m_u-1)];
+0105     c_old = [c_old; B*x_k-w];
+0106     
+0107     <span class="comment">% Error estimate for new measurements.</span>
+0108     <span class="keyword">if</span> abs(abs(B*x_k-w))&gt;=10*eps
+0109         nu = sign(B*x_k-w);
+0110         i_nu = [m_new-m_u+1:m_new]';
+0111         gammak_new = [gamma_k; i_nu];
+0112     <span class="keyword">else</span>
+0113         stp = 1; <span class="comment">% Something is wrong! (degenracy)</span>
+0114         <span class="keyword">break</span>;
+0115     <span class="keyword">end</span>
+0116 
+0117     lambda_old = [lambda_k; nu]; <span class="comment">% xi_old</span>
+0118 
+0119     done = 0;
+0120     epsilon_old = 0;
+0121     iter_in = 0;
+0122     <span class="keyword">while</span> ~done
+0123         iter_in = iter_in+1;
+0124         <span class="comment">% [iter_mat iter_in]</span>
+0125     
+0126         gamma_k = gammak_new;
+0127         x_k = x_old;
+0128         c_k = c_old;
+0129         lambda_k = lambda_old; <span class="comment">% xi_k</span>
+0130 
+0131         gamma_kc = gamma_kc_new;
+0132 
+0133         <span class="comment">% INVERSE UPDATE</span>
+0134         <span class="comment">%iGg = inv(G(:,gamma_kc));</span>
+0135         <span class="comment">% iGg = iGg_new;</span>
+0136         <span class="comment">% del_lambda = -iGg*(G(:,i_nu)*sign(lambda_k(i_nu))); % del_xi</span>
+0137         
+0138         del_lambda = -Rg\(Qg'*(G(:,i_nu)*sign(lambda_k(i_nu))));
+0139         
+0140         del_lambda_vec = zeros(m_new,1); <span class="comment">% del_xi_vec</span>
+0141         del_lambda_vec(gamma_kc) = del_lambda;
+0142 
+0143         <span class="comment">% find incoming elements in support of error vector</span>
+0144         constr1 = (1-lambda_k(gamma_kc))./del_lambda_vec(gamma_kc);
+0145         constr1_pos = constr1(constr1&gt;2*eps);
+0146         delta1 = min(constr1_pos);
+0147         idelta1 = gamma_kc(find(constr1==delta1));
+0148 
+0149         constr2 = -(1+lambda_k(gamma_kc))./del_lambda_vec(gamma_kc);
+0150         constr2_pos = constr2(constr2&gt;2*eps);
+0151         delta2 = min(constr2_pos);
+0152         idelta2 = gamma_kc(find(constr2==delta2));
+0153 
+0154         <span class="keyword">if</span> delta1&gt;delta2
+0155             delta = delta2;
+0156             idelta = idelta2;
+0157         <span class="keyword">else</span>
+0158             delta = delta1;
+0159             idelta = idelta1;
+0160         <span class="keyword">end</span>
+0161 
+0162         <span class="keyword">if</span> epsilon_old+delta &lt;=1
+0163             lambdak_1 = lambda_k + delta*del_lambda_vec;
+0164             lambdak_1(idelta) = sign(lambdak_1(idelta));
+0165             gammak_temp = [gamma_k; idelta];
+0166 
+0167             <span class="comment">% outgoing element from the support of</span>
+0168             uz_vec = zeros(N,1);
+0169             idelta_gamma_kc = find(idelta==gamma_kc);
+0170             uz_vec(idelta_gamma_kc) = sign(lambdak_1(idelta));
+0171 
+0172             <span class="comment">%delx = iGg'*uz_vec;</span>
+0173             
+0174             delx = Qg*(Rg'\uz_vec);
+0175             
+0176             delc= G'*delx;
+0177             constr3 = -(c_k(gamma_k)./delc(gamma_k));
+0178             constr3_pos = constr3(constr3&gt;2*eps);
+0179             delta3 = min(constr3_pos);
+0180             idelta3 = gamma_k(find(constr3==delta3));
+0181             xk_1 = x_k + delta3*delx;
+0182             ck_1 = c_k + delta3*delc;
+0183             ck_1(idelta3) = 0;
+0184 
+0185             out_lambda = idelta3;
+0186             
+0187             <span class="comment">% See if signal is decoded exactly...</span>
+0188             <span class="keyword">if</span> [m_new-N~=length(find(abs(ck_1)&gt;=1e4*eps))]
+0189                 gamma_final = setdiff(gammak_temp,find(abs(G'*xk_1-q)&lt;=100*eps));
+0190                 x_old = xk_1;
+0191                 c_old = ck_1;
+0192                 lambda_old = lambdak_1;
+0193                 stp = 1; <span class="comment">%% WHAT TO DO NOW ???</span>
+0194                 all_done = 1; <span class="comment">% Take a break!</span>
+0195                 <span class="keyword">break</span>; <span class="keyword">break</span>; <span class="keyword">break</span>;
+0196             <span class="keyword">end</span>
+0197             gammak_new = setdiff(gammak_temp,idelta3);
+0198             gamma_kc_new = gamma_kc;
+0199             gamma_kc_new(idelta_gamma_kc) = idelta3;
+0200 
+0201             <span class="comment">% UPDATE INVERSE OF G(gamma_kc)</span>
+0202             <span class="comment">% Gg = Gg + (g_new - g_old)*1_idelta_gamma_kc';</span>
+0203             <span class="comment">% diff_G_in_out = G(:,idelta3)-G(:,idelta);</span>
+0204             <span class="comment">% iGg_new = iGg - (iGg*diff_G_in_out/(1+iGg(idelta_gamma_kc,:)*diff_G_in_out))*(iGg(idelta_gamma_kc,:));</span>
+0205             
+0206             <span class="comment">% UPDATE QR FACTORS FOR G(gamma_kc)</span>
+0207             diff_G_in_out = G(:,idelta3)-G(:,idelta);
+0208             loc_vector = zeros(length(diff_G_in_out),1);
+0209             loc_vector(idelta_gamma_kc) = 1;
+0210             Q0 = Qg; R0 = Rg;
+0211             [Qg Rg] = qrupdate(Q0,R0,diff_G_in_out,loc_vector);
+0212             
+0213             x_old = xk_1;
+0214             c_old = ck_1;
+0215             lambda_old = lambdak_1;
+0216             gamma_old = gammak_new;
+0217 
+0218             <span class="keyword">if</span> ~isempty(find(idelta3 == i_nu, 1))
+0219                 lambda_old(idelta3) = (epsilon_old+delta)*lambdak_1(idelta3);
+0220                 i_nu = setdiff(i_nu,idelta3);
+0221                 <span class="keyword">if</span> isempty(i_nu)
+0222                     epsilon = 1;
+0223                 <span class="keyword">else</span>
+0224                     epsilon = delta + epsilon_old;
+0225                 <span class="keyword">end</span>
+0226             <span class="keyword">else</span>
+0227                 epsilon = delta + epsilon_old;
+0228             <span class="keyword">end</span>
+0229 
+0230             <span class="keyword">if</span> epsilon &gt;=1
+0231                 done = 1;
+0232                 
+0233                 A_old = G';
+0234                 y_old = q;
+0235                 m_old = m_new;
+0236             <span class="keyword">end</span>
+0237             epsilon_old = epsilon;
+0238 
+0239         <span class="keyword">else</span>
+0240             new_delta = 1-epsilon_old;
+0241             lambdak_1 = lambda_k + new_delta*del_lambda_vec;
+0242             lambda_old = [lambdak_1];
+0243             gamma_old = gammak_new;
+0244 
+0245             done = 1;
+0246             
+0247             A_old = G';
+0248             y_old = q;
+0249             m_old = m_new;
+0250         <span class="keyword">end</span>
+0251     <span class="keyword">end</span>
+0252     figure(2);  clf; 
+0253     subplot(211);plot(x_old); hold on; plot(x,<span class="string">'r.'</span>);
+0254     title([<span class="string">'Estimated signal with '</span>, num2str(iter_mat+m_u-1+m_st), <span class="string">' measurements in the presence of '</span>,num2str(T),  <span class="string">'  errors'</span>]);
+0255     legend(<span class="string">'Estimation'</span>, <span class="string">'Original'</span>);
+0256     subplot(212);plot(c_old); hold on; plot(c_original,<span class="string">'r.'</span>);
+0257     title([<span class="string">'Estimated and original sparse error vectors'</span>]);
+0258     legend(<span class="string">'Estimation'</span>, <span class="string">'Original'</span>); drawnow
+0259     
+0260     total_iter = total_iter+iter_in;
+0261     disp([<span class="string">'No. of errors = '</span>,num2str(nnz(c_original)), <span class="string">', Current no. of measurements = '</span>,num2str(iter_mat+m_u-1+m_st), <span class="string">', Homotopy iterations = '</span>, num2str(iter_in), <span class="string">',  Running sum of iterations = '</span>, num2str(total_iter)]);
+0262             
+0263     <span class="keyword">if</span> all_done == 1
+0264         <span class="comment">% Need L1-magic package for this verification.</span>
+0265         <span class="comment">% x02 = G'\q;</span>
+0266         <span class="comment">%  [xp2 lamf1 lamf2] = l1decode_pd2(x02, G', [], q, 1e-12, 30);</span>
+0267         <span class="keyword">break</span>;
+0268     <span class="keyword">end</span>
+0269 <span class="keyword">end</span>
+0270 x_out = x_old;
+0271 figure(2);  clf;
+0272 subplot(211);plot(x_old); hold on; plot(x,<span class="string">'r.'</span>);
+0273 title([<span class="string">'Estimated signal with '</span>, num2str(iter_mat+m_u-1+m_st), <span class="string">' measurements in the presence of '</span>,num2str(T),  <span class="string">'  errors'</span>]);
+0274 legend(<span class="string">'Estimation'</span>, <span class="string">'Original'</span>);
+0275 subplot(212);plot(c_old); hold on; plot(c_original,<span class="string">'r.'</span>);
+0276 title([<span class="string">'Estimated and original sparse error vectors'</span>]);
+0277 legend(<span class="string">'Estimation'</span>, <span class="string">'Original'</span>); drawnow</pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

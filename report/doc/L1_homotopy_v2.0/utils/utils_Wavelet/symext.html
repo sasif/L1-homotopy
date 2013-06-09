@@ -1,0 +1,121 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of symext</title>
+  <meta name="keywords" content="symext">
+  <meta name="description" content="symext.m">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../../menu.html L1_homotopy_v2.0 --><!-- ../menu.html utils --><!-- menu.html utils_Wavelet -->
+<h1>symext
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>symext.m</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function xe = symext(x, ln, rn, par, sym) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> symext.m
+
+ Symmetrically extends the input vector
+ Usage : xe = symext(x, ln, rn, par, sym)
+ x - vector to be extended, 1xN
+ ln - number of values to tack onto the left of x
+ rn - number of values to tack onto the right of x
+ par - parity of the extension, 
+       'ee' or 'e' - repeating ext., 
+       'oo' or 'o' non-repeating,
+       'eo' - (2,1) extension (even on right, odd on left)
+       'oe' - (1,2) extension (odd on right, even on left)
+       
+ sym - if par = 'e', sym gives whether we have a symmetric extension
+ (sym='s') or asymmetric (sym='a')
+
+ Written by : Justin Romberg
+ Created : 9/4/2001</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="dwtlevel1.html" class="code" title="function w = dwtlevel1(x, h0, h1, sym)">dwtlevel1</a>	dwtlevel1.m</li><li><a href="idwtlevel1.html" class="code" title="function x = idwtlevel1(w, g0, g1, sym)">idwtlevel1</a>	idwtlevel1.m</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% symext.m</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% Symmetrically extends the input vector</span>
+0004 <span class="comment">% Usage : xe = symext(x, ln, rn, par, sym)</span>
+0005 <span class="comment">% x - vector to be extended, 1xN</span>
+0006 <span class="comment">% ln - number of values to tack onto the left of x</span>
+0007 <span class="comment">% rn - number of values to tack onto the right of x</span>
+0008 <span class="comment">% par - parity of the extension,</span>
+0009 <span class="comment">%       'ee' or 'e' - repeating ext.,</span>
+0010 <span class="comment">%       'oo' or 'o' non-repeating,</span>
+0011 <span class="comment">%       'eo' - (2,1) extension (even on right, odd on left)</span>
+0012 <span class="comment">%       'oe' - (1,2) extension (odd on right, even on left)</span>
+0013 <span class="comment">%</span>
+0014 <span class="comment">% sym - if par = 'e', sym gives whether we have a symmetric extension</span>
+0015 <span class="comment">% (sym='s') or asymmetric (sym='a')</span>
+0016 <span class="comment">%</span>
+0017 <span class="comment">% Written by : Justin Romberg</span>
+0018 <span class="comment">% Created : 9/4/2001</span>
+0019 
+0020 <a name="_sub0" href="#_subfunctions" class="code">function xe = symext(x, ln, rn, par, sym)</a>
+0021 
+0022 <span class="keyword">if</span> (nargin &lt; 5)
+0023   sym = <span class="string">'s'</span>;
+0024 <span class="keyword">end</span>
+0025 
+0026 N = length(x);
+0027 t = [fliplr(1-(1:ln)) 1:N N+1:N+rn];
+0028 <span class="keyword">if</span> ((par == <span class="string">'o'</span>) | (par == <span class="string">'oo'</span>))
+0029   yl = 1;
+0030   yh = N;
+0031 <span class="keyword">elseif</span> ((par == <span class="string">'e'</span>) | (par == <span class="string">'ee'</span>))
+0032   yl = 0.5;
+0033   yh = N+0.5;
+0034 <span class="keyword">elseif</span> (par == <span class="string">'eo'</span>)
+0035   yl = 0.5;
+0036   yh = N;
+0037 <span class="keyword">elseif</span> (par == <span class="string">'oe'</span>)
+0038   yl = 1;
+0039   yh = N+0.5;
+0040 <span class="keyword">end</span>
+0041 
+0042 <span class="keyword">if</span> (abs(yl-yh)&lt;1)
+0043   tr = ones(1,ln+rn+1);
+0044 <span class="keyword">else</span>
+0045   tr = zeros(size(t));
+0046   p = mod(floor((t-yl)/(yh-yl)),2);
+0047   i0 = find(p == 0);
+0048   tr(i0) = mod(t(i0)-yl, yh-yl) + yl;
+0049   i1 = find(p == 1);
+0050   tr(i1) = yh - mod(t(i1)-yl, yh-yl);
+0051 <span class="keyword">end</span>
+0052 
+0053 tr = round(tr);
+0054 <span class="keyword">if</span> (sym == <span class="string">'a'</span>)
+0055   xe = (1-2*p).*x(tr);
+0056 <span class="keyword">elseif</span> (sym == <span class="string">'s'</span>)
+0057   xe = x(tr);
+0058 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

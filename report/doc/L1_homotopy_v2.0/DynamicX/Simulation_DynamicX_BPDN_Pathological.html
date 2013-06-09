@@ -1,0 +1,227 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of Simulation_DynamicX_BPDN_Pathological</title>
+  <meta name="keywords" content="Simulation_DynamicX_BPDN_Pathological">
+  <meta name="description" content="Simulation of homotopy update for signals with large dynamic range.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../menu.html L1_homotopy_v2.0 --><!-- menu.html DynamicX -->
+<h1>Simulation_DynamicX_BPDN_Pathological
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>Simulation of homotopy update for signals with large dynamic range.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> Simulation of homotopy update for signals with large dynamic range.
+ Comparison with FPC_AS and simple BPDN homotopy
+ Need FPC package and accompanying problems to test parts of this file.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="DynamicX_BPDN_function.html" class="code" title="function [xp_h, gamma_xh, iter,cpu] = DynamicX_BPDN_function(A, AtAgx, iAtAgx, y, yt, xp, gamma_x, pk, tau, maxiter)">DynamicX_BPDN_function</a>	DynamicX_BPDN_function.m</li><li><a href="../../L1_homotopy_v2.0/Pursuits_Homotopy/BPDN_homotopy_function.html" class="code" title="function out = BPDN_homotopy_function(A, y, in)">BPDN_homotopy_function</a>	BPDN_homotopy_function.m</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% Simulation of homotopy update for signals with large dynamic range.</span>
+0002 <span class="comment">% Comparison with FPC_AS and simple BPDN homotopy</span>
+0003 <span class="comment">% Need FPC package and accompanying problems to test parts of this file.</span>
+0004 
+0005 clear
+0006 <span class="comment">% close all</span>
+0007 <span class="comment">% clear classes;</span>
+0008 
+0009 <span class="comment">% % load fixed random states</span>
+0010 <span class="comment">% load RandomStates</span>
+0011 <span class="comment">% rand('state', s_rand);</span>
+0012 <span class="comment">% randn('state', s_randn);</span>
+0013 
+0014 sim_runs = 100;
+0015 <span class="comment">% tau_table = [1e-1 1e-3 1e-5];</span>
+0016 outer_iterations = 1;
+0017 
+0018 stack_time_solve = zeros(sim_runs*outer_iterations,2);
+0019 stack_time_update = zeros(sim_runs*outer_iterations,2);
+0020 stack_iter = zeros(sim_runs*outer_iterations,5);
+0021 
+0022 <span class="comment">% Test difficult problems, adopted from FPC_AS package.</span>
+0023 FPC_problems = 2;
+0024 
+0025 <span class="keyword">if</span> FPC_problems == 1
+0026     <span class="comment">% Following list of problems can be used from FPC_AS package</span>
+0027     Problist = {<span class="string">'Ameth6Xmeth2n1024m512k154seed200'</span>, <span class="string">'Ameth6Xmeth6n1024m512k154seed200'</span>, <span class="keyword">...</span>
+0028         <span class="string">'CaltechTest1'</span>, <span class="string">'CaltechTest2'</span>, <span class="string">'CaltechTest3'</span>, <span class="string">'CaltechTest4'</span>};
+0029     di = 6; <span class="comment">% choose the problem type</span>
+0030     load( Problist{di}, <span class="string">'b'</span>,<span class="string">'Omega'</span>,<span class="string">'n'</span>,<span class="string">'xs'</span>);
+0031 
+0032     m = length(b);
+0033     x = xs;
+0034     q = (find(abs(xs)&gt;0));
+0035     T = length(q);
+0036     large_mag = max(abs(x(q)));
+0037     small_mag = min(abs(x(q)));
+0038     DCT_mat = dct(eye(n));
+0039     A = DCT_mat(Omega,:);
+0040 <span class="keyword">else</span>
+0041     n = 512;
+0042     m = 228;
+0043     T = 30;
+0044     q = randperm(n);
+0045     T1 = 15;
+0046     T2 = T-T1;
+0047     x = zeros(n,1);
+0048     large_mag = 1e6;
+0049     small_mag = 1e2;
+0050     x(q(1:T1)) = randsrc(T1,1)*large_mag;
+0051     x(q(T1+1:T1+T2)) = randsrc(T2,1)*small_mag;
+0052 
+0053     <span class="comment">% measurement matrix</span>
+0054     A = randn(m,n)/sqrt(m);
+0055     <span class="comment">% orthonormalize rows</span>
+0056     <span class="comment">% A = orth(A')';</span>
+0057 
+0058 <span class="keyword">end</span>
+0059 
+0060 <span class="comment">% noisy observations</span>
+0061 sigma = 0.0; <span class="comment">% how much noise to add should depend on power of Ax</span>
+0062 e = randn(m,1)*sigma;
+0063 y = A*x + e;
+0064 
+0065 <span class="comment">% regularization parameter</span>
+0066 tau = .01*small_mag/large_mag*max(abs(A'*y)); 
+0067 <span class="comment">%tau = tau_table;</span>
+0068 <span class="comment">% if sigma&gt;0</span>
+0069 <span class="comment">%     tau = sigma * sqrt(log(n)*2); % BPDN</span>
+0070 <span class="comment">%     %tau = max(abs(A'*(A*x-y))); % ideal ???</span>
+0071 <span class="comment">% end</span>
+0072 
+0073 <span class="comment">% Homotopy method</span>
+0074 tic
+0075 [xp, gamma_x, iter_xp, t_homotopy1] = <a href="../../L1_homotopy_v2.0/Pursuits_Homotopy/BPDN_homotopy_function.html" class="code" title="function out = BPDN_homotopy_function(A, y, in)">BPDN_homotopy_function</a>(A, y, tau,4*n); <span class="comment">%BPDN</span>
+0076 t_homotopy1 = toc;
+0077 tolA_h = tau*sum(abs(xp))+1/2*(norm(A*xp-y))^2;
+0078 
+0079 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0080 <span class="comment">% The relaxation in the tolerance of objective value for FPC</span>
+0081 <span class="comment">% The performance of FPC is best for the small values of these parameters</span>
+0082 <span class="comment">% and that increases the iteration count.</span>
+0083 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0084 pdg_scale = 1e-3; 
+0085 opts.gtol = 1e-8;
+0086 
+0087 tolA = tolA_h*(1+pdg_scale);
+0088 
+0089 M = [];
+0090 opts.f_value_tol = tolA;
+0091 
+0092 tic
+0093 [x_FPC, Out_FPC] = FPC_AS(n,A,y,tau,M,opts); <span class="comment">% call FPC_AS</span>
+0094 t_FPC = toc
+0095 [t_homotopy1 t_FPC]
+0096 
+0097 <span class="keyword">for</span> out_iter = 1:outer_iterations
+0098     <span class="keyword">for</span> sim_iter = 1:sim_runs
+0099 
+0100         <span class="comment">% Model the change in signal</span>
+0101         dx_model = 1;
+0102         <span class="keyword">switch</span> dx_model
+0103             <span class="keyword">case</span>  1
+0104                 <span class="comment">% Add some elements (T_in) or remove some existing elements (T_out)</span>
+0105                 dx  = zeros(n,1);
+0106                 T_in = randint(1,1,round(T/10))+1;
+0107                 T_out = randint(1,1,round(T/10));
+0108                 new_large_small = round(rand(T_in,1));
+0109                 qin = randperm(n);
+0110                 dx(qin(1:T_in)) = randn(T_in,1).*(new_large_small.*large_mag + (1-new_large_small).*small_mag);
+0111                 
+0112                 qout = randperm(T);
+0113                 oldx_indices = q(1:T);
+0114                 dx(oldx_indices(qout(1:T_out))) = -x(oldx_indices(qout(1:T_out))).*rand(T_out,1);
+0115                 <span class="comment">%dx(oldx_indices(qout(T_out+1:end))) = randn(T-T_out,1)*.01;</span>
+0116             <span class="keyword">case</span>  2;
+0117                 <span class="comment">% Perturb the current locations by Gaussian noise</span>
+0118                 oldx_indices = q(1:T);
+0119                 dx = zeros(n,1);
+0120                 dx(oldx_indices) = .1*randn(T,1);
+0121                 T_in = 0;
+0122                 T_out = 0;
+0123             <span class="keyword">otherwise</span>
+0124                 disp(<span class="string">'DIY'</span>);
+0125         <span class="keyword">end</span>
+0126         xt = x+dx;
+0127         yt = y+A*dx;
+0128 
+0129         pk_old = A'*(A*xp-y);
+0130         pk_old(gamma_x) = sign(pk_old(gamma_x))*tau;
+0131         AtAgx = A(:,gamma_x)'*A(:,gamma_x);
+0132         iAtAgx = inv(AtAgx);
+0133 
+0134         <span class="comment">% Update using homotopy</span>
+0135         tic;
+0136         [xp_h, gamma_xh, iter_xp_update, t_homotopy_update] = <a href="DynamicX_BPDN_function.html" class="code" title="function [xp_h, gamma_xh, iter,cpu] = DynamicX_BPDN_function(A, AtAgx, iAtAgx, y, yt, xp, gamma_x, pk, tau, maxiter)">DynamicX_BPDN_function</a>(A, AtAgx, iAtAgx, y, yt, xp, gamma_x, pk_old, tau,2*n);
+0137         t_homotopy_update = toc;
+0138         
+0139         tolA_h = tau*sum(abs(xp_h))+1/2*(norm(A*xp_h-yt))^2;
+0140 
+0141         <span class="comment">% Homotopy method from scratch</span>
+0142         tic
+0143         [xp2, gamma_x2, iter_xp2, t_homotopy2] = <a href="../../L1_homotopy_v2.0/Pursuits_Homotopy/BPDN_homotopy_function.html" class="code" title="function out = BPDN_homotopy_function(A, y, in)">BPDN_homotopy_function</a>(A, yt, tau,2*n); <span class="comment">%BPDN</span>
+0144         t_homotopy2 = toc;
+0145         tolA_h = tau*sum(abs(xp))+1/2*(norm(A*xp-y))^2;
+0146         
+0147         <span class="comment">% % l1_ls</span>
+0148         <span class="comment">% [x_l1_ls_update,status,history] = l1_ls(A,yt,2*tau,1e-4);</span>
+0149         <span class="comment">% t_l1_ls_update = history(7,end);</span>
+0150         <span class="comment">% tolA_ls = history(2,end)/2;</span>
+0151 
+0152         tolA = tolA_h*(1+pdg_scale);
+0153         
+0154         opts.x0 = x_FPC;
+0155         opts.f_value_tol = tolA;
+0156         M = [];
+0157 
+0158         tic;
+0159         [x_FPC_update, Out_FPC_update] = FPC_AS(n,A,yt,tau,M,opts); <span class="comment">% call FPC_AS</span>
+0160         t_FPC_update = toc;
+0161         
+0162         stack_time_solve((out_iter-1)*sim_runs+sim_iter,:) = [t_homotopy2 t_FPC];
+0163         stack_time_update((out_iter-1)*sim_runs+sim_iter,:) = [t_homotopy_update t_FPC_update];
+0164         stack_iter((out_iter-1)*sim_runs+sim_iter,:) = [iter_xp2 iter_xp_update (Out_FPC_update.nProdA+Out_FPC_update.nProdAt)/2 norm(xt-xp_h) norm(xt-x_FPC_update)];
+0165         [out_iter sim_iter]
+0166     <span class="keyword">end</span>
+0167 <span class="keyword">end</span>
+0168 
+0169 <span class="comment">% Generate table for performance</span>
+0170 disp([<span class="string">'       DynamicX          BPDN homotopy          FPC_AS'</span>]);
+0171 disp([<span class="string">'   nProdAtA    CPU     nProdAtA     CPU    nProdAtA     CPU'</span>])
+0172 table_stats = zeros(length(outer_iterations),6);
+0173 table_stats(:,3) = mean(reshape(stack_iter(:,1),sim_runs,outer_iterations));
+0174 table_stats(:,1) = mean(reshape(stack_iter(:,2),sim_runs,outer_iterations));
+0175 table_stats(:,5) = mean(reshape(stack_iter(:,3),sim_runs,outer_iterations));
+0176 table_stats(:,4) = mean(reshape(stack_time_solve(:,1),sim_runs,outer_iterations));
+0177 table_stats(:,2) = mean(reshape(stack_time_update(:,1),sim_runs,outer_iterations));
+0178 table_stats(:,6) = mean(reshape(stack_time_update(:,2),sim_runs,outer_iterations));
+0179 table_stats</pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

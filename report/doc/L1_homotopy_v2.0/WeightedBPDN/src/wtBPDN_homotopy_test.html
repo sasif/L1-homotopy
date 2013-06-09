@@ -1,0 +1,453 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of wtBPDN_homotopy_test</title>
+  <meta name="keywords" content="wtBPDN_homotopy_test">
+  <meta name="description" content="BPDN_homotopy_Weighted">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../../menu.html L1_homotopy_v2.0 --><!-- ../menu.html WeightedBPDN --><!-- menu.html src -->
+<h1>wtBPDN_homotopy_test
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>BPDN_homotopy_Weighted</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> BPDN_homotopy_Weighted
+
+ Solves the following basis pursuit denoising (BPDN) problem
+ min_x  \Sum \e_i |x_i| + 1/2*||y-Ax||_2^2
+
+ Written by: Salman Asif, Georgia Tech
+ Email: sasif@ece.gatech.edu
+
+-------------------------------------------+
+ Copyright (c) 2010.  Muhammad Salman Asif 
+-------------------------------------------+</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="../../../L1_homotopy_v2.0/Pursuits_Homotopy/update_inverse.html" class="code" title="function iAtB = update_inverse(AtB, iAtB_old,flag);">update_inverse</a>	function iAtB_mod = update_inverse(AtB, Atb, atB, atb);</li><li><a href="../../../L1_homotopy_v2.0/solvers/yall1.html" class="code" title="function [x, Out] = yall1(A, b, opts)">yall1</a>	</li><li><a href="../../../L1_homotopy_v2.0/utils/fig.html" class="code" title="function h = fig(varargin)">fig</a>	</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% BPDN_homotopy_Weighted</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% Solves the following basis pursuit denoising (BPDN) problem</span>
+0004 <span class="comment">% min_x  \Sum \e_i |x_i| + 1/2*||y-Ax||_2^2</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% Written by: Salman Asif, Georgia Tech</span>
+0007 <span class="comment">% Email: sasif@ece.gatech.edu</span>
+0008 <span class="comment">%</span>
+0009 <span class="comment">%-------------------------------------------+</span>
+0010 <span class="comment">% Copyright (c) 2010.  Muhammad Salman Asif</span>
+0011 <span class="comment">%-------------------------------------------+</span>
+0012 
+0013 clear
+0014 clc
+0015 
+0016 <span class="comment">% load RandomStates</span>
+0017 rseed = sum(100*clock);
+0018 rseed = 0;
+0019 <span class="comment">% rand('state',rseed);</span>
+0020 <span class="comment">% randn('state',rseed);</span>
+0021 RandStream.setDefaultStream(RandStream(<span class="string">'mt19937ar'</span>,<span class="string">'seed'</span>,rseed));
+0022 
+0023 N = 128;   <span class="comment">% signal length</span>
+0024 T = 20;    <span class="comment">% sparsity level</span>
+0025 M = 100;    <span class="comment">% no. of measurements</span>
+0026 
+0027 <span class="comment">% Generate a random signal</span>
+0028 x = zeros(N,1);
+0029 q = randperm(N);
+0030 x(q(1:T)) = sign(randn(T,1));
+0031 
+0032 <span class="comment">% measurement matrix</span>
+0033 A = randn(M,N)/sqrt(M); <span class="comment">% Gaussian</span>
+0034 
+0035 <span class="comment">% Hadamard</span>
+0036 <span class="comment">% H = hadamard(N);</span>
+0037 <span class="comment">% A = H(q(1:M),:)/sqrt(M);</span>
+0038 
+0039 <span class="comment">% Bernoulli</span>
+0040 <span class="comment">% A = randsrc(M,N)/sqrt(M);</span>
+0041 
+0042 <span class="comment">% Random Projection</span>
+0043 <span class="comment">% A = orth(A')';</span>
+0044 
+0045 <span class="comment">% AtA = A'*A;</span>
+0046 
+0047 <span class="comment">% measurements</span>
+0048 sigma = 0.01;
+0049 e = randn(M,1)*sigma;
+0050 y = A*x+e;
+0051 
+0052 
+0053 <span class="comment">% Regularization parameters</span>
+0054 epsilon_vec = [ones(N/2,1); ones(N/2,1)*1e4]*1e-2;
+0055 
+0056 tau = 1e-2;
+0057 W_new = ones(N,1);
+0058 W_new(abs(x)&gt;0) = 1e-5./abs(x(abs(x)&gt;0));
+0059 
+0060 epsilon_vec = tau.*W_new;
+0061 unique_eps = sort(unique(epsilon_vec),<span class="string">'descend'</span>);
+0062 thresh = min(epsilon_vec);
+0063 
+0064 maxiter = 4*N;
+0065 
+0066 in = [];
+0067 in.x_orig = x;
+0068 in.epsilon_vec = epsilon_vec;
+0069 in.maxiter = maxiter;
+0070 in.delx_mode = <span class="string">'mil'</span>;
+0071 out = wtBPDN_function(A,y,in);
+0072 xh_wt = out.x_out;
+0073 gamma_wt = out.gamma;
+0074 iter_wt = out.iter;
+0075 
+0076 <span class="comment">%%</span>
+0077 
+0078 <span class="comment">% Initialization of primal sign and support</span>
+0079 z_x = zeros(N,1);
+0080 gamma_x = [];       <span class="comment">% Primal support</span>
+0081 
+0082 <span class="comment">% Initial step</span>
+0083 Primal_constrk = -A'*y; 
+0084 constr_mask = abs(Primal_constrk)&gt;epsilon_vec;
+0085 [c i] = max(abs(Primal_constrk.*constr_mask));
+0086 eps_iter = sum(unique_eps&gt;c)+1;
+0087 
+0088 gamma_xk = i;
+0089 
+0090 z_x(gamma_xk) = -sign(Primal_constrk(gamma_xk));
+0091 epsilon = c;
+0092 Primal_constrk(gamma_xk) = sign(Primal_constrk(gamma_xk))*epsilon;
+0093 xk_1 = zeros(N,1);
+0094 
+0095 z_xk = z_x;
+0096 
+0097 <span class="comment">% loop parameters</span>
+0098 done = 0;
+0099 iter = 0;
+0100 data_precision = eps;   <span class="comment">% floating point precision</span>
+0101 
+0102 old_delta = 0;
+0103 out_x = [];
+0104 count_delta_stop = 0;
+0105 
+0106 <span class="comment">% Turn the plots on and off</span>
+0107 constraint_plots = 1; <span class="comment">% 1 - draw the plots after every homotopy iteration.</span>
+0108 
+0109 AtAgx = A(:,gamma_xk)'*A(:,gamma_xk);
+0110 iAtAgx = inv(AtAgx);
+0111 
+0112 <span class="keyword">while</span> ~done
+0113     iter = iter+1;
+0114     <span class="comment">% warning('off','MATLAB:divideByZero')</span>
+0115 
+0116     gamma_x = gamma_xk;
+0117     z_x = z_xk;
+0118     x_k = xk_1;
+0119 
+0120     <span class="comment">%%%%%%%%%%%%%%%%%%%%%</span>
+0121     <span class="comment">%%%% update on x %%%%</span>
+0122     <span class="comment">%%%%%%%%%%%%%%%%%%%%%</span>
+0123 
+0124     <span class="comment">% Update direction</span>
+0125 <span class="comment">%     del_x = -inv(A(:,gamma_lambda)'*A(:,gamma_x))*z_lambda(gamma_lambda);</span>
+0126 <span class="comment">%     diff_inv = [ max(max(abs(inv(A(:,gamma_lambda)'*A(:,gamma_x))-iAtglAgx)))]</span>
+0127 <span class="comment">%     if diff_inv &gt; 1e-8</span>
+0128 <span class="comment">%         stp =1;</span>
+0129 <span class="comment">%     end</span>
+0130     indicator_temp = epsilon&gt;epsilon_vec(gamma_x);
+0131     del_x = iAtAgx*(indicator_temp.*z_x(gamma_x));
+0132     del_x_vec = zeros(N,1);
+0133     del_x_vec(gamma_x) = del_x;
+0134 
+0135     pk = Primal_constrk;
+0136     <span class="comment">% dk = AtA*del_x_vec;</span>
+0137     dk = A'*(A(:,gamma_x)*del_x);
+0138     
+0139     <span class="comment">%%% CONTROL THE MACHINE PRECISION ERROR AT EVERY OPERATION: LIKE BELOW.</span>
+0140     pk_temp = Primal_constrk;
+0141     gammaL_temp = find(abs(abs(Primal_constrk)-epsilon)&lt;min(epsilon,1e-12));
+0142 <span class="comment">%     pk_temp(gammaL_temp) = sign(Primal_constrk(gammaL_temp))*epsilon;</span>
+0143     
+0144     xk_temp = x_k;
+0145     gammaX_temp = find(abs(x_k)&lt;1*eps);
+0146     <span class="comment">%%%---</span>
+0147     
+0148     temp_gamma = zeros(N,1);
+0149     temp_gamma(gamma_x) = gamma_x;
+0150     gamma_xc = find([1:N]' ~= temp_gamma);
+0151     
+0152     <span class="comment">% For different values of regularization parameters</span>
+0153     eps_temp = epsilon.*(epsilon&gt;epsilon_vec(gamma_xc))+epsilon_vec(gamma_xc).*(epsilon&lt;=epsilon_vec(gamma_xc));
+0154     one_temp = epsilon&gt;epsilon_vec(gamma_xc);
+0155     <span class="keyword">if</span> find(one_temp-1)
+0156         stp = 1;
+0157     <span class="keyword">end</span>
+0158     <span class="keyword">if</span> find(eps_temp-epsilon)
+0159         stp = 1;
+0160     <span class="keyword">end</span>
+0161     delta1_constr = (eps_temp-pk(gamma_xc))./(one_temp+dk(gamma_xc));
+0162     delta1_pos_ind = find(delta1_constr&gt;0);
+0163     delta1_pos = delta1_constr(delta1_pos_ind);
+0164     [delta1 i_delta1] = min(delta1_pos);
+0165     <span class="keyword">if</span> isempty(delta1)
+0166         delta1 = inf;
+0167     <span class="keyword">end</span>
+0168     delta2_constr = (eps_temp+pk(gamma_xc))./(one_temp-dk(gamma_xc));
+0169     delta2_pos_ind = find(delta2_constr&gt;0);
+0170     delta2_pos = delta2_constr(delta2_pos_ind);
+0171     [delta2 i_delta2] = min(delta2_pos);
+0172     <span class="keyword">if</span> isempty(delta2)
+0173         delta2 = inf;
+0174     <span class="keyword">end</span>
+0175     
+0176     <span class="keyword">if</span> delta1&gt;delta2
+0177         delta = delta2;
+0178         i_delta = gamma_xc(delta2_pos_ind(i_delta2));
+0179     <span class="keyword">else</span>
+0180         delta = delta1;
+0181         i_delta = gamma_xc(delta1_pos_ind(i_delta1));
+0182     <span class="keyword">end</span>
+0183     
+0184     delta3_constr = (-x_k(gamma_x)./del_x_vec(gamma_x));
+0185     delta3_pos_index = find(delta3_constr&gt;0);
+0186     [delta3 i_delta3] = min(delta3_constr(delta3_pos_index));
+0187     out_x_index = gamma_x(delta3_pos_index(i_delta3));
+0188     
+0189     chk_x = 0;
+0190     out_x = [];
+0191     <span class="keyword">if</span> delta3 &gt; 0 &amp; delta3 &lt;= delta
+0192         chk_x = 1;
+0193         delta = delta3;
+0194         out_x = out_x_index;
+0195     <span class="keyword">end</span>
+0196 
+0197     [i_delta out_x delta -chk_x]
+0198     <span class="keyword">if</span> old_delta &lt; 4*eps &amp; delta &lt; 4*eps
+0199         count_delta_stop = count_delta_stop + 1;
+0200     <span class="keyword">else</span>
+0201         count_delta_stop = 0;
+0202     <span class="keyword">end</span>
+0203     <span class="keyword">if</span> count_delta_stop &gt;= 50
+0204         disp(<span class="string">'stuck in some corner'</span>);
+0205         <span class="keyword">break</span>;
+0206     <span class="keyword">end</span>
+0207     old_delta = delta;
+0208 
+0209     xk_1 = x_k+delta*del_x_vec;
+0210     Primal_constrk = pk+delta*dk;
+0211     epsilon_old = epsilon;
+0212     epsilon = epsilon-delta;
+0213     
+0214     <span class="keyword">if</span> epsilon &lt;= unique_eps(eps_iter)
+0215         epsilon = unique_eps(eps_iter);
+0216         delta_end = epsilon_old-epsilon;
+0217         Primal_constrk = pk+delta_end*dk;
+0218         epsilon_temp = epsilon.*(epsilon&gt;epsilon_vec(gamma_xk))+epsilon_vec(gamma_xk).*(epsilon&lt;=epsilon_vec(gamma_xk));
+0219         Primal_constrk(gamma_x) = sign(Primal_constrk(gamma_x)).*epsilon_temp;
+0220  
+0221         xk_1 = x_k + delta_end*del_x_vec;
+0222         eps_iter = eps_iter+1;
+0223         <span class="keyword">if</span> eps_iter &gt; length(unique_eps)
+0224             disp(<span class="string">'done!'</span>);
+0225             <span class="keyword">break</span>;
+0226         <span class="keyword">else</span>
+0227             disp(<span class="string">'switch epsilon!'</span>);
+0228             <span class="keyword">continue</span>; 
+0229         <span class="keyword">end</span>
+0230     <span class="keyword">end</span>
+0231     <span class="keyword">if</span> epsilon &lt;= min(epsilon_vec); <span class="comment">%sqrt(2*log(N))*sigma; %1e-7 %|| iter &gt; 5*T || (length(gamma_lambda) == K)</span>
+0232         delta_end = epsilon_old-thresh;
+0233         Primal_constrk = pk+delta_end*dk;
+0234         xk_1 = x_k + delta_end*del_x_vec;
+0235         disp(<span class="string">'done!'</span>);
+0236         <span class="keyword">break</span>;
+0237     <span class="keyword">end</span>
+0238     
+0239     <span class="keyword">if</span> length(gamma_x)==M &amp; chk_x ==0
+0240         stp =1;
+0241         disp(<span class="string">'Cannot do it Sire'</span>); <span class="comment">% Commondos: are you out of your mind Sire!</span>
+0242         <span class="keyword">break</span>;
+0243     <span class="keyword">end</span>
+0244 
+0245     <span class="keyword">if</span> chk_x == 1
+0246         <span class="comment">% If an element is removed from gamma_x</span>
+0247         gx_old = gamma_x;
+0248 
+0249         outx_index = find(gamma_x==out_x);
+0250         gamma_x(outx_index) = gamma_x(end);
+0251         gamma_x(end) = out_x;
+0252         gamma_xk = gamma_x(1:end-1);
+0253 
+0254         rowi = outx_index; <span class="comment">% ith row of A is swapped with last row (out_x)</span>
+0255         colj = outx_index; <span class="comment">% jth column of A is swapped with last column (out_lambda)</span>
+0256         AtAgx_ij = AtAgx;
+0257         temp_row = AtAgx_ij(rowi,:);
+0258         AtAgx_ij(rowi,:) = AtAgx_ij(<span class="keyword">end</span>,:);
+0259         AtAgx_ij(<span class="keyword">end</span>,:) = temp_row;
+0260         temp_col = AtAgx_ij(:,colj);
+0261         AtAgx_ij(:,colj) = AtAgx_ij(:,end);
+0262         AtAgx_ij(:,end) = temp_col;
+0263         
+0264         iAtAgx_ij = iAtAgx;
+0265         temp_row = iAtAgx_ij(colj,:);
+0266         iAtAgx_ij(colj,:) = iAtAgx_ij(<span class="keyword">end</span>,:);
+0267         iAtAgx_ij(<span class="keyword">end</span>,:) = temp_row;
+0268         temp_col = iAtAgx_ij(:,rowi);
+0269         iAtAgx_ij(:,rowi) = iAtAgx_ij(:,end);
+0270         iAtAgx_ij(:,end) = temp_col;
+0271 
+0272         AtAgx = AtAgx_ij(1:end-1,1:end-1);
+0273         iAtAgx = <a href="../../../L1_homotopy_v2.0/Pursuits_Homotopy/update_inverse.html" class="code" title="function iAtB = update_inverse(AtB, iAtB_old,flag);">update_inverse</a>(AtAgx_ij, iAtAgx_ij,2);
+0274         xk_1(out_x) = 0;
+0275     <span class="keyword">else</span>
+0276         <span class="comment">% If an element is added to gamma_x</span>
+0277         gamma_xk = [gamma_x; i_delta];
+0278         i_theta = i_delta;
+0279         new_x = i_delta;
+0280         AtAnl = A(:,gamma_x)'*A(:,new_x);
+0281         AtAgx_mod = [AtAgx A(:,gamma_x)'*A(:,i_theta); AtAnl' A(:,new_x)'*A(:,i_theta)];
+0282 
+0283         AtAgx = AtAgx_mod;
+0284         iAtAgx = <a href="../../../L1_homotopy_v2.0/Pursuits_Homotopy/update_inverse.html" class="code" title="function iAtB = update_inverse(AtB, iAtB_old,flag);">update_inverse</a>(AtAgx, iAtAgx,1);
+0285         xk_1(i_theta) = 0;
+0286         
+0287         gamma_x  = gamma_xk;
+0288     <span class="keyword">end</span>
+0289 
+0290     z_xk = zeros(N,1);
+0291     z_xk(gamma_xk) = -sign(Primal_constrk(gamma_xk));
+0292     epsilon_temp = epsilon.*(epsilon&gt;epsilon_vec(gamma_x))+epsilon_vec(gamma_x).*(epsilon&lt;=epsilon_vec(gamma_x));
+0293     Primal_constrk(gamma_x) = sign(Primal_constrk(gamma_x)).*epsilon_temp;
+0294     
+0295     <span class="keyword">if</span> iter &gt; 500*T
+0296         disp(<span class="string">'too many iterations ooooooooops'</span>);
+0297         <span class="keyword">break</span>;
+0298     <span class="keyword">end</span>
+0299 
+0300     <span class="keyword">if</span> constraint_plots
+0301         <a href="../../../L1_homotopy_v2.0/utils/fig.html" class="code" title="function h = fig(varargin)">fig</a> = figure(1);
+0302         subplot(2,1,1)
+0303         hold off
+0304         plot(pk,<span class="string">'.r'</span>, <span class="string">'MarkerSize'</span>,14);
+0305         hold on;
+0306         plot(Primal_constrk, <span class="string">'LineWidth'</span>,1);
+0307 
+0308         <span class="keyword">if</span> chk_x == 0
+0309             plot(new_x, Primal_constrk(new_x),<span class="string">'or'</span>,<span class="string">'MarkerSize'</span>,18,<span class="string">'LineWidth'</span>,2);
+0310             text(new_x, Primal_constrk(new_x)*1.1, [<span class="string">'Incoming \gamma = '</span>,num2str(new_x)],<span class="string">'FontSize'</span>,14);
+0311         <span class="keyword">else</span>
+0312             plot(out_x, Primal_constrk(out_x),<span class="string">'*k'</span>,<span class="string">'MarkerSize'</span>,18,<span class="string">'LineWidth'</span>,2);
+0313             text(out_x,Primal_constrk(out_x)*1.1, [<span class="string">'Outgoing \gamma = '</span>,num2str(out_x)],<span class="string">'FontSize'</span>,14);
+0314         <span class="keyword">end</span>
+0315         set(gca,<span class="string">'FontSize'</span>,16, <span class="string">'XLim'</span>,[1 N] );
+0316         title({<span class="string">'BPDN shrinkage constraints,'</span>; [<span class="string">'n = '</span>,num2str(N), <span class="string">', m = '</span>, num2str(M), <span class="string">', T = '</span>,num2str(T)]});
+0317         plot(1:N, epsilon*ones(1,N),<span class="string">'--k'</span>,<span class="string">'MarkerSize'</span>,12);
+0318         plot(1:N, -epsilon*ones(1,N), <span class="string">'--k'</span>,<span class="string">'MarkerSize'</span>,12);
+0319         plot(1:N, epsilon_old*ones(1,N),<span class="string">'--m'</span>,<span class="string">'MarkerSize'</span>,12);
+0320         plot(1:N, -epsilon_old*ones(1,N), <span class="string">'--m'</span>,<span class="string">'MarkerSize'</span>,12);
+0321 
+0322         figure(1);
+0323         subplot(2,1,2)
+0324         hold off
+0325         plot(x_k,<span class="string">'.r'</span>,<span class="string">'MarkerSize'</span>,14); hold on;
+0326         plot(xk_1,<span class="string">'LineWidth'</span>,1);
+0327         <span class="keyword">if</span> chk_x == 1
+0328             plot(out_x, 0,<span class="string">'ok'</span>, <span class="string">'MarkerSize'</span>,18,<span class="string">'LineWidth'</span>,2);
+0329         <span class="keyword">else</span>
+0330             plot(new_x, 0,<span class="string">'or'</span>, <span class="string">'MarkerSize'</span>,18,<span class="string">'LineWidth'</span>,2);
+0331         <span class="keyword">end</span>
+0332         set(gca,<span class="string">'FontSize'</span>,16,<span class="string">'XLim'</span>,[1 N]);
+0333         title([<span class="string">'BPDN estimate at \tau = '</span>,num2str(epsilon), <span class="string">', iter = '</span>, num2str(iter)]);
+0334         
+0335         <span class="keyword">if</span> iter == 1
+0336             disp(<span class="string">'  '</span>);
+0337             disp(<span class="string">'Every frame in the figure corresponds to a critical point on the homotopy path.'</span>)
+0338             disp(<span class="string">'Circle represents an incoming element, star represents an outgoing element.'</span>);
+0339             disp(<span class="string">' '</span>);
+0340             disp(<span class="string">'Put pause somewhere in the code to see this. '</span>);
+0341             disp(<span class="string">'For now press some key to continue...'</span>);
+0342             <span class="comment">%pause</span>
+0343         <span class="keyword">end</span>
+0344 
+0345         <span class="comment">%drawnow;</span>
+0346         <span class="comment">%print(gcf,'-dbmp','-r200',['BPDNPath_',num2str(iter)])</span>
+0347     <span class="keyword">end</span>
+0348 <span class="comment">%     pause</span>
+0349 <span class="comment">%     [iter epsilon delta]</span>
+0350 <span class="keyword">end</span>
+0351 
+0352 <a href="../../../L1_homotopy_v2.0/utils/fig.html" class="code" title="function h = fig(varargin)">fig</a> = figure(1);
+0353 subplot(2,1,1)
+0354 hold off
+0355 plot(pk,<span class="string">'.r'</span>, <span class="string">'MarkerSize'</span>,14);
+0356 hold on;
+0357 plot(Primal_constrk, <span class="string">'LineWidth'</span>,1);
+0358 
+0359 
+0360 set(gca,<span class="string">'FontSize'</span>,16, <span class="string">'XLim'</span>,[1 N] );
+0361 title({<span class="string">'BPDN shrinkage constraints,'</span>; [<span class="string">'n = '</span>,num2str(N), <span class="string">', m = '</span>, num2str(M), <span class="string">', T = '</span>,num2str(T)]});
+0362 plot(1:N, epsilon*ones(1,N),<span class="string">'--k'</span>,<span class="string">'MarkerSize'</span>,12);
+0363 plot(1:N, -epsilon*ones(1,N), <span class="string">'--k'</span>,<span class="string">'MarkerSize'</span>,12);
+0364 plot(1:N, epsilon_old*ones(1,N),<span class="string">'--m'</span>,<span class="string">'MarkerSize'</span>,12);
+0365 plot(1:N, -epsilon_old*ones(1,N), <span class="string">'--m'</span>,<span class="string">'MarkerSize'</span>,12);
+0366 
+0367 figure(1);
+0368 subplot(2,1,2)
+0369 hold off
+0370 plot(x_k,<span class="string">'.r'</span>,<span class="string">'MarkerSize'</span>,14); hold on;
+0371 plot(xk_1,<span class="string">'LineWidth'</span>,1);
+0372 set(gca,<span class="string">'FontSize'</span>,16,<span class="string">'XLim'</span>,[1 N]);
+0373 title([<span class="string">'BPDN estimate at \tau = '</span>,num2str(thresh), <span class="string">', iter = '</span>, num2str(iter)]);
+0374 
+0375 <span class="comment">%%</span>
+0376 digit = 6; <span class="keyword">if</span> sigma &gt; 0; digit = 7; <span class="keyword">end</span>
+0377 opts = [];
+0378 opts.tol = 10^(-digit);
+0379 W_new = ones(N,1);
+0380 opts.weights = W_new;
+0381 opts.print = 0;
+0382 opts.maxit = maxiter;
+0383 
+0384 opts.nu = 0; opts.rho = tau;
+0385 tic;
+0386 [x_yall1,Out] = <a href="../../../L1_homotopy_v2.0/solvers/yall1.html" class="code" title="function [x, Out] = yall1(A, b, opts)">yall1</a>(A,y,opts);
+0387 
+0388 <span class="comment">%% CVX check</span>
+0389 cvx_begin
+0390     cvx_precision best
+0391     variable xc(N);
+0392     minimize( sum(epsilon_vec.*abs(xc))+ 1/2*sum(square(A*xc-y)))
+0393 cvx_end
+0394 
+0395 <span class="comment">%%</span>
+0396 figure(101); plot([xc xk_1])
+0397 figure(102); plot([xc-xk_1])</pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

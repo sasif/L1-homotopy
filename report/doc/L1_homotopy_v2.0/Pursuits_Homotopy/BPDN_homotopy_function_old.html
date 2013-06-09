@@ -1,0 +1,302 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of BPDN_homotopy_function_old</title>
+  <meta name="keywords" content="BPDN_homotopy_function_old">
+  <meta name="description" content="BPDN_homotopy_function.m">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../menu.html L1_homotopy_v2.0 --><!-- menu.html Pursuits_Homotopy -->
+<h1>BPDN_homotopy_function_old
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>BPDN_homotopy_function.m</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function out = BPDN_homotopy_function(A, y, in) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> BPDN_homotopy_function.m
+
+ Solves the following basis pursuit denoising (BPDN) problem
+ min_x  \tau ||x||_1 + 1/2*||y-Ax||_2^2
+
+ Inputs:
+ A - m x n measurement matrix
+ y - measurement vector
+ tau - final value of regularization parameter
+ maxiter - maximum number of homotopy iterations
+
+ Outputs:
+ x_out - output for BPDN
+ gamma_x - support of the solution
+ total_iter - number of homotopy iterations taken by the solver
+ total_time - time taken by the solver
+
+ Written by: Salman Asif, Georgia Tech
+ Email: sasif@ece.gatech.edu
+
+ Modified 
+ May 2012: Added qr update feature
+ 
+-------------------------------------------+
+ Copyright (c) 2007.  Muhammad Salman Asif
+-------------------------------------------+</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="update_inverse.html" class="code" title="function iAtB = update_inverse(AtB, iAtB_old,flag);">update_inverse</a>	function iAtB_mod = update_inverse(AtB, Atb, atB, atb);</li><li><a href="update_primal.html" class="code" title="function [i_delta, out_x, delta, chk_x] = update_primal(gamma_x, gamma_lambda, z_x, x_k, del_x_vec, pk, dk, epsilon, out_lambda);">update_primal</a>	update_primal.m</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% BPDN_homotopy_function.m</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% Solves the following basis pursuit denoising (BPDN) problem</span>
+0004 <span class="comment">% min_x  \tau ||x||_1 + 1/2*||y-Ax||_2^2</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% Inputs:</span>
+0007 <span class="comment">% A - m x n measurement matrix</span>
+0008 <span class="comment">% y - measurement vector</span>
+0009 <span class="comment">% tau - final value of regularization parameter</span>
+0010 <span class="comment">% maxiter - maximum number of homotopy iterations</span>
+0011 <span class="comment">%</span>
+0012 <span class="comment">% Outputs:</span>
+0013 <span class="comment">% x_out - output for BPDN</span>
+0014 <span class="comment">% gamma_x - support of the solution</span>
+0015 <span class="comment">% total_iter - number of homotopy iterations taken by the solver</span>
+0016 <span class="comment">% total_time - time taken by the solver</span>
+0017 <span class="comment">%</span>
+0018 <span class="comment">% Written by: Salman Asif, Georgia Tech</span>
+0019 <span class="comment">% Email: sasif@ece.gatech.edu</span>
+0020 <span class="comment">%</span>
+0021 <span class="comment">% Modified</span>
+0022 <span class="comment">% May 2012: Added qr update feature</span>
+0023 <span class="comment">%</span>
+0024 <span class="comment">%-------------------------------------------+</span>
+0025 <span class="comment">% Copyright (c) 2007.  Muhammad Salman Asif</span>
+0026 <span class="comment">%-------------------------------------------+</span>
+0027 
+0028 <a name="_sub0" href="#_subfunctions" class="code">function out = BPDN_homotopy_function(A, y, in)</a>
+0029 
+0030 <span class="comment">% fprintf('Rewrite this function to add qrupdate \n');</span>
+0031 
+0032 t0 = cputime;
+0033 N = size(A,2);
+0034 M = size(A,1);
+0035 
+0036 tau = in.tau;
+0037 Te = inf;
+0038 <span class="keyword">if</span> isfield(in,<span class="string">'Te'</span>)
+0039     Te = in.Te;
+0040 <span class="keyword">end</span>
+0041 maxiter = 4*N;
+0042 <span class="keyword">if</span> isfield(in,<span class="string">'maxiter'</span>);
+0043     maxiter = in.maxiter;
+0044 <span class="keyword">end</span>
+0045 x_orig = in.x_orig;
+0046 err_record = in.record;
+0047 
+0048 <span class="comment">% Initialization of primal and dual sign and support</span>
+0049 z_x = zeros(N,1);
+0050 gamma_x = [];       <span class="comment">% Primal support</span>
+0051 
+0052 <span class="comment">% Initial step</span>
+0053 pk_old = -A'*y;
+0054 [c i] = max(abs(pk_old));
+0055 
+0056 gamma_xk = i;
+0057 
+0058 epsilon = c;
+0059 xk_1 = zeros(N,1);
+0060 
+0061 z_x(gamma_xk) = -sign(pk_old(gamma_xk));
+0062 pk_old(gamma_xk) = sign(pk_old(gamma_xk))*epsilon;
+0063 
+0064 z_xk = z_x;
+0065 
+0066 <span class="comment">% loop parameters</span>
+0067 done = 0;
+0068 iter = 0;
+0069 data_precision = eps;   <span class="comment">% floating point precision</span>
+0070 
+0071 old_delta = 0;
+0072 out_x = [];
+0073 count_delta_stop = 0;
+0074 
+0075 constraint_plots = 1;
+0076 
+0077 AtAgx = A(:,gamma_xk)'*A(:,gamma_xk);
+0078 iAtAgx = inv(A(:,gamma_xk)'*A(:,gamma_xk));
+0079 
+0080 G = @(z) A*z;
+0081 Gt = @(z) A'*z;
+0082 
+0083 <span class="keyword">if</span> err_record
+0084     error_table = [epsilon norm(xk_1-x_orig) 1];
+0085 <span class="keyword">end</span>
+0086 
+0087 <span class="keyword">while</span> iter &lt; maxiter
+0088     iter = iter+1;
+0089     <span class="comment">% warning('off','MATLAB:divideByZero')</span>
+0090     
+0091     gamma_x = gamma_xk;
+0092     z_x = z_xk;
+0093     x_k = xk_1;
+0094     
+0095     <span class="comment">%%%%%%%%%%%%%%%%%%%%%</span>
+0096     <span class="comment">%%%% update on x %%%%</span>
+0097     <span class="comment">%%%%%%%%%%%%%%%%%%%%%</span>
+0098     
+0099     <span class="comment">% Update direction</span>
+0100     <span class="comment">% delx = inv(A(:,gamma_x)'*A(:,gamma_x))*z_x(gamma_x);</span>
+0101     <span class="comment">%     if iter &gt; 1</span>
+0102     <span class="comment">%     [delx_cg, res, iter] = cgsolve2(delx_vec(gamma_x), AtAgx, z_x(gamma_x), 1e-8, 100, 1)</span>
+0103     <span class="comment">%     end</span>
+0104     delx = iAtAgx*z_x(gamma_x);
+0105     <span class="comment">% delx = (A(:,gamma_x)'*A(:,gamma_x))\z_x(gamma_x);</span>
+0106     delx_vec = zeros(N,1);
+0107     delx_vec(gamma_x) = delx;
+0108     <span class="comment">%delx_vec = sparse(delx_vec);</span>
+0109     
+0110     pk = pk_old;
+0111     <span class="comment">%dk = A'*(A*delx_vec);</span>
+0112     <span class="comment">% Agdelx = A(:,gamma_x)*delx;</span>
+0113     <span class="comment">% dk = A'*Agdelx;</span>
+0114     <span class="comment">% dk = A'*(A*delx_vec);</span>
+0115     dk_t = G(delx_vec);
+0116     dk = Gt(dk_t);
+0117     
+0118     <span class="comment">%%% CONTROL THE MACHINE PRECISION ERROR AT EVERY OPERATION: LIKE BELOW.</span>
+0119     pk_temp = pk_old;
+0120     gammaL_temp = find(abs(abs(pk_old)-epsilon)&lt;min(epsilon,2*eps));
+0121     <span class="comment">%     pk_temp(gammaL_temp) = sign(pk_old(gammaL_temp))*epsilon;</span>
+0122     
+0123     xk_temp = x_k;
+0124     gammaX_temp = find(abs(x_k)&lt;1*eps);
+0125     <span class="comment">%     xk_temp(gammaX_temp) = 0;</span>
+0126     <span class="comment">%%%---</span>
+0127     
+0128     <span class="comment">% Compute the step size</span>
+0129     [idelta, out_x, delta, chk_x] = <a href="update_primal.html" class="code" title="function [i_delta, out_x, delta, chk_x] = update_primal(gamma_x, gamma_lambda, z_x, x_k, del_x_vec, pk, dk, epsilon, out_lambda);">update_primal</a>(gamma_x, gamma_x, z_x,  xk_temp, delx_vec, pk_temp, dk, epsilon, out_x);
+0130     <span class="comment">%     disp(sprintf(['iter = %d, delta = %3.4g, idelta = %d, flag = %d'], iter, delta, idelta, chk_x));</span>
+0131     <span class="comment">%     pause(1/60)</span>
+0132     <span class="keyword">if</span> old_delta &lt; 4*eps &amp;&amp; delta &lt; 4*eps
+0133         count_delta_stop = count_delta_stop + 1;
+0134     <span class="keyword">else</span>
+0135         count_delta_stop = 0;
+0136     <span class="keyword">end</span>
+0137     <span class="keyword">if</span> count_delta_stop &gt;= 500
+0138         disp(<span class="string">'stuck somewhere'</span>);
+0139         <span class="keyword">break</span>;
+0140     <span class="keyword">end</span>
+0141     old_delta = delta;
+0142     
+0143     xk_1 = x_k+delta*delx_vec;
+0144     pk_old = pk+delta*dk;
+0145     epsilon_old = epsilon;
+0146     epsilon = epsilon-delta;
+0147     
+0148     <span class="comment">%% Check convergence criterion</span>
+0149     <span class="comment">%     if length(gamma_x) &lt; M/2</span>
+0150     <span class="comment">%         xhat = zeros(N,1);</span>
+0151     <span class="comment">%         xhat(gamma_x) = AtAgx\(A(:,gamma_x)'*y);</span>
+0152     <span class="comment">%         if norm(y-A*xhat) &lt; tau</span>
+0153     <span class="comment">%             xk_1 = xhat;</span>
+0154     <span class="comment">%             break;</span>
+0155     <span class="comment">%         end</span>
+0156     <span class="comment">%     end</span>
+0157     
+0158     <span class="keyword">if</span> epsilon &lt;= tau;
+0159         xk_1 = x_k + (epsilon_old-tau)*delx_vec;
+0160         total_time= cputime-t0;
+0161         <span class="keyword">break</span>;
+0162     <span class="keyword">end</span>
+0163     <span class="keyword">if</span> length(gamma_x)-chk_x &gt;= Te
+0164         total_time = cputime-t0;
+0165         <span class="keyword">break</span>;
+0166     <span class="keyword">end</span>
+0167     <span class="keyword">if</span> chk_x == 1
+0168         <span class="comment">% If an element is removed from gamma_x</span>
+0169         gx_old = gamma_x;
+0170         len_gamma = length(gamma_x);
+0171         
+0172         outx_index = find(gamma_x==out_x);
+0173         gamma_x(outx_index) = gamma_x(len_gamma);
+0174         gamma_x(len_gamma) = out_x;
+0175         gamma_xk = gamma_x(1:len_gamma-1);
+0176         
+0177         rowi = outx_index; <span class="comment">% ith row of A is swapped with last row (out_x)</span>
+0178         colj = outx_index; <span class="comment">% jth column of A is swapped with last column (out_lambda)</span>
+0179         AtAgx_ij = AtAgx;
+0180         temp_row = AtAgx_ij(rowi,:);
+0181         AtAgx_ij(rowi,:) = AtAgx_ij(len_gamma,:);
+0182         AtAgx_ij(len_gamma,:) = temp_row;
+0183         temp_col = AtAgx_ij(:,colj);
+0184         AtAgx_ij(:,colj) = AtAgx_ij(:,len_gamma);
+0185         AtAgx_ij(:,len_gamma) = temp_col;
+0186         iAtAgx_ij = iAtAgx;
+0187         temp_row = iAtAgx_ij(colj,:);
+0188         iAtAgx_ij(colj,:) = iAtAgx_ij(len_gamma,:);
+0189         iAtAgx_ij(len_gamma,:) = temp_row;
+0190         temp_col = iAtAgx_ij(:,rowi);
+0191         iAtAgx_ij(:,rowi) = iAtAgx_ij(:,len_gamma);
+0192         iAtAgx_ij(:,len_gamma) = temp_col;
+0193         
+0194         AtAgx = AtAgx_ij(1:len_gamma-1,1:len_gamma-1);
+0195         iAtAgx = <a href="update_inverse.html" class="code" title="function iAtB = update_inverse(AtB, iAtB_old,flag);">update_inverse</a>(AtAgx_ij, iAtAgx_ij,2);
+0196         xk_1(out_x) = 0;
+0197     <span class="keyword">else</span>
+0198         <span class="comment">% If an element is added to gamma_x</span>
+0199         gamma_xk = [gamma_x; idelta];
+0200         new_x = idelta;
+0201         
+0202         AtgxAnx = A(:,gamma_x)'*A(:,new_x);
+0203         AtAgx_mod = [AtAgx AtgxAnx; AtgxAnx' A(:,new_x)'*A(:,idelta)];
+0204         
+0205         AtAgx = AtAgx_mod;
+0206         iAtAgx = <a href="update_inverse.html" class="code" title="function iAtB = update_inverse(AtB, iAtB_old,flag);">update_inverse</a>(AtAgx, iAtAgx,1);
+0207         xk_1(idelta) = 0;
+0208         gamma_x = gamma_xk;
+0209     <span class="keyword">end</span>
+0210     
+0211     z_xk = zeros(N,1);
+0212     z_xk(gamma_xk) = -sign(pk_old(gamma_xk));
+0213     pk_old([gamma_x]) = sign(pk_old([gamma_x]))*epsilon;
+0214     <span class="comment">%     figure(1); plot(pk_old)</span>
+0215     
+0216     <span class="keyword">if</span> err_record
+0217         error_table = [error_table; epsilon norm(xk_1-x_orig) length(gamma_x)];
+0218     <span class="keyword">end</span>
+0219 <span class="keyword">end</span>
+0220 <span class="keyword">if</span> err_record
+0221     error_table = [error_table; epsilon norm(xk_1-x_orig) length(gamma_x)];
+0222 <span class="keyword">end</span>
+0223 total_iter = iter;
+0224 total_time = cputime-t0;
+0225 
+0226 out = [];
+0227 out.x_out = xk_1;
+0228 out.gamma = gamma_x;
+0229 out.iter = total_iter;
+0230 out.time = total_time;
+0231 out.error_table = error_table;</pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

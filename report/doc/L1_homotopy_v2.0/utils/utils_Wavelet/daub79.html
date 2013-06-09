@@ -1,0 +1,82 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of daub79</title>
+  <meta name="keywords" content="daub79">
+  <meta name="description" content="daub79.m">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../../menu.html L1_homotopy_v2.0 --><!-- ../menu.html utils --><!-- menu.html utils_Wavelet -->
+<h1>daub79
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>daub79.m</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function [h0, h1, g0, g1] = daub79() </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> daub79.m
+
+ Returns the filter coefficients (for lowpass and highpass) for the
+ Daubechies 7,9 biorthogonal wavelet set
+ Usage : [h0,h1,g0,g1] = daub79
+ h0 - lowpass analysis
+ h1 - highpass analysis
+ g0 - lowpass synthesis
+ g1 - highpass synthesis</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="../../../L1_homotopy_v2.0/utils/genSignal.html" class="code" title="function [x varargout] = genSignal(N,in)">genSignal</a>	Inputs</li><li><a href="create_DWT.html" class="code" title="function Psi = create_DWT(in)">create_DWT</a>	Creates a DWT representation matrix without signal extension</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% daub79.m</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% Returns the filter coefficients (for lowpass and highpass) for the</span>
+0004 <span class="comment">% Daubechies 7,9 biorthogonal wavelet set</span>
+0005 <span class="comment">% Usage : [h0,h1,g0,g1] = daub79</span>
+0006 <span class="comment">% h0 - lowpass analysis</span>
+0007 <span class="comment">% h1 - highpass analysis</span>
+0008 <span class="comment">% g0 - lowpass synthesis</span>
+0009 <span class="comment">% g1 - highpass synthesis</span>
+0010 
+0011 <a name="_sub0" href="#_subfunctions" class="code">function [h0, h1, g0, g1] = daub79()</a>
+0012 
+0013 b = sqrt(2)*[0.6029490182363579 0.2668641184428723 -0.07822326652898785 <span class="keyword">...</span>
+0014   -0.01686411844287495 0.02674875741080976];
+0015 c = sqrt(2)/2*[1.115087052456994 -0.5912717631142470 -0.05754352622849957 <span class="keyword">...</span>
+0016       0.09127176311424948]; 
+0017 
+0018 
+0019 h0 = [0 fliplr(b) b(2:5)];
+0020 h1 = [0 -fliplr(c) -c(2:4) 0 0];
+0021 g0 = ((-1).^(1:10)).*h1;
+0022 g1 = ((-1).^(0:9)).*h0;
+0023 
+0024 <span class="comment">% NOTE: This function is equivalent to the following using</span>
+0025 <span class="comment">%  the MATLAB wavelet toolbox:</span>
+0026 <span class="comment">% [rf,df] = biorwavf('bior4.4');</span>
+0027 <span class="comment">% [h0,h1,g0,g1] = biorfilt(df,rf);</span>
+0028</pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

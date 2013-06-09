@@ -1,0 +1,297 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of DynamicSeq_BPDN_function</title>
+  <meta name="keywords" content="DynamicSeq_BPDN_function">
+  <meta name="description" content="DynamicLasso_update_function.m">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../menu.html L1_homotopy_v2.0 --><!-- menu.html DynamicSeq -->
+<h1>DynamicSeq_BPDN_function
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>DynamicLasso_update_function.m</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function [xp_h, gamma_xh, iter, th] = DynamicSeq_BPDN_function(A, b, AtAgx, iAtAgx, y, w, xp, gamma_x, pk, tau, chk_e0, maxiter) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> DynamicLasso_update_function.m
+ 
+ Solves  
+ min_x  \epsilon ||x||_1 + 1/2*||Ax-y||_2^2 + 1/2* ||bx-w||_2^2
+
+ using homotopy update method
+
+ [xp_h, gamma_xh, iter] = DynamicSeq_BPDN_function(A, b, AtAgx, iAtAgx, y, w, xp, gamma_x, pk, tau, chk_e0, maxiter)
+
+ A: mxn matrix
+ b: new rows in measurement matrix
+ AtAgx: AtA submatrix at row and column indices at gamma_x.
+ iAtAgx: inv(AtAgx)
+ y: old set of measurements
+ w: new measurements
+ xp: old solution
+ gamma_x: old support
+ pk: old constraints
+ tau: threshold parameter. 
+ chk_e0: 0 or 1: This selects if we want to take U = (A'A+b'b) (1) or (A'A+e0*b'b) (0)...!
+ In simulation U = (A'A+b'b) works better</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../L1_homotopy_v2.0/Pursuits_Homotopy/update_inverse.html" class="code" title="function iAtB = update_inverse(AtB, iAtB_old,flag);">update_inverse</a>	function iAtB_mod = update_inverse(AtB, Atb, atB, atb);</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="DynamicSeq_BPDN_demo.html" class="code" title="">DynamicSeq_BPDN_demo</a>	BPDN update with sequential measurements homotopy comparison</li><li><a href="Simulation_DynamicSeq_BPDN.html" class="code" title="">Simulation_DynamicSeq_BPDN</a>	Simulation for dynamic update with sequential measurements.</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% DynamicLasso_update_function.m</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% Solves</span>
+0004 <span class="comment">% min_x  \epsilon ||x||_1 + 1/2*||Ax-y||_2^2 + 1/2* ||bx-w||_2^2</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% using homotopy update method</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">% [xp_h, gamma_xh, iter] = DynamicSeq_BPDN_function(A, b, AtAgx, iAtAgx, y, w, xp, gamma_x, pk, tau, chk_e0, maxiter)</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">% A: mxn matrix</span>
+0011 <span class="comment">% b: new rows in measurement matrix</span>
+0012 <span class="comment">% AtAgx: AtA submatrix at row and column indices at gamma_x.</span>
+0013 <span class="comment">% iAtAgx: inv(AtAgx)</span>
+0014 <span class="comment">% y: old set of measurements</span>
+0015 <span class="comment">% w: new measurements</span>
+0016 <span class="comment">% xp: old solution</span>
+0017 <span class="comment">% gamma_x: old support</span>
+0018 <span class="comment">% pk: old constraints</span>
+0019 <span class="comment">% tau: threshold parameter.</span>
+0020 <span class="comment">% chk_e0: 0 or 1: This selects if we want to take U = (A'A+b'b) (1) or (A'A+e0*b'b) (0)...!</span>
+0021 <span class="comment">% In simulation U = (A'A+b'b) works better</span>
+0022 
+0023 <span class="comment">% BPDN solution update with dynamic measurements</span>
+0024 <span class="comment">% Author: Salman Asif, Georgia Tech</span>
+0025 <span class="comment">% Email: sasif@ece.gatech.edu</span>
+0026 <span class="comment">% Created: February 2008</span>
+0027 <span class="comment">%</span>
+0028 <span class="comment">%-------------------------------------------+</span>
+0029 <span class="comment">% Copyright (c) 2008.  Muhammad Salman Asif</span>
+0030 <span class="comment">%-------------------------------------------+</span>
+0031 
+0032 <a name="_sub0" href="#_subfunctions" class="code">function [xp_h, gamma_xh, iter, th] = DynamicSeq_BPDN_function(A, b, AtAgx, iAtAgx, y, w, xp, gamma_x, pk, tau, chk_e0, maxiter)</a>
+0033 
+0034 t0 = cputime;
+0035 N = length(xp);
+0036 xp_h = xp;
+0037 gamma_xh = gamma_x;
+0038 itheta = [];
+0039 e0 = 0;
+0040 
+0041 <span class="comment">% Gram matrix update</span>
+0042 <span class="comment">% AtAgx = A(:,gamma_xh)'*A(:,gamma_xh)+chk_e0*b(:,gamma_xh)'*b(:,gamma_xh);</span>
+0043 pk_old = pk;
+0044 
+0045 notdone = 1;
+0046 iter = 0;
+0047 
+0048 <span class="keyword">while</span> iter &lt; maxiter
+0049     iter = iter +1 ;
+0050 
+0051     e0h = e0*(1-chk_e0)+1*chk_e0; 
+0052     <span class="comment">% this way we can set e0h to 1 or e0 which changes the definition of theta and U accordingly</span>
+0053 
+0054     <span class="comment">%%% UPDATE</span>
+0055     <span class="comment">%     U = A(:,gamma_xh)'*A(:,gamma_xh)+e0h*b(:,gamma_xh)'*b(:,gamma_xh);</span>
+0056     <span class="comment">%     iU = inv(U);</span>
+0057     U = AtAgx;
+0058     iU = iAtAgx;
+0059 
+0060     d = b(:,gamma_xh)'*(b(:,gamma_xh)*xp_h(gamma_xh)-w);
+0061     u = (b(:,gamma_xh)*iU*b(:,gamma_xh)');
+0062     dx = -iU*d;
+0063     pk = pk_old; <span class="comment">%A'*(A*xp_h-y)+e0*b'*(b*xp_h-w);</span>
+0064     <span class="comment">%dk = b'*(b*xp_h-w)+(Atf(A(:,gamma_xh)*dx)+b'*(e0h*(b(:,gamma_xh)*dx)));</span>
+0065     delx_vec = zeros(N,1);
+0066     delx_vec(gamma_xh) = dx;
+0067     Adelx = A(:,gamma_xh)*dx;
+0068     AtAdelx = (A')*Adelx;
+0069     dk = b'*(b*xp_h-w)+AtAdelx+b'*(e0h*(b*delx_vec));
+0070 
+0071     temp_gamma = zeros(N,1);
+0072     temp_gamma(gamma_xh) = gamma_xh;
+0073     gamma_xc = find([1:N]' ~= temp_gamma);
+0074     <span class="comment">% gamma_xc = setdiff([1:N],[gamma_xh]);</span>
+0075 
+0076     b_constr1 = (tau-pk(gamma_xc))./dk(gamma_xc);
+0077     b_constr2 = (tau+pk(gamma_xc))./-dk(gamma_xc);
+0078     b_constr3 = (-xp_h(gamma_xh)./delx_vec(gamma_xh));
+0079     itheta_1 = find(b_constr1&gt;2*eps);
+0080     itheta_2 = find(b_constr2&gt;2*eps);
+0081     itheta_3 = find(b_constr3&gt;2*eps);
+0082     theta1 = min(b_constr1(itheta_1));
+0083     theta2 = min(b_constr2(itheta_2));
+0084     theta3 = min(b_constr3(itheta_3));
+0085     <span class="keyword">if</span> isempty(theta1)
+0086         theta1 = inf;
+0087     <span class="keyword">end</span>
+0088     <span class="keyword">if</span> isempty(theta2)
+0089         theta2 = inf;
+0090     <span class="keyword">end</span>
+0091     <span class="keyword">if</span> isempty(theta3)
+0092         theta3 = inf;
+0093     <span class="keyword">end</span>
+0094 
+0095     <span class="keyword">if</span> theta1&gt;theta2
+0096         theta = theta2;
+0097         itheta = gamma_xc(find(b_constr2==theta2));
+0098         flag = 1;
+0099     <span class="keyword">else</span>
+0100         theta = theta1;
+0101         itheta = gamma_xc(find(b_constr1==theta1));
+0102         flag = 1;
+0103     <span class="keyword">end</span>
+0104     <span class="keyword">if</span> theta3 &lt; theta
+0105         theta = theta3;
+0106         itheta = gamma_xh(find(b_constr3==theta3));
+0107         flag = 0;
+0108     <span class="keyword">end</span>
+0109     epsilon = e0+(theta)/(1-theta*u);
+0110     epsilon = (theta+e0-e0h*u*theta)/(1-theta*u);
+0111     
+0112     <span class="keyword">if</span> epsilon &lt; 0
+0113         epsilon= inf;
+0114     <span class="keyword">end</span>
+0115 
+0116     <span class="keyword">if</span> epsilon &gt;=1
+0117         theta_end = (1-e0)/(1+u-e0h*u);
+0118         xp_h = xp_h + theta_end*delx_vec;
+0119         th = cputime-t0;
+0120         <span class="keyword">break</span>;
+0121     <span class="keyword">end</span>
+0122 
+0123     xp_h_old = xp_h;
+0124     gamma_xh_old = gamma_xh;
+0125     xp_h = xp_h+theta*delx_vec;
+0126     
+0127     <span class="keyword">if</span> flag == 1
+0128         <span class="keyword">if</span> e0h == e0
+0129             AtgxAnx = A(:,gamma_xh)'*A(:,itheta)+b(:,gamma_xh)'*(epsilon*b(:,itheta));
+0130             <span class="comment">% btbgx = b(:,gamma_xh)'*b(:,gamma_xh);</span>
+0131             AtAgx_new = AtAgx + ((epsilon-e0)*b(:,gamma_xh)')*b(:,gamma_xh);
+0132             iAtAgx_bt = iAtAgx*b(:,gamma_xh)';
+0133             <span class="comment">% iAtAgx_new = iAtAgx - (epsilon-e0)*(iAtAgx_bt)*(inv(1+(epsilon-e0)*b(:,gamma_xh)*iAtAgx_bt)*iAtAgx_bt');</span>
+0134             iAtAgx_new = iAtAgx - (((epsilon-e0)/(1+(epsilon-e0)*(b(:,gamma_xh)*iAtAgx_bt)))*iAtAgx_bt)*iAtAgx_bt';
+0135             AtAgx_mod = [AtAgx_new AtgxAnx; AtgxAnx' A(:,itheta)'*A(:,itheta)+epsilon*b(:,itheta)'*b(:,itheta)];
+0136 
+0137             iAtAgx = <a href="../../L1_homotopy_v2.0/Pursuits_Homotopy/update_inverse.html" class="code" title="function iAtB = update_inverse(AtB, iAtB_old,flag);">update_inverse</a>(AtAgx_mod, iAtAgx_new,1);
+0138             AtAgx = AtAgx_mod;
+0139             
+0140             AtAgx_mod = [];
+0141             AtAgx_new = [];
+0142             iAtAgx_new = [];
+0143             
+0144             gamma_xh = [gamma_xh; itheta];
+0145             xp_h(itheta) = 0;
+0146         <span class="keyword">else</span>
+0147             AtgxAnx = A(:,gamma_xh)'*A(:,itheta)+b(:,gamma_xh)'*b(:,itheta);
+0148             <span class="comment">% btbgx = b(:,gamma_xh)'*b(:,gamma_xh);</span>
+0149             iAtAgx_bt = iAtAgx*b(:,gamma_xh)';
+0150             AtAgx_mod = [AtAgx AtgxAnx; AtgxAnx' A(:,itheta)'*A(:,itheta)+b(:,itheta)'*b(:,itheta)];
+0151 
+0152             iAtAgx = <a href="../../L1_homotopy_v2.0/Pursuits_Homotopy/update_inverse.html" class="code" title="function iAtB = update_inverse(AtB, iAtB_old,flag);">update_inverse</a>(AtAgx_mod, iAtAgx,1);
+0153             AtAgx = AtAgx_mod;
+0154             
+0155             AtAgx_mod = [];
+0156             gamma_xh = [gamma_xh; itheta];
+0157             xp_h(itheta) = 0;
+0158         <span class="keyword">end</span>
+0159     <span class="keyword">else</span>
+0160         outx_index = find(gamma_xh==itheta);
+0161         gamma_xh(outx_index) = gamma_xh(end);
+0162         gamma_xh(end) = itheta;
+0163         gamma_xh = gamma_xh(1:end-1);
+0164 
+0165         <span class="keyword">if</span> e0h == e0
+0166             <span class="comment">% btbgx = b(:,gamma_xh_old)'*b(:,gamma_xh_old);</span>
+0167             AtAgx_new = AtAgx + ((epsilon-e0)*b(:,gamma_xh_old)')*b(:,gamma_xh_old);
+0168             iAtAgx_bt = iAtAgx*b(:,gamma_xh_old)';
+0169             <span class="comment">% iAtAgx_new = iAtAgx - (epsilon-e0)*(iAtAgx_bt)*(inv(1+(epsilon-e0)*b(:,gamma_xh_old)*iAtAgx_bt)*iAtAgx_bt');</span>
+0170             iAtAgx_new = iAtAgx - (((epsilon-e0)/(1+(epsilon-e0)*(b(:,gamma_xh_old)*iAtAgx_bt)))*iAtAgx_bt)*iAtAgx_bt';
+0171 
+0172             rowi = outx_index; <span class="comment">% ith row of A is swapped with last row (out_x)</span>
+0173             colj = outx_index; <span class="comment">% jth column of A is swapped with last column (out_x)</span>
+0174             AtAgx_ij = AtAgx_new;
+0175             temp_row = AtAgx_ij(rowi,:);
+0176             AtAgx_ij(rowi,:) = AtAgx_ij(<span class="keyword">end</span>,:);
+0177             AtAgx_ij(<span class="keyword">end</span>,:) = temp_row;
+0178             temp_col = AtAgx_ij(:,colj);
+0179             AtAgx_ij(:,colj) = AtAgx_ij(:,end);
+0180             AtAgx_ij(:,end) = temp_col;
+0181             iAtAgx_ij = iAtAgx_new;
+0182             temp_row = iAtAgx_ij(colj,:);
+0183             iAtAgx_ij(colj,:) = iAtAgx_ij(<span class="keyword">end</span>,:);
+0184             iAtAgx_ij(<span class="keyword">end</span>,:) = temp_row;
+0185             temp_col = iAtAgx_ij(:,rowi);
+0186             iAtAgx_ij(:,rowi) = iAtAgx_ij(:,end);
+0187             iAtAgx_ij(:,end) = temp_col;
+0188 
+0189             AtAgx = AtAgx_ij(1:end-1,1:end-1);
+0190             iAtAgx = <a href="../../L1_homotopy_v2.0/Pursuits_Homotopy/update_inverse.html" class="code" title="function iAtB = update_inverse(AtB, iAtB_old,flag);">update_inverse</a>(AtAgx_ij, iAtAgx_ij,2);
+0191             
+0192             AtAgx_mod = [];
+0193             AtAgx_new = [];
+0194             iAtAgx_new = [];
+0195             AtAgx_ij = [];
+0196             iAtAgx_ij = [];
+0197         <span class="keyword">else</span>
+0198 
+0199             rowi = outx_index; <span class="comment">% ith row of A is swapped with last row (out_x)</span>
+0200             colj = outx_index; <span class="comment">% jth column of A is swapped with last column (out_x)</span>
+0201             AtAgx_ij = AtAgx;
+0202             temp_row = AtAgx_ij(rowi,:);
+0203             AtAgx_ij(rowi,:) = AtAgx_ij(<span class="keyword">end</span>,:);
+0204             AtAgx_ij(<span class="keyword">end</span>,:) = temp_row;
+0205             temp_col = AtAgx_ij(:,colj);
+0206             AtAgx_ij(:,colj) = AtAgx_ij(:,end);
+0207             AtAgx_ij(:,end) = temp_col;
+0208             iAtAgx_ij = iAtAgx;
+0209             temp_row = iAtAgx_ij(colj,:);
+0210             iAtAgx_ij(colj,:) = iAtAgx_ij(<span class="keyword">end</span>,:);
+0211             iAtAgx_ij(<span class="keyword">end</span>,:) = temp_row;
+0212             temp_col = iAtAgx_ij(:,rowi);
+0213             iAtAgx_ij(:,rowi) = iAtAgx_ij(:,end);
+0214             iAtAgx_ij(:,end) = temp_col;
+0215 
+0216             AtAgx = AtAgx_ij(1:end-1,1:end-1);
+0217             iAtAgx = <a href="../../L1_homotopy_v2.0/Pursuits_Homotopy/update_inverse.html" class="code" title="function iAtB = update_inverse(AtB, iAtB_old,flag);">update_inverse</a>(AtAgx_ij, iAtAgx_ij,2);
+0218             
+0219             AtAgx_ij = [];
+0220             iAtAgx_ij = [];
+0221         <span class="keyword">end</span>
+0222 
+0223         xp_h(itheta) = 0;
+0224     <span class="keyword">end</span>
+0225 
+0226     e0 = epsilon;
+0227     pk_old = pk+theta*dk;
+0228     pk_old([gamma_xh; itheta]) =  sign(pk_old([gamma_xh; itheta]))*tau;
+0229 <span class="keyword">end</span>
+0230 
+0231</pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

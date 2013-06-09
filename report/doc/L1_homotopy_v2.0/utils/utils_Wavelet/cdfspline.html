@@ -1,0 +1,86 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of cdfspline</title>
+  <meta name="keywords" content="cdfspline">
+  <meta name="description" content="cdfspline.m">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../../menu.html L1_homotopy_v2.0 --><!-- ../menu.html utils --><!-- menu.html utils_Wavelet -->
+<h1>cdfspline
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>cdfspline.m</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function [h0, g0] = cdfspline(N, M) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> cdfspline.m
+
+ Filter coefficients for Cohen, Daubechies, Faveau biorth spline filters
+ Usage : [h0,g0] = cdfspline(N,M)
+ h0 - bspline poly of order N
+ g0 - poly using rest of factors from daubpoly((N+M)/2)
+ h0 and g0 are scaling filters
+
+ Written by : Justin Romberg
+ Created : 3/23/2004</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="daubpoly.html" class="code" title="function [P, Q] = daubpoly(p)">daubpoly</a>	daubpoly.m</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% cdfspline.m</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% Filter coefficients for Cohen, Daubechies, Faveau biorth spline filters</span>
+0004 <span class="comment">% Usage : [h0,g0] = cdfspline(N,M)</span>
+0005 <span class="comment">% h0 - bspline poly of order N</span>
+0006 <span class="comment">% g0 - poly using rest of factors from daubpoly((N+M)/2)</span>
+0007 <span class="comment">% h0 and g0 are scaling filters</span>
+0008 <span class="comment">%</span>
+0009 <span class="comment">% Written by : Justin Romberg</span>
+0010 <span class="comment">% Created : 3/23/2004</span>
+0011 
+0012 <a name="_sub0" href="#_subfunctions" class="code">function [h0, g0] = cdfspline(N, M)</a>
+0013 
+0014 
+0015 <span class="keyword">if</span> (mod(N+M,2) ~= 0)
+0016   error(<span class="string">'N+M must be even.'</span>)
+0017 <span class="keyword">end</span>
+0018 
+0019 
+0020 [P, Q] = <a href="daubpoly.html" class="code" title="function [P, Q] = daubpoly(p)">daubpoly</a>((N+M)/2);
+0021 qr = roots(Q);
+0022 
+0023 h0r = -ones(N,1); 
+0024 g0r = [-ones(M,1); qr];
+0025 
+0026 h0p = poly(h0r);
+0027 g0p = poly(g0r);
+0028 h0 = [zeros(1,M-1) sqrt(2)*h0p/sum(h0p) zeros(1,M-1)];
+0029 g0 = sqrt(2)*g0p/sum(g0p);
+0030 
+0031</pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

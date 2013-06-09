@@ -1,0 +1,77 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of idwtmult1_conv</title>
+  <meta name="keywords" content="idwtmult1_conv">
+  <meta name="description" content="idwtmult1_conv.m">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../../menu.html L1_homotopy_v2.0 --><!-- ../menu.html utils --><!-- menu.html utils_Wavelet -->
+<h1>idwtmult1_conv
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>idwtmult1_conv.m</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function x = idwtmult1_conv(w, g0, g1, J) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> idwtmult1_conv.m
+
+ adjoint of dwtmult1_conv.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="idwtlevel1.html" class="code" title="function x = idwtlevel1(w, g0, g1, sym)">idwtlevel1</a>	idwtlevel1.m</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="create_DWT.html" class="code" title="function Psi = create_DWT(in)">create_DWT</a>	Creates a DWT representation matrix without signal extension</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% idwtmult1_conv.m</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% adjoint of dwtmult1_conv.</span>
+0004 
+0005 <a name="_sub0" href="#_subfunctions" class="code">function x = idwtmult1_conv(w, g0, g1, J)</a>
+0006 
+0007 sym = 3;
+0008 
+0009 w = w(:)';
+0010 
+0011 L = length(w);
+0012 x = [];
+0013 xl = w(1:L*2^(-J+1));
+0014 <span class="keyword">for</span> j = J:-1:1
+0015   xh = <a href="idwtlevel1.html" class="code" title="function x = idwtlevel1(w, g0, g1, sym)">idwtlevel1</a>(xl, g0, g1, 3);
+0016   xh = xh(1:end-1);
+0017   <span class="keyword">if</span> j == 1
+0018       x = xh; 
+0019       <span class="keyword">return</span>;
+0020   <span class="keyword">end</span>
+0021   xp = w(L*2^(-j+1)+1:L*2^(-j+2));
+0022   npad = length(xh)-length(xp);
+0023   
+0024   <span class="comment">% center</span>
+0025   <span class="comment">% xl = [xh zeros(1,ceil(npad/2)) xp zeros(1,floor(npad/2))];</span>
+0026   
+0027   <span class="comment">% left</span>
+0028   xl = [xh xp zeros(1,npad)];   
+0029 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

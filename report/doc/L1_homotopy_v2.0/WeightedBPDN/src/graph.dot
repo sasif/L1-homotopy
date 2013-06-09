@@ -1,0 +1,30 @@
+/* Created by mdot for Matlab */
+digraph m2html {
+  script_rwtBPDN_adaptive -> weight_param;
+  script_rwtBPDN_adaptive -> wtBPDN_Update_function_v1;
+  script_rwtBPDN_adaptive -> wtBPDN_Update_function_v2;
+  script_rwtBPDN_adaptive -> wtBPDN_adaptive_function;
+  script_rwtBPDN_iterative -> weight_param;
+  script_rwtBPDN_iterative -> wtBPDN_Update_function_v1;
+  script_rwtBPDN_iterative -> wtBPDN_Update_function_v2;
+  script_simulation_adpWBPDN -> script_rwtBPDN_adaptive;
+  script_simulation_adpWBPDN -> weight_param;
+  script_simulation_wtBPDN -> script_rwtBPDN_adaptive;
+  script_simulation_wtBPDN -> script_rwtBPDN_iterative;
+  script_simulation_wtBPDN -> weight_param;
+  shrinkage_update -> weight_param;
+  wtBPDN_adaptive_function -> shrinkage_update;
+
+  script_rwtBPDN_adaptive [URL="script_rwtBPDN_adaptive.html"];
+  script_rwtBPDN_iterative [URL="script_rwtBPDN_iterative.html"];
+  script_simulation_adpWBPDN [URL="script_simulation_adpWBPDN.html"];
+  script_simulation_wtBPDN [URL="script_simulation_wtBPDN.html"];
+  shrinkage_update [URL="shrinkage_update.html"];
+  simulation_wtBPDN [URL="simulation_wtBPDN.html"];
+  weight_param [URL="weight_param.html"];
+  wtBPDN_Update_function_v1 [URL="wtBPDN_Update_function_v1.html"];
+  wtBPDN_Update_function_v2 [URL="wtBPDN_Update_function_v2.html"];
+  wtBPDN_adaptive_function [URL="wtBPDN_adaptive_function.html"];
+  wtBPDN_homotopy_function [URL="wtBPDN_homotopy_function.html"];
+  wtBPDN_homotopy_test [URL="wtBPDN_homotopy_test.html"];
+}

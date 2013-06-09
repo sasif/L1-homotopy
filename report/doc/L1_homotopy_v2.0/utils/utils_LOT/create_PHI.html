@@ -1,0 +1,120 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of create_PHI</title>
+  <meta name="keywords" content="create_PHI">
+  <meta name="description" content="Inputs">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../../menu.html L1_homotopy_v2.0 --><!-- ../menu.html utils --><!-- menu.html utils_LOT -->
+<h1>create_PHI
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>Inputs</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function PHI = create_PHI(in); </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> Inputs
+   P -- desired number of sampling windowsLOT window
+   N -- length of each sampling window
+   M -- number of measuremnets per sampling window
+   mType -- type of measurements (randn, sign)
+   SM -- sampling mode (starting and ending position of each row)
+       1 : Project sampling waveforms on the LOT basis 
+           Sample each window separately
+           Resultant system will be block diagonal with LOT coeffs
+           measureed with mType waveforms
+       2 : Project sampling waveform on the LOT basis
+           Sample multiple windows in each measurement
+           Resultant system is banded 
+       3 : General sampling system
+           Sample signal directly with mType samples
+           Resultant system will be banded with LOT coeffs. measured with
+           mType*PSI waveforms... 
+       4 : Overlapping samples
+           Applicable with compressive interference cancellation
+       5 : A windowed measurements and reconstructed with DCT-I basis at 
+           right-side border</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="../../../L1_homotopy_v2.0/utils/genAmat.html" class="code" title="function A = genAmat(M,N,in);">genAmat</a>	</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="../../../L1_homotopy_v2.0/demo_KalmanRWT.html" class="code" title="">demo_KalmanRWT</a>	demo_KalmanRWT</li><li><a href="../../../L1_homotopy_v2.0/demo_streamingDWT.html" class="code" title="">demo_streamingDWT</a>	demo_streamingDWT</li><li><a href="../../../L1_homotopy_v2.0/demo_streamingLOT.html" class="code" title="">demo_streamingLOT</a>	demo_streamingLOT</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function PHI = create_PHI(in);</a>
+0002 
+0003 <span class="comment">% Inputs</span>
+0004 <span class="comment">%   P -- desired number of sampling windowsLOT window</span>
+0005 <span class="comment">%   N -- length of each sampling window</span>
+0006 <span class="comment">%   M -- number of measuremnets per sampling window</span>
+0007 <span class="comment">%   mType -- type of measurements (randn, sign)</span>
+0008 <span class="comment">%   SM -- sampling mode (starting and ending position of each row)</span>
+0009 <span class="comment">%       1 : Project sampling waveforms on the LOT basis</span>
+0010 <span class="comment">%           Sample each window separately</span>
+0011 <span class="comment">%           Resultant system will be block diagonal with LOT coeffs</span>
+0012 <span class="comment">%           measureed with mType waveforms</span>
+0013 <span class="comment">%       2 : Project sampling waveform on the LOT basis</span>
+0014 <span class="comment">%           Sample multiple windows in each measurement</span>
+0015 <span class="comment">%           Resultant system is banded</span>
+0016 <span class="comment">%       3 : General sampling system</span>
+0017 <span class="comment">%           Sample signal directly with mType samples</span>
+0018 <span class="comment">%           Resultant system will be banded with LOT coeffs. measured with</span>
+0019 <span class="comment">%           mType*PSI waveforms...</span>
+0020 <span class="comment">%       4 : Overlapping samples</span>
+0021 <span class="comment">%           Applicable with compressive interference cancellation</span>
+0022 <span class="comment">%       5 : A windowed measurements and reconstructed with DCT-I basis at</span>
+0023 <span class="comment">%           right-side border</span>
+0024 
+0025 <span class="comment">% For SM = 1,</span>
+0026 <span class="comment">% In the LOT coefficients domain, the final system matrix will be block</span>
+0027 <span class="comment">% diganal, where each block measures only one set of LOT coefficints.</span>
+0028 <span class="comment">% In the signal domain, the measurement waveforms are created by first</span>
+0029 <span class="comment">% projecting random (Gaussian or Bernoulli) vectors onto LOT bases...</span>
+0030 <span class="comment">% The sensing matrix rows will overlap and align with the boundary of each</span>
+0031 <span class="comment">% LOT window boundaries</span>
+0032 <span class="comment">% LM = N+2*eta*N; length of sensing waveform</span>
+0033 <span class="comment">% Note: Each set of LOT coefficients can be estimated separately.</span>
+0034 
+0035 <span class="comment">% For SM = 2, (multiple LOT coefficients measured together--streaming setup)</span>
+0036 <span class="comment">% In the LOT coeffs domain, overlapping measurements of LOT coefficients</span>
+0037 <span class="comment">% in d windows</span>
+0038 <span class="comment">% LM = d*N+2*eta*N; length of sensing waveform in the signal domain</span>
+0039 <span class="comment">% Note: Need streaming setup here</span>
+0040         
+0041 <span class="comment">% For SM = 3;</span>
+0042 <span class="comment">% 'universal' sampling scheme</span>
+0043 <span class="comment">% It might be better to align the measurements such that they overlap with</span>
+0044 <span class="comment">% a few LOT windows before the last overlapping interval</span>
+0045 <span class="comment">% LM = d*N; length of sensing waveforms overlapping d LOT windows</span>
+0046 
+0047 <span class="comment">% Sensing matrix for each</span>
+0048 genAmat_h = @(M,N) <a href="../../../L1_homotopy_v2.0/utils/genAmat.html" class="code" title="function A = genAmat(M,N,in);">genAmat</a>(M,N,in);
+0049 
+0050 P = in.P; M = in.M; N = in.N; LM = in.LM;
+0051 PHI = zeros(P*M,(P-1)*N+LM);
+0052 <span class="keyword">for</span> p = 1:P
+0053     PHI((p-1)*M+1:p*M,(p-1)*N+1:(p-1)*N+LM) = genAmat_h(M,LM);
+0054 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

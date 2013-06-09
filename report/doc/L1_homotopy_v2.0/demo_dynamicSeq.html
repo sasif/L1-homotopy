@@ -1,0 +1,255 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of demo_dynamicSeq</title>
+  <meta name="keywords" content="demo_dynamicSeq">
+  <meta name="description" content="demo_dynamicSeq">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- menu.html L1_homotopy_v2.0 -->
+<h1>demo_dynamicSeq
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>demo_dynamicSeq</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> demo_dynamicSeq
+
+ Solves the following BPDN problem
+ min_x  tau\|x\|_1 + 1/2*||y-Ax||_2^2
+ 
+ and updates the solution as new measurements w = Bx are received. 
+
+ Written by: Salman Asif, Georgia Tech
+ Email: sasif@gatech.edu
+ Created: August 2012
+
+ Modified: May 2013 (using l1homotopy for update)</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="l1homotopy.html" class="code" title="function out = l1homotopy(A, y, opts)">l1homotopy</a>	l1homotopy.m</li><li><a href="../L1_homotopy_v2.0/utils/genAmat.html" class="code" title="function A = genAmat(M,N,in);">genAmat</a>	</li><li><a href="../L1_homotopy_v2.0/utils/genSignal.html" class="code" title="function [x varargout] = genSignal(N,in)">genSignal</a>	Inputs</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="readme.html" class="code" title="">readme</a>	----------L1 Homotopy Package-------------+</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% demo_dynamicSeq</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% Solves the following BPDN problem</span>
+0004 <span class="comment">% min_x  tau\|x\|_1 + 1/2*||y-Ax||_2^2</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% and updates the solution as new measurements w = Bx are received.</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">% Written by: Salman Asif, Georgia Tech</span>
+0009 <span class="comment">% Email: sasif@gatech.edu</span>
+0010 <span class="comment">% Created: August 2012</span>
+0011 <span class="comment">%</span>
+0012 <span class="comment">% Modified: May 2013 (using l1homotopy for update)</span>
+0013 <span class="comment">%</span>
+0014 clear
+0015 close all force
+0016   
+0017 <span class="comment">%% Setup path</span>
+0018 mname = mfilename;
+0019 mpath = mfilename(<span class="string">'fullpath'</span>);
+0020 mdir = mpath(1:end-length(mname));
+0021 cd(mdir);
+0022 
+0023 addpath utils/
+0024 addpath utils/qr/
+0025 
+0026 disp([<span class="string">'--------------------'</span>,datestr(now),<span class="string">'-------------------------'</span>])
+0027 
+0028 <span class="comment">% load RandomStates</span>
+0029 <span class="comment">%</span>
+0030 rseed = 2012;
+0031 rand(<span class="string">'state'</span>,rseed);
+0032 randn(<span class="string">'state'</span>,rseed);
+0033 
+0034 <span class="comment">% simulation parameters</span>
+0035 mType = <span class="string">'randn'</span>; <span class="comment">% {'randn','orth','rdct'};</span>
+0036 sType = <span class="string">'randn'</span>; <span class="comment">% {'randn','sign','highD', 'blocks','pcwPoly'}</span>
+0037 SNR = inf;       <span class="comment">% additive Gaussian noise</span>
+0038   
+0039 N = 512;   <span class="comment">% signal length</span>
+0040 M = round(N/2);    <span class="comment">% no. of measurements</span>
+0041 T = round(M/4);    <span class="comment">% sparsity level</span>
+0042 Mn = round(M/10);  <span class="comment">% new measurements</span>
+0043 
+0044 <span class="comment">% rank-1 update mode</span>
+0045 delx_mode = <span class="string">'mil'</span>; <span class="comment">% mil or qr</span>
+0046 fprintf(<span class="string">'Add sequential measurements..\n'</span>);
+0047 str0 = sprintf(<span class="string">'mType-%s, sType-%s, SNR = %d, (N,M,T) = %d, %d, %d; Mn = %d.'</span>, mType, sType, SNR, N, M, T,Mn);
+0048 disp(str0);
+0049 
+0050  
+0051 maxsim = 10;
+0052 SIM_stack = cell(maxsim,1);
+0053 SIM_memory = cell(maxsim,1);
+0054  
+0055 <span class="keyword">for</span> sim = 1:maxsim
+0056     
+0057     <span class="comment">% Generate a random signal</span>
+0058     in = []; in.type = sType; in.T = T; in.randgen = 1;
+0059     x = <a href="../L1_homotopy_v2.0/utils/genSignal.html" class="code" title="function [x varargout] = genSignal(N,in)">genSignal</a>(N,in);
+0060     [val ind] = sort(abs(x),<span class="string">'descend'</span>);
+0061     ind_pos = ind(val&gt;1e-1);
+0062     gamma_orig = ind_pos(1:min(length(ind_pos),M-1));
+0063         
+0064     <span class="comment">% measurement matrix</span>
+0065     in = []; in.type = mType;
+0066     A = <a href="../L1_homotopy_v2.0/utils/genAmat.html" class="code" title="function A = genAmat(M,N,in);">genAmat</a>(M,N,in);
+0067     A = A*sqrt(M); <span class="comment">% Because genAmat generates matrices with unit (expected) norm columns</span>
+0068     
+0069     <span class="comment">% measurements</span>
+0070     sigma = sqrt(norm(A*x)^2/10^(SNR/10)/M);    
+0071     e = randn(M,1)*sigma;
+0072     y = A*x+e;
+0073     
+0074     <span class="comment">%     % orthogonalize rows of A</span>
+0075     <span class="comment">%     [Q, R] = qr(A',0);</span>
+0076     <span class="comment">%     A = Q'; y = R' \ y;</span>
+0077     
+0078     <span class="comment">% parameter selection</span>
+0079     <span class="comment">% tau = sigma*sqrt(log(N));</span>
+0080     tau = max(1e-4*max(abs(A'*y)),sigma*sqrt(log(N)));
+0081     
+0082     maxiter = 4*N;
+0083     err_fun = @(z) (norm(x-z)/norm(x))^2;
+0084     
+0085     <span class="comment">%% BPDN using l1homotopy</span>
+0086     in = [];
+0087     in.tau = tau;
+0088     in.delx_mode = delx_mode;
+0089     in.debias = 0;
+0090     in.verbose = 0;
+0091     in.plots = 0;
+0092     in.record = 1;
+0093     in.err_fun = err_fun;
+0094     tic
+0095     out = <a href="l1homotopy.html" class="code" title="function out = l1homotopy(A, y, opts)">l1homotopy</a>(A,y,in);
+0096     xh = out.x_out;
+0097     iter_bpdn = out.iter;
+0098     time_bpdn = toc;
+0099     gamma_bpdn = out.gamma;
+0100     err_bpdn = out.error_table;
+0101     
+0102     <span class="comment">%% Update the solution after adding measurements (DynamicSeq)</span>
+0103     xh_old = xh; tau_old = tau;
+0104     x_old = x; y_old = y; A_old = A;
+0105     
+0106     <span class="comment">% Additional measurements</span>
+0107     in = []; in.type = mType;
+0108     B = <a href="../L1_homotopy_v2.0/utils/genAmat.html" class="code" title="function A = genAmat(M,N,in);">genAmat</a>(Mn,N,in);
+0109     B = B*sqrt(Mn); <span class="comment">% Because genAmat generates matrices with unit (expected) norm columns</span>
+0110     
+0111     <span class="comment">% noise in the new measurements</span>
+0112     sigma = sqrt(norm(B*x)^2/10^(SNR/10)/Mn);    
+0113     e = randn(Mn,1)*sigma;
+0114     w = B*x+e;
+0115     
+0116     A = [A_old; B];
+0117     y = [y_old; w];
+0118     
+0119     <span class="comment">% parameter selection</span>
+0120     <span class="comment">% tau = sigma*sqrt(log(N));</span>
+0121     tau = max(1e-4*max(abs(A'*y)),sigma*sqrt(log(N)));    
+0122     
+0123     homotopy_mode = <span class="string">'dummy'</span>;
+0124     <span class="keyword">switch</span> homotopy_mode
+0125         <span class="keyword">case</span> <span class="string">'dummy'</span>
+0126             <span class="comment">% create a dummy variable...</span>
+0127             <span class="comment">% use homotopy on the measurements...</span>
+0128             <span class="comment">% in principle, we can start with any xh_old with this formulation</span>
+0129             <span class="comment">% and any starting value of tau or W...</span>
+0130             W = tau; 
+0131             W_old = tau_old;
+0132             Atr = A'*(A*xh_old-y);
+0133             u =  -W.*sign(xh_old)-Atr;
+0134             pk_old = Atr+u;
+0135         <span class="keyword">otherwise</span>
+0136             <span class="comment">% Use direct information from the old solution</span>
+0137             W = tau; 
+0138             W_old = tau_old;
+0139             <span class="comment">%             u = out.pk;</span>
+0140             <span class="comment">%             yh = [y_old; B*xh_old];</span>
+0141             <span class="comment">%             Atdyu = A'*(yh-y);</span>
+0142             Atr = A'*(A*xh_old-y);
+0143             u =  -W.*sign(xh_old)-Atr;
+0144             pk_old = Atr+u;
+0145     <span class="keyword">end</span> 
+0146     
+0147     in = out;
+0148     gamma_old = in.gamma;
+0149     <span class="keyword">switch</span> delx_mode
+0150         <span class="keyword">case</span> <span class="string">'mil'</span>;
+0151             <span class="comment">% in.delx_mode = 'mil';</span>
+0152             <span class="comment">% The following gram matrix and its inverse can be used from the</span>
+0153             <span class="comment">% previous homotopy. Too lazy to include that right now...</span>
+0154             <span class="comment">% wt BPDN homotopy update</span>
+0155             AtAgx = A(:,gamma_old)'*A(:,gamma_old);
+0156             iAtAgx = inv(AtAgx);
+0157             in.iAtA = iAtAgx;
+0158         <span class="keyword">case</span> {<span class="string">'qr'</span>,<span class="string">'chol'</span>};
+0159             <span class="comment">% in.delx_mode = 'qr';</span>
+0160             [Q R] = qr(A(:,gamma_old),0);
+0161             in.Q = Q; in.R = R;
+0162         <span class="keyword">case</span> <span class="string">'qrM'</span>
+0163             <span class="comment">% in.delx_mode = 'qrM';</span>
+0164             [Q0 R0] = qr(A(:,gamma_old));
+0165             in.Q0 = Q0; in.R0 = R0;
+0166     <span class="keyword">end</span>
+0167 
+0168     in.xh_old = xh_old;
+0169     in.pk_old = pk_old;
+0170     in.u = u;
+0171     in.W = W;
+0172     in.W_old = W_old;
+0173     in.delx_mode = delx_mode;
+0174     in.debias = 0;
+0175     in.verbose = 0;
+0176     in.plots = 0;
+0177     in.record = 1;
+0178     in.err_fun = @(z) (norm(x-z)/norm(x))^2;
+0179     tic
+0180     out = <a href="l1homotopy.html" class="code" title="function out = l1homotopy(A, y, opts)">l1homotopy</a>(A,y,in);
+0181     xh_dynSeq = out.x_out;
+0182     gamma_dynSeq = out.gamma;
+0183     iter_dynSeq = out.iter;
+0184     time_dynSeq = toc;
+0185          
+0186     SIM_stack{sim} = [sim, tau, <span class="keyword">...</span>
+0187         norm(x_old-xh)^2/norm(x)^2, sum(iter_bpdn,2), sum(time_bpdn,2), <span class="keyword">...</span>
+0188         norm(x-xh_dynSeq)^2/norm(x)^2, sum(iter_dynSeq,2), sum(time_dynSeq,2)];  
+0189     
+0190     fprintf(<span class="string">'sim %d. tau = %3.4g, (err,iter,time): l1homotopy from scratch-%3.4g,%3.4g,%3.4g; dynSeq l1homotopy-%3.4g,%3.4g,%3.4g. \n'</span>, <span class="keyword">...</span>
+0191         SIM_stack{sim});
+0192    
+0193     <span class="comment">%% plot recovered signals</span>
+0194     figure(1); plot([x xh xh_dynSeq]);
+0195     title(<span class="string">'Comparison betweeen the new and old homotopy code'</span>)
+0196 <span class="keyword">end</span>
+0197 mS =  mean(cell2mat(SIM_stack),1);
+0198 fprintf(<span class="string">'Average results: maxsim %d. tau = %3.4g, (err,iter,time): l1homotopy from scratch-%3.4g,%3.4g,%3.4g; dynSeq l1homotopy-%3.4g,%3.4g,%3.4g. \n'</span>, maxsim, mS(2:end));</pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

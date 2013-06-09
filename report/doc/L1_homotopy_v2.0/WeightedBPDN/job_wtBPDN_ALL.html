@@ -1,0 +1,199 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of job_wtBPDN_ALL</title>
+  <meta name="keywords" content="job_wtBPDN_ALL">
+  <meta name="description" content="Comparison of various solvers for iterative reweighting and adaptive reweighting">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../menu.html L1_homotopy_v2.0 --><!-- menu.html WeightedBPDN -->
+<h1>job_wtBPDN_ALL
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>Comparison of various solvers for iterative reweighting and adaptive reweighting</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> Comparison of various solvers for iterative reweighting and adaptive reweighting
+
+ Solves the following basis pursuit denoising (BPDN) problem
+ min_x  \Sum \w_i |x_i| + 1/2*||y-Ax||_2^2
+
+ while updating the weights w_i
+
+ Written by: Salman Asif, Georgia Tech
+ Email: sasif@gatech.edu
+ Created: June 16, 2011
+ 
+ Reference: 
+ &quot;Fast and accurate algorithms for re-weighted L1 norm minimization,&quot; by 
+ M. Salman Asif and Justin Romberg</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../L1_homotopy_v2.0/WeightedBPDN/src/script_simulation_wtBPDN.html" class="code" title="">script_simulation_wtBPDN</a>	partial script for running different solvers</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% Comparison of various solvers for iterative reweighting and adaptive reweighting</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% Solves the following basis pursuit denoising (BPDN) problem</span>
+0004 <span class="comment">% min_x  \Sum \w_i |x_i| + 1/2*||y-Ax||_2^2</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% while updating the weights w_i</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">% Written by: Salman Asif, Georgia Tech</span>
+0009 <span class="comment">% Email: sasif@gatech.edu</span>
+0010 <span class="comment">% Created: June 16, 2011</span>
+0011 <span class="comment">%</span>
+0012 <span class="comment">% Reference:</span>
+0013 <span class="comment">% &quot;Fast and accurate algorithms for re-weighted L1 norm minimization,&quot; by</span>
+0014 <span class="comment">% M. Salman Asif and Justin Romberg</span>
+0015 
+0016 <span class="comment">% function job_wtBPDN_ALL(mT, sT, snr, rwt_mode, lam_mode)</span>
+0017 <span class="comment">% mT = 1, sT = 1, snr = 2, rwt_mode = 5, lam_mode = 1;</span>
+0018 
+0019 EXP_LIST = [1 1 2 5 1; 1 1 3 5 1; 1 1 4 5 1; 1 2 2 5 1; 1 2 3 5 1; 1 2 4 5 1];
+0020 maxNumCompThreads(1);
+0021 
+0022 <span class="comment">%% Setup path</span>
+0023 mname = mfilename;
+0024 mpath = mfilename(<span class="string">'fullpath'</span>);
+0025 mdir = mpath(1:end-length(mname));
+0026 cd(mdir);
+0027 
+0028 addpath ../Pursuits_Homotopy/
+0029 addpath ../utils/
+0030 addpath ../utils/utils_Wavelet/
+0031 addpath ../solvers/
+0032 addpath src/
+0033 
+0034 <span class="comment">%% Simulation parameters</span>
+0035 <span class="comment">% reweighted setup</span>
+0036 rwt = 5;        <span class="comment">% number of reweighting iterations</span>
+0037 rwt_adp = 2;    <span class="comment">% number of reweighting iterations after adaptive reweighting</span>
+0038 
+0039 <span class="comment">% rank-1 update mode</span>
+0040 delx_mode = <span class="string">'mil'</span>; <span class="comment">% mil or qr</span>
+0041 
+0042 <span class="comment">% simulation setup</span>
+0043 maxsim = 100;
+0044 
+0045 mType_list = {<span class="string">'randn'</span>,<span class="string">'orth'</span>,<span class="string">'rdct'</span>};
+0046 sType_list = {<span class="string">'randn'</span>,<span class="string">'sign'</span>,<span class="string">'highD'</span>}; <span class="comment">% 'blocks','pcwPoly'</span>
+0047 SNR_list = [20:10:40 inf];
+0048 
+0049 lambda_list = [0, 1e-1, 1e-2, 1e-4];
+0050 <span class="comment">% multiplication factor for tau = lambda *\|A'y\|_\infty</span>
+0051 <span class="comment">% 0 --&gt; sigma*log(N)</span>
+0052 
+0053 N_list = [256 512 1024];
+0054 M_ratio = [2:5];
+0055 T_ratio = [3:5];
+0056 
+0057 <span class="comment">% for mT = 1:length(mType_list);</span>
+0058 <span class="comment">%     for sT = 1:length(sType_list);</span>
+0059 <span class="comment">%         for snr = 1:length(SNR_list);</span>
+0060 <span class="comment">%             for rwt_mode = rwt_list</span>
+0061 <span class="comment">%                 for lam_mode = 1:length(lambda_list)</span>
+0062 
+0063 <span class="keyword">for</span> pf = 1:length(EXP_LIST)
+0064     
+0065     mT = EXP_LIST(pf,1);
+0066     sT = EXP_LIST(pf,2);
+0067     snr = EXP_LIST(pf,3);
+0068     rwt_mode = EXP_LIST(pf,4);
+0069     lam_mode = EXP_LIST(pf,5);
+0070     
+0071     EXP_stack = {};
+0072     estack = 1;
+0073     EXP_stack{1,1} = <span class="string">'mType'</span>;
+0074     EXP_stack{1,2} = <span class="string">'sType'</span>;
+0075     EXP_stack{1,3} = <span class="string">'SNR'</span>;
+0076     EXP_stack{1,4} = <span class="string">'rwt_mode'</span>;
+0077     EXP_stack{1,5} = <span class="string">'lambda_mode'</span>;
+0078     EXP_stack{1,6} = <span class="string">'N'</span>;
+0079     EXP_stack{1,7} = <span class="string">'M'</span>;
+0080     EXP_stack{1,8} = <span class="string">'T'</span>;
+0081     EXP_stack{1,9} = <span class="string">'str0'</span>;
+0082     EXP_stack{1,10} = <span class="string">'str2'</span>;
+0083     EXP_stack{1,11} = <span class="string">'avg SIM_stack'</span>;
+0084     EXP_stack{1,12} = <span class="string">'SIM_stack'</span>;
+0085     EXP_stack{1,13} = <span class="string">'SIM_memory'</span>;
+0086     
+0087     
+0088     <span class="keyword">for</span> nl = 1:length(N_list)
+0089         <span class="keyword">for</span> mr = 1:length(M_ratio)
+0090             <span class="keyword">for</span> tr = 1:length(T_ratio)
+0091                 
+0092                 N = N_list(nl);     <span class="comment">% signal length</span>
+0093                 M = round(N/M_ratio(mr));   <span class="comment">% no. of measurements</span>
+0094                 T = round(M/T_ratio(tr));   <span class="comment">% sparsity level</span>
+0095                 
+0096                 sType = char(sType_list{sT});
+0097                 mType = char(mType_list{mT});
+0098                 SNR = SNR_list(snr);
+0099                 
+0100                 lambda = lambda_list(lam_mode);
+0101                 
+0102                 str0 = sprintf(<span class="string">'mType-%s, sType-%s, SNR = %d, (N,M,T) = %d, %d, %d, rwt_mode-%d, lambda%3.4g.'</span>, mType, sType, SNR, N, M, T, rwt_mode, lambda);
+0103                 disp(str0);
+0104                 
+0105                 filename_save = sprintf(<span class="string">'results_comparison_ALL/comparison_wtBPDN_mT-%s_sT-%s_SNR%d-reproduce-Trwt.mat'</span>,mType,sType,SNR);
+0106                 
+0107                 <span class="comment">% % load RandomStates</span>
+0108                 <span class="comment">% rseed = sum(100*clock);</span>
+0109                 <span class="comment">% RandStream.setDefaultStream(RandStream('mt19937ar','seed',rseed));</span>
+0110                 <span class="comment">%</span>
+0111                 <span class="comment">% Experiments that reproduce results in the paper...</span>
+0112                 rseed = 2012;
+0113                 rand(<span class="string">'state'</span>,rseed);
+0114                 randn(<span class="string">'state'</span>,rseed);
+0115                 
+0116                 <span class="comment">%% Run simulation</span>
+0117                 <a href="../../L1_homotopy_v2.0/WeightedBPDN/src/script_simulation_wtBPDN.html" class="code" title="">script_simulation_wtBPDN</a>
+0118                 
+0119                 <span class="comment">%% save results</span>
+0120                 estack = estack+1;
+0121                 
+0122                 EXP_stack{estack,1} = mType;
+0123                 EXP_stack{estack,2} = sType;
+0124                 EXP_stack{estack,3} = SNR;
+0125                 EXP_stack{estack,4} = rwt_mode;
+0126                 EXP_stack{estack,5} = lambda;
+0127                 EXP_stack{estack,6} = N;
+0128                 EXP_stack{estack,7} = M;
+0129                 EXP_stack{estack,8} = T;
+0130                 EXP_stack{estack,9} = str0;
+0131                 EXP_stack{estack,10} = str2;
+0132                 EXP_stack{estack,11} = mean(cell2mat(SIM_stack),1);
+0133                 EXP_stack{estack,12} = SIM_stack;
+0134                 EXP_stack{estack,13} = SIM_memory;
+0135                 
+0136                 eval(sprintf(<span class="string">'save %s'</span>, filename_save));
+0137             <span class="keyword">end</span>
+0138         <span class="keyword">end</span>
+0139     <span class="keyword">end</span>
+0140 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

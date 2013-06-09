@@ -1,0 +1,174 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of demo_BPDN</title>
+  <meta name="keywords" content="demo_BPDN">
+  <meta name="description" content="demo_BPDN">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- menu.html L1_homotopy_v2.0 -->
+<h1>demo_BPDN
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>demo_BPDN</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> demo_BPDN
+
+ Solves the following basis pursuit denoising (BPDN) problem: 
+ \min_x  \tau \|x\|_1 + \frac{1}{2}\|y-Ax\|_2^2 
+
+ Written by: Salman Asif, Georgia Tech
+ Email: sasif@gatech.edu
+ Created: February 2013</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="l1homotopy.html" class="code" title="function out = l1homotopy(A, y, opts)">l1homotopy</a>	l1homotopy.m</li><li><a href="l1homotopy_v1.html" class="code" title="function out = l1homotopy_v1(A, y, opts)">l1homotopy_v1</a>	l1homotopy_v1.m</li><li><a href="../L1_homotopy_v2.0/utils/fig.html" class="code" title="function h = fig(varargin)">fig</a>	</li><li><a href="../L1_homotopy_v2.0/utils/genAmat.html" class="code" title="function A = genAmat(M,N,in);">genAmat</a>	</li><li><a href="../L1_homotopy_v2.0/utils/genSignal.html" class="code" title="function [x varargout] = genSignal(N,in)">genSignal</a>	Inputs</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="readme.html" class="code" title="">readme</a>	----------L1 Homotopy Package-------------+</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% demo_BPDN</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% Solves the following basis pursuit denoising (BPDN) problem:</span>
+0004 <span class="comment">% \min_x  \tau \|x\|_1 + \frac{1}{2}\|y-Ax\|_2^2</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% Written by: Salman Asif, Georgia Tech</span>
+0007 <span class="comment">% Email: sasif@gatech.edu</span>
+0008 <span class="comment">% Created: February 2013</span>
+0009 
+0010 clear
+0011 close all force
+0012 
+0013 <span class="comment">%% Setup path</span>
+0014 mname = mfilename;
+0015 mpath = mfilename(<span class="string">'fullpath'</span>);
+0016 mdir = mpath(1:end-length(mname));
+0017 cd(mdir);
+0018 
+0019 addpath utils/  
+0020 
+0021 disp([<span class="string">'--------------------'</span>,datestr(now),<span class="string">'-------------------------'</span>])
+0022 
+0023 <span class="comment">% load RandomStates</span>
+0024 <span class="comment">%</span>
+0025 rseed = 2012;
+0026 rand(<span class="string">'state'</span>,rseed);
+0027 randn(<span class="string">'state'</span>,rseed);
+0028 
+0029 <span class="comment">% simulation parameters</span>
+0030 mType = <span class="string">'randn'</span>; <span class="comment">% {'randn','orth','rdct'};</span>
+0031 sType = <span class="string">'randn'</span>; <span class="comment">% {'randn','sign','highD', 'blocks','pcwPoly'}</span>
+0032 SNR = 40;       <span class="comment">% additive Gaussian noise</span>
+0033 
+0034 N = 512;   <span class="comment">% signal length</span>
+0035 M = round(N/2);    <span class="comment">% no. of measurements</span>
+0036 T = round(M/3);    <span class="comment">% sparsity level</span>
+0037 
+0038 <span class="comment">% rank-1 update mode</span>
+0039 delx_mode = <span class="string">'mil'</span>; <span class="comment">% mil or qr</span>
+0040 lambda = 0;
+0041 fprintf(<span class="string">'Standard LASSO/BPDN homotopy..\n'</span>);
+0042 str0 = sprintf(<span class="string">'mType-%s, sType-%s, SNR = %d, (N,M,T) = %d, %d, %d.'</span>, mType, sType, SNR, N, M, T);
+0043 disp(str0);
+0044  
+0045 maxsim = 10;
+0046 SIM_stack = cell(maxsim,1);
+0047 
+0048 <span class="keyword">for</span> sim = 1:maxsim
+0049  
+0050     <span class="comment">% Generate a random signal</span>
+0051     in = []; in.type = sType; in.T = T; in.randgen = 1;
+0052     x = <a href="../L1_homotopy_v2.0/utils/genSignal.html" class="code" title="function [x varargout] = genSignal(N,in)">genSignal</a>(N,in); 
+0053     [val ind] = sort(abs(x),<span class="string">'descend'</span>);
+0054     ind_pos = ind(val&gt;1e-1);
+0055     gamma_orig = ind_pos(1:min(length(ind_pos),M-1));
+0056      
+0057     <span class="comment">% measurement matrix</span>
+0058     in = []; in.type = mType;
+0059     A = <a href="../L1_homotopy_v2.0/utils/genAmat.html" class="code" title="function A = genAmat(M,N,in);">genAmat</a>(M,N,in);
+0060     
+0061     <span class="comment">% measurements</span>
+0062     sigma = sqrt(norm(A*x)^2/10^(SNR/10)/M);    
+0063     e = randn(M,1)*sigma;
+0064     y = A*x+e;
+0065     
+0066     <span class="comment">%     % orthogonalize rows of A</span>
+0067     <span class="comment">%     [Q, R] = qr(A',0);</span>
+0068     <span class="comment">%     A = Q'; y = R' \ y;</span>
+0069     
+0070     <span class="comment">% parameter selection</span>
+0071     <span class="comment">% tau = sigma*sqrt(log(N));</span>
+0072     tau = max(1e-4*max(abs(A'*y)),sigma*sqrt(log(N)));
+0073     
+0074     err_fun = @(z) (norm(x-z)/norm(x))^2;
+0075     maxiter = 4*N;
+0076     
+0077     <span class="comment">%% BPDN using l1homotopy</span>
+0078     in = [];   
+0079     in.tau = tau;
+0080     in.delx_mode = delx_mode;
+0081     in.debias = 0;
+0082     in.verbose = 0;
+0083     in.plots = 0;
+0084     in.record = 1;
+0085     in.err_fun = err_fun;
+0086     out = <a href="l1homotopy.html" class="code" title="function out = l1homotopy(A, y, opts)">l1homotopy</a>(A,y,in);
+0087     xh = out.x_out;
+0088     iter_bpdn = out.iter;
+0089     time_bpdn = out.time;
+0090     gamma_bpdn = out.gamma;
+0091     err_bpdn = out.error_table;
+0092         
+0093     <span class="comment">%% Old code</span>
+0094     in = [];
+0095     in.tau = tau;
+0096     in.delx_mode = delx_mode;
+0097     in.debias = 0;
+0098     in.verbose = 0;
+0099     in.plots = 0;
+0100     in.record = 1;
+0101     in.err_fun = err_fun;
+0102     out = <a href="l1homotopy_v1.html" class="code" title="function out = l1homotopy_v1(A, y, opts)">l1homotopy_v1</a>(A,y,in);
+0103     xh_old = out.x_out;
+0104     iter_old = out.iter;
+0105     time_old = out.time;
+0106     gamma_old = out.gamma;
+0107     err_old = out.error_table;
+0108     
+0109     SIM_stack{sim} = [sim, tau, <span class="keyword">...</span>
+0110         norm(x-xh)^2/norm(x)^2, sum(iter_bpdn,2), sum(time_bpdn,2), <span class="keyword">...</span>
+0111         norm(x-xh_old)^2/norm(x)^2, sum(iter_old,2), sum(time_old,2)];  
+0112     
+0113     fprintf(<span class="string">'sim %d. tau = %3.4g, (err,iter,time): l1homotopy-%3.4g,%3.4g,%3.4g; old homotopy-%3.4g,%3.4g,%3.4g. \n'</span>, <span class="keyword">...</span>
+0114         SIM_stack{sim});
+0115 
+0116     <span class="comment">%% plot recovered signals</span>
+0117     <a href="../L1_homotopy_v2.0/utils/fig.html" class="code" title="function h = fig(varargin)">fig</a>(1); plot([x xh xh_old]);    
+0118     title(<span class="string">'Comparison betweeen the new and old homotopy code'</span>)
+0119 <span class="keyword">end</span>
+0120 mS =  mean(cell2mat(SIM_stack),1);
+0121 fprintf(<span class="string">'Average results: maxsim %d. tau = %3.4g, (err,iter,time): l1homotopy-%3.4g,%3.4g,%3.4g; old homotopy-%3.4g,%3.4g,%3.4g. \n'</span>, maxsim, mS(2:end));</pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

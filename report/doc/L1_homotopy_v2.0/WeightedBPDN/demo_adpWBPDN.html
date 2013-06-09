@@ -1,0 +1,141 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of demo_adpWBPDN</title>
+  <meta name="keywords" content="demo_adpWBPDN">
+  <meta name="description" content="demo_adpWBPDN.m">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../menu.html L1_homotopy_v2.0 --><!-- menu.html WeightedBPDN -->
+<h1>demo_adpWBPDN
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>demo_adpWBPDN.m</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> demo_adpWBPDN.m
+
+ Solves the following basis pursuit denoising (BPDN) problem
+ min_x  \Sum \w_i |x_i| + 1/2*||y-Ax||_2^2
+
+ while adaptively selecting the weights w_i
+
+ Written by: Salman Asif, Georgia Tech
+ Email: sasif@gatech.edu
+ Created: June 16, 2011</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../L1_homotopy_v2.0/WeightedBPDN/src/script_simulation_adpWBPDN.html" class="code" title="">script_simulation_adpWBPDN</a>	partial script for running different solvers for adaptive reweighting</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% demo_adpWBPDN.m</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% Solves the following basis pursuit denoising (BPDN) problem</span>
+0004 <span class="comment">% min_x  \Sum \w_i |x_i| + 1/2*||y-Ax||_2^2</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% while adaptively selecting the weights w_i</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">% Written by: Salman Asif, Georgia Tech</span>
+0009 <span class="comment">% Email: sasif@gatech.edu</span>
+0010 <span class="comment">% Created: June 16, 2011</span>
+0011 
+0012 clear
+0013 close all
+0014 
+0015 <span class="comment">%% parfor setup</span>
+0016 <span class="comment">% numCores = str2double(getenv('NUMBER_OF_PROCESSORS'));</span>
+0017 <span class="comment">% mpSize = numCores-1;</span>
+0018 <span class="comment">% if matlabpool('size') ~= mpSize</span>
+0019 <span class="comment">%     if matlabpool('size')~=0</span>
+0020 <span class="comment">%         matlabpool close;</span>
+0021 <span class="comment">%     else</span>
+0022 <span class="comment">%         matlabpool('open', mpSize);</span>
+0023 <span class="comment">%     end</span>
+0024 <span class="comment">% end</span>
+0025 
+0026 <span class="comment">%% Setup path</span>
+0027 mname = mfilename;
+0028 mpath = mfilename(<span class="string">'fullpath'</span>);
+0029 mdir = mpath(1:end-length(mname));
+0030 cd(mdir);
+0031 
+0032 addpath ../Pursuits_Homotopy/
+0033 addpath ../utils/
+0034 addpath ../utils/utils_Wavelet
+0035 addpath ../utils/utils_meas
+0036 addpath ../solvers/
+0037 addpath src/
+0038 
+0039 disp([<span class="string">'--------------------'</span>,datestr(now),<span class="string">'-------------------------'</span>])
+0040 
+0041 <span class="comment">% simulation parameters</span>
+0042 rwt_mode = 5;
+0043 lambda = 0;
+0044 
+0045 
+0046 SAVE_RESULTS = false;
+0047 
+0048 <span class="comment">% SAVE_RESULTS = true;  diary(sprintf('%s-reproduce.txt',mname));</span>
+0049 
+0050 largescale = 1;
+0051 SNR = 40;
+0052 R = 2; 
+0053 
+0054 IMG_LIST = {<span class="string">'barbara'</span>,<span class="string">'boats'</span>, <span class="string">'cameraman'</span>,<span class="string">'house'</span>,<span class="string">'peppers'</span>,<span class="string">'shapes'</span>,<span class="string">'lena'</span>,<span class="string">'airplane'</span>,<span class="string">'baboon'</span>,<span class="string">'sailboat'</span>,<span class="string">'tiffany'</span>};
+0055 sType = IMG_LIST{3};
+0056 
+0057 <span class="keyword">if</span> largescale
+0058     mType = <span class="string">'noiselets'</span>;
+0059     <span class="comment">% sType = 'cameraman'; N = (256)^2;</span>
+0060     <span class="comment">% sType = 'boats'; N = (256)^2;</span>
+0061     <span class="comment">% sType = 'peppers'; N = (256)^2;</span>
+0062     <span class="comment">% sType = 'house'; N = (256)^2;</span>
+0063     <span class="comment">% sType = 'shapes'; N = (256)^2;</span>
+0064     <span class="comment">% sType = 'pirate'; N = (512)^2;</span>
+0065     N = (256)^2;
+0066     M = round(N/R);
+0067     <span class="comment">%M = 30000;</span>
+0068     T = N;
+0069     str0 = sprintf(<span class="string">'mType-%s, sType-%s, SNR = %d, (N,M) = %d, %d, rwt_mode-%d, lambda%3.4g.'</span>, mType, sType, SNR, N, M, rwt_mode, lambda);
+0070     disp(str0);
+0071 <span class="keyword">else</span>
+0072     mType = <span class="string">'randn'</span>;
+0073     sType = <span class="string">'HeaviSine'</span>;
+0074     N = 512;   <span class="comment">% signal length</span>
+0075     M = round(N/2);    <span class="comment">% no. of measurements</span>
+0076     T = round(M/3);    <span class="comment">% sparsity level</span>
+0077     str0 = sprintf(<span class="string">'mType-%s, sType-%s, SNR = %d, (N,M,T) = %d, %d, %d, rwt_mode-%d, lambda%3.4g.'</span>, mType, sType, SNR, N, M, T, rwt_mode, lambda);
+0078     disp(str0);
+0079 <span class="keyword">end</span>
+0080 
+0081 <span class="comment">% rank-1 update mode</span>
+0082 delx_mode = <span class="string">'mil'</span>; <span class="comment">% mil or qr</span>
+0083 
+0084 <span class="comment">%% Simulation</span>
+0085 maxsim = 1;
+0086 <a href="../../L1_homotopy_v2.0/WeightedBPDN/src/script_simulation_adpWBPDN.html" class="code" title="">script_simulation_adpWBPDN</a></pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

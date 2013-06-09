@@ -1,0 +1,12 @@
+/* Created by mdot for Matlab */
+digraph m2html {
+  DynamicSeq_REC_demo -> DynamicSeq_REC_function;
+  Simulation_DynamicSeq_REC -> DynamicSeq_REC_function;
+
+  DynamicSeq_REC_demo [URL="DynamicSeq_REC_demo.html"];
+  DynamicSeq_REC_function [URL="DynamicSeq_REC_function.html"];
+  Simulation_DynamicSeq_REC [URL="Simulation_DynamicSeq_REC.html"];
+  Simulation_l1Decode [URL="Simulation_l1Decode.html"];
+  l1Decode_homotopy_fast [URL="l1Decode_homotopy_fast.html"];
+  l1Decode_homotopy_qr [URL="l1Decode_homotopy_qr.html"];
+}

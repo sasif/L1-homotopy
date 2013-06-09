@@ -1,0 +1,431 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of script_simulation_adpWBPDN</title>
+  <meta name="keywords" content="script_simulation_adpWBPDN">
+  <meta name="description" content="partial script for running different solvers for adaptive reweighting">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../../menu.html L1_homotopy_v2.0 --><!-- ../menu.html WeightedBPDN --><!-- menu.html src -->
+<h1>script_simulation_adpWBPDN
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>partial script for running different solvers for adaptive reweighting</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> partial script for running different solvers for adaptive reweighting</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="../../../L1_homotopy_v2.0/Pursuits_Homotopy/BPDN_homotopy_function.html" class="code" title="function out = BPDN_homotopy_function(A, y, in)">BPDN_homotopy_function</a>	BPDN_homotopy_function.m</li><li><a href="script_rwtBPDN_adaptive.html" class="code" title="function out = script_rwtBPDN_adaptive(in)">script_rwtBPDN_adaptive</a>	BPDN rwt update (initialize with adaptive_wtBPDN)</li><li><a href="weight_param.html" class="code" title="function [alpha beta epsilon] = weight_param(rwt_mode,itr,varargin)">weight_param</a>	Compute alpha,beta, and epsilon to update weights as</li><li><a href="../../../L1_homotopy_v2.0/solvers/SpaRSA_adpW.html" class="code" title="function [x,x_debias,objective,times,debias_start,mses,taus, numA, numAt]=SpaRSA_adpW(y,A,tau,varargin)">SpaRSA_adpW</a>	SpaRSA version 2.0, December 31, 2007</li><li><a href="../../../L1_homotopy_v2.0/solvers/soft.html" class="code" title="function y = soft(x,T)">soft</a>	</li><li><a href="../../../L1_homotopy_v2.0/solvers/spgSetParms.html" class="code" title="function options = spgSetParms(varargin)">spgSetParms</a>	SPGSETPARMS  Set options for SPGL1</li><li><a href="../../../L1_homotopy_v2.0/solvers/spgl1.html" class="code" title="function [x,r,g,info] = spgl1( A, b, tau, sigma, x, options )">spgl1</a>	SPGL1  Solve basis pursuit, basis pursuit denoise, and LASSO</li><li><a href="../../../L1_homotopy_v2.0/solvers/wspgSetParms.html" class="code" title="function options = wspgSetParms(varargin)">wspgSetParms</a>	SPGSETPARMS  Set options for SPGL1</li><li><a href="../../../L1_homotopy_v2.0/solvers/wspgl1.html" class="code" title="function [x,r,g,info] = wspgl1( A, b, tau, sigma, x, options )">wspgl1</a>	SPGL1  Solve basis pursuit, basis pursuit denoise, and LASSO</li><li><a href="../../../L1_homotopy_v2.0/utils/genAmat.html" class="code" title="function A = genAmat(M,N,in);">genAmat</a>	</li><li><a href="../../../L1_homotopy_v2.0/utils/genSignal.html" class="code" title="function [x varargout] = genSignal(N,in)">genSignal</a>	Inputs</li><li><a href="../../../L1_homotopy_v2.0/utils/utils_Wavelet/ifwt2.html" class="code" title="">ifwt2</a>	ifwt2.m</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="../../../L1_homotopy_v2.0/WeightedBPDN/demo_adpWBPDN.html" class="code" title="">demo_adpWBPDN</a>	demo_adpWBPDN.m</li><li><a href="../../../L1_homotopy_v2.0/WeightedBPDN/job_adpWBPDN.html" class="code" title="">job_adpWBPDN</a>	Comparison of various solvers for adaptive reweighting</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% partial script for running different solvers for adaptive reweighting</span>
+0002 
+0003 <span class="comment">% reweighted setup</span>
+0004 adp_wt = 0;  <span class="comment">% adaptive selection of the weights?</span>
+0005 rwt = 3*(1-adp_wt)+1;        <span class="comment">% number of reweighting iterations</span>
+0006 
+0007 I_ALL = [];
+0008 EXP = [0 1; 0 4; 1 1]; 
+0009 <span class="comment">% 0 1 -- standard BPDN</span>
+0010 <span class="comment">% 0 x -- iterative reweighting with x reweighting iterations</span>
+0011 <span class="comment">% 1 1 -- adaptive reweigthing</span>
+0012 <span class="keyword">for</span> exp = 1:3;
+0013     <span class="comment">% set up random generator</span>
+0014     rseed = 2012;
+0015     rand(<span class="string">'state'</span>,rseed);
+0016     randn(<span class="string">'state'</span>,rseed);
+0017 
+0018     <span class="comment">% RandStream.setDefaultStream(RandStream('mt19937ar','seed',rseed));</span>
+0019     <span class="comment">% seed = rng('shuffle');</span>
+0020     <span class="comment">% seed = rng(0);</span>
+0021 
+0022     adp_wt = EXP(exp,1);
+0023     rwt = EXP(exp,2);
+0024     
+0025     fprintf(<span class="string">'adp_wt = %d, rwt = %d '</span>,adp_wt,rwt);
+0026     
+0027     
+0028     err_fun = @(z) -20*log10(z);
+0029     
+0030     <span class="comment">%% Main loop</span>
+0031     SIM_stack = cell(maxsim,1);
+0032     SIM_memory = cell(maxsim,1);
+0033     
+0034     Ir_stack = [];
+0035     <span class="keyword">for</span> sim = 1:maxsim
+0036         <span class="comment">%% Generate a random signal</span>
+0037         in = []; in.type = sType; in.T = T; in.randgen = 1; in.take_fwt = 1;
+0038         [x img wave_struct] = <a href="../../../L1_homotopy_v2.0/utils/genSignal.html" class="code" title="function [x varargout] = genSignal(N,in)">genSignal</a>(N,in);
+0039         <span class="comment">% gamma_orig = find(abs(x)&gt;0);</span>
+0040         [val ind] = sort(abs(x),<span class="string">'descend'</span>);
+0041         ind_pos = ind(val&gt;0);
+0042         gamma_orig = ind_pos(1:min(length(ind_pos),M-1));
+0043         
+0044         <span class="comment">% measurement matrix</span>
+0045         in = []; in.type = mType;
+0046         AA = <a href="../../../L1_homotopy_v2.0/utils/genAmat.html" class="code" title="function A = genAmat(M,N,in);">genAmat</a>(M,N,in);
+0047         <span class="keyword">if</span> largescale
+0048             wType = wave_struct.wType;
+0049             FilterBank = wave_struct.FilterBank;
+0050             h0 = FilterBank(1,:);
+0051             h1 = FilterBank(2,:);
+0052             g0 = FilterBank(3,:);
+0053             g1 = FilterBank(4,:);
+0054             J = wave_struct.J;
+0055             sym = wave_struct.sym;
+0056             
+0057             n = sqrt(N);
+0058             rshp1 = @(z) reshape(z,n,n);
+0059             rshp2 = @(z) z(:);
+0060             
+0061             <span class="comment">% FT = @(x) rshp2(fwt2(rshp1(x),h0,h1,J,sym));</span>
+0062             <span class="comment">% iFT = @(x) rshp2(ifwt2(rshp1(x),g0,g1,J,sym));</span>
+0063             FT = @(z) z; 
+0064             iFT = @(z) z; 
+0065             
+0066             A = @(x) AA(iFT(x),1);
+0067             AT = @(x) FT(AA(x,2));
+0068             <span class="comment">% measurements</span>
+0069             Ax = A(x);
+0070             sigma = sqrt(norm(Ax)^2/10^(SNR/10)/M);
+0071             <span class="comment">%sigma = .05;</span>
+0072             e = randn(M,1)*sigma;
+0073             
+0074             y = Ax+e;
+0075             Aty = AT(y);
+0076         <span class="keyword">else</span>
+0077             A = AA;
+0078             AT = A';
+0079             <span class="comment">% measurements</span>
+0080             Ax = A*x;
+0081             sigma = sqrt(norm(Ax)^2/10^(SNR/10)/M);
+0082             <span class="comment">%sigma = .05;</span>
+0083             e = randn(M,1)*sigma;
+0084             y = A*x+e;
+0085             Aty = AT*y;
+0086         <span class="keyword">end</span>
+0087         
+0088         maxiter = 2*N;
+0089         
+0090         <span class="comment">%% wSPGL1</span>
+0091         <span class="comment">% call SPGL1</span>
+0092         iter_spgl1 = []; err_spgl1 = []; supp_diff_spgl1 = []; time_spgl1 = [];
+0093         <span class="comment">% if ~exist('spgSetParms','file'); error('Solver SPGL1 is not found.'); end</span>
+0094         
+0095         W_new = ones(N,1);
+0096         delta = norm(e);
+0097         delta = max(sqrt(M)*sigma,1e-1);
+0098         x_spgl1 = [];
+0099         
+0100         <span class="keyword">for</span> rwt_itr = 1:rwt*0
+0101             <span class="keyword">if</span> adp_wt == 0
+0102                 spg_opts = <a href="../../../L1_homotopy_v2.0/solvers/spgSetParms.html" class="code" title="function options = spgSetParms(varargin)">spgSetParms</a>(<span class="string">'verbosity'</span>,0,<span class="string">'weights'</span>,W_new,<span class="string">'iterations'</span>,maxiter);
+0103                 [x_spgl1,r,g,info] = <a href="../../../L1_homotopy_v2.0/solvers/spgl1.html" class="code" title="function [x,r,g,info] = spgl1( A, b, tau, sigma, x, options )">spgl1</a>(AA,y,0,delta,x_spgl1,spg_opts);
+0104                 <span class="comment">% [x_spgl1,r,g,info] = spgl1(AA,y,1e5,0,x_spgl1,spg_opts);</span>
+0105             <span class="keyword">else</span>
+0106                 spg_opts = <a href="../../../L1_homotopy_v2.0/solvers/wspgSetParms.html" class="code" title="function options = wspgSetParms(varargin)">wspgSetParms</a>(<span class="string">'verbosity'</span>,0,<span class="string">'omega'</span>,0.3);
+0107                 [x_spgl1,r,g,info] = <a href="../../../L1_homotopy_v2.0/solvers/wspgl1.html" class="code" title="function [x,r,g,info] = wspgl1( A, b, tau, sigma, x, options )">wspgl1</a>(AA,y,0,delta,x_spgl1,spg_opts);
+0108             <span class="keyword">end</span>
+0109             
+0110             rerr = norm(x_spgl1-x)/norm(x);
+0111             iter_spgl1 = [iter_spgl1  (info.nProdA+info.nProdAt)/2];
+0112             err_spgl1 = [err_spgl1 rerr];
+0113             supp_diff_sgpl1 = [supp_diff_spgl1 length(setxor(gamma_orig,find(x_spgl1)))];
+0114             time_spgl1 = [time_spgl1 info.timeTotal];
+0115             [alpha beta epsilon] = <a href="weight_param.html" class="code" title="function [alpha beta epsilon] = weight_param(rwt_mode,itr,varargin)">weight_param</a>(rwt_mode,rwt_itr,x_spgl1,M);
+0116             W_new = 1/alpha./(beta*abs(x_spgl1)+epsilon);
+0117             <span class="comment">% W_new = 1./(abs(x_spgl1)+0.1);</span>
+0118             r_spgl1 = A(x_spgl1)-y; Atr_spgl1 = AT(r_spgl1);        
+0119         <span class="keyword">end</span>
+0120         
+0121         <span class="comment">%% SpaRSA</span>
+0122         tau = max(1e-3*max(abs(Aty)),sigma*sqrt(log(N)));
+0123         <span class="comment">% tau = max(abs(Atr_spgl1));</span>
+0124         
+0125         iter_sparsa = [];
+0126         err_sparsa = [];
+0127         time_sparsa = [];
+0128         x_sparsa = 0;
+0129         supp_diff_sparsa = [];
+0130         W_new = 1;
+0131         
+0132         <span class="comment">% [alpha beta epsilon] = weight_param(5,rwt_itr,x,M);</span>
+0133         <span class="comment">% W_new = 1/alpha./(beta*abs(x)+epsilon);</span>
+0134         <span class="comment">% W_new = abs(Atr_spgl1)/tau;</span>
+0135         
+0136         <span class="keyword">for</span> rwt_itr = 1:rwt
+0137             psi_function = @(x,tau) <a href="../../../L1_homotopy_v2.0/solvers/soft.html" class="code" title="function y = soft(x,T)">soft</a>(x,tau*W_new);
+0138             phi_function = @(x) sum(abs(W_new.*x));
+0139             tic
+0140             [x_SpaRSA,x_debias_SpaRSA_m,obj_SpaRSA_m_cont,<span class="keyword">...</span>
+0141                 times_SpaRSA_m_cont,debias_start_SpaRSA_m,mse_SpaRSA_m,taus_SpaRSA_m, numA, numAt]= <span class="keyword">...</span>
+0142                 <a href="../../../L1_homotopy_v2.0/solvers/SpaRSA_adpW.html" class="code" title="function [x,x_debias,objective,times,debias_start,mses,taus, numA, numAt]=SpaRSA_adpW(y,A,tau,varargin)">SpaRSA_adpW</a>(y,A,tau,<span class="keyword">...</span>
+0143                 <span class="string">'Monotone'</span>,0,<span class="keyword">...</span>
+0144                 <span class="string">'AT'</span>,AT,<span class="keyword">...</span>
+0145                 <span class="string">'adp_wt'</span>,adp_wt,<span class="keyword">...</span>
+0146                 <span class="string">'Debias'</span>,0,<span class="keyword">...</span>
+0147                 <span class="string">'Initialization'</span>,x_sparsa,<span class="keyword">...</span>
+0148                 <span class="string">'StopCriterion'</span>,2,<span class="keyword">...</span>
+0149                 <span class="string">'ToleranceA'</span>,1e-4,<span class="keyword">...</span>
+0150                 <span class="string">'MaxiterA'</span>,maxiter,<span class="keyword">...</span>
+0151                 <span class="string">'psi'</span>,psi_function,<span class="keyword">...</span>
+0152                 <span class="string">'phi'</span>,phi_function,<span class="keyword">...</span>
+0153                 <span class="string">'Verbose'</span>,0,<span class="keyword">...</span>
+0154                 <span class="string">'W_new'</span>,W_new,<span class="keyword">...</span>
+0155                 <span class="string">'True_x'</span>,x,<span class="keyword">...</span>
+0156                 <span class="string">'Continuation'</span>,1,<span class="keyword">...</span>
+0157                 <span class="string">'Continuationsteps'</span>,-1);
+0158             x_sparsa = x_SpaRSA;
+0159             time_sparsa = [time_sparsa toc];
+0160             
+0161             iter_sparsa = [iter_sparsa (numA+numAt)/2];
+0162             rerr = norm(x-x_sparsa)/norm(x);
+0163             err_sparsa = [err_sparsa rerr];
+0164             
+0165             supp_diff_sparsa = [supp_diff_sparsa length(setxor(gamma_orig,find(x_sparsa)))];
+0166             
+0167             [alpha beta epsilon] = <a href="weight_param.html" class="code" title="function [alpha beta epsilon] = weight_param(rwt_mode,itr,varargin)">weight_param</a>(rwt_mode,rwt_itr,x_sparsa,M);
+0168             W_new = 1/alpha./(beta*abs(x_sparsa)+epsilon);
+0169             
+0170             <span class="comment">%         gamma = find(abs(x)&gt;tau*100);</span>
+0171             <span class="comment">%         W_new = ones(N,1);</span>
+0172             <span class="comment">%         ewt_b = 2*length(y)*(norm(x,2)/norm(x,1))^2;</span>
+0173             <span class="comment">%         W_new(gamma) = 1./abs(x(gamma))/ewt_b;</span>
+0174         <span class="keyword">end</span>
+0175         <span class="comment">% r_sparsa = A(x_sparsa)-y; Atr_sparsa = AT(r_sparsa);</span>
+0176         
+0177         <span class="comment">%% NESTA</span>
+0178         <span class="comment">%     opts = [];</span>
+0179         <span class="comment">%     opts.Verbose = 0;</span>
+0180         <span class="comment">%     opts.tolvar = 1e-5;</span>
+0181         <span class="comment">%     opts.MaxIntIter = 5;</span>
+0182         <span class="comment">%     delta = max(sigma*sqrt(M),1e-6);</span>
+0183         <span class="comment">%     muf = 1e-3;</span>
+0184         <span class="comment">%</span>
+0185         <span class="comment">%     iter_nesta = [];</span>
+0186         <span class="comment">%     err_nesta = [];</span>
+0187         <span class="comment">%     supp_diff_nesta = [];</span>
+0188         <span class="comment">%     x_nesta = [];</span>
+0189         <span class="comment">%     tic;</span>
+0190         <span class="comment">%     % constrained</span>
+0191         <span class="comment">%     [x_nesta,niter,resid,outData,optsOut] = NESTA_adpW(A,AT,y,muf,delta,opts);</span>
+0192         <span class="comment">%     % unconstrained</span>
+0193         <span class="comment">%     % La = norm( A*A' );</span>
+0194         <span class="comment">%     % [x_nesta,niter,resid,outData,optsOut] = NESTA_UP(A,[],y,tau,La,muf,opts);</span>
+0195         <span class="comment">%     time_nesta = toc;</span>
+0196         <span class="comment">%     iter_nesta = [iter_nesta niter*3];</span>
+0197         <span class="comment">%     rerr = norm(x-x_nesta)/norm(x);</span>
+0198         <span class="comment">%     err_nesta = [err_nesta rerr];</span>
+0199         <span class="comment">%     supp_diff_nesta = [supp_diff_nesta length(setxor(gamma_orig,find(x_nesta)))];</span>
+0200         
+0201         <span class="keyword">if</span> largescale == 0
+0202             <span class="comment">%% Adaptive support &amp; weight selection</span>
+0203             in = [];
+0204             in.A = A; in.y = y; in.x = x;
+0205             in.x_init = zeros(N,1); in.max_rwt = 0;
+0206             in.tau = tau;
+0207             in.rwt_mode = rwt_mode;
+0208             in.delx_mode = delx_mode;
+0209             in.debias = 0;
+0210             in.verbose = 0;
+0211             out = <a href="script_rwtBPDN_adaptive.html" class="code" title="function out = script_rwtBPDN_adaptive(in)">script_rwtBPDN_adaptive</a>(in);
+0212             xh_adp = out.x_out;
+0213             iter_adp = out.iter;
+0214             gamma_adp = out.gamma;
+0215             W_new = out.W_new;
+0216             xh_adp_init = out.x_init;
+0217             err_adp = out.err;
+0218             time_adp = out.time;
+0219             supp_diff_adp = out.supp_diff;
+0220             
+0221             <span class="comment">%% Oracle rwt BPDN</span>
+0222             alpha = 5; beta = 10;
+0223             W_new = ones(N,1); W_new(gamma_orig) = 1/alpha./(beta*abs(x(gamma_orig)));
+0224             <span class="comment">% epsilon = 0.1; W_new = 1/alpha./(beta*(abs(x))+epsilon);</span>
+0225             
+0226             <span class="comment">% To check the accuracy of rwtBPDN_adaptive set</span>
+0227             <span class="comment">% W_new = out.W_new/tau;</span>
+0228             
+0229             in = [];
+0230             in.tau = tau;
+0231             in.maxiter = maxiter;
+0232             in.x_orig = x;
+0233             in.record = 1;
+0234             in.delx_mode = <span class="string">'mil'</span>;
+0235             <span class="comment">%     in.Te = rwt_itr;</span>
+0236             AW = A*diag(1./W_new);
+0237             tic;
+0238             out_new = <a href="../../../L1_homotopy_v2.0/Pursuits_Homotopy/BPDN_homotopy_function.html" class="code" title="function out = BPDN_homotopy_function(A, y, in)">BPDN_homotopy_function</a>(AW, y, in); <span class="comment">%BPDN</span>
+0239             <span class="comment">% time_orac = out_new.time;</span>
+0240             time_orac = toc;
+0241             xh_orac = out_new.x_out.*(1./W_new);
+0242             gamma_orac = out_new.gamma;
+0243             iter_orac = out_new.iter;
+0244             
+0245             
+0246             <span class="comment">%% oracle LS</span>
+0247             x_LS = zeros(N,1);
+0248             x_LS(gamma_orig) = A(:,gamma_orig)\y;
+0249         <span class="keyword">end</span>
+0250                 
+0251         <span class="comment">%%</span>
+0252         <span class="keyword">if</span> largescale
+0253             fprintf(<span class="string">'Image-%s-%d, wavelet-%s, adp_wt = %d @ rwt = %d ... '</span>,sType,n,wType,adp_wt, rwt);
+0254             
+0255             I = <a href="../../../L1_homotopy_v2.0/utils/utils_Wavelet/ifwt2.html" class="code" title="">ifwt2</a>(reshape(x,n,n),g0,g1,J,sym); Ir_max = max(abs(I(:)));
+0256             Ir_sparsa = <a href="../../../L1_homotopy_v2.0/utils/utils_Wavelet/ifwt2.html" class="code" title="">ifwt2</a>(reshape(x_sparsa,n,n),g0,g1,J,sym);
+0257             <span class="comment">% Ir_sparsa(Ir_sparsa&lt;0) = 0;</span>
+0258             <span class="comment">% Ir_sparsa(Ir_sparsa&gt;255) = 255;</span>
+0259             
+0260             mse_sparsa = norm(Ir_sparsa(:)-I(:))^2/N;
+0261             psnr_sparsa = 10*log10(Ir_max*Ir_max/mse_sparsa);
+0262             ser_sparsa = norm(I(:))^2/norm(Ir_sparsa(:)-I(:))^2;
+0263             fprintf(<span class="string">'(PSNR,MSE,SER): SpaRSA-%3.4g,%3.4g,%3.4g  '</span>, psnr_sparsa, mse_sparsa, ser_sparsa);
+0264             
+0265             <span class="comment">% Ir_spgl1 = ifwt2(reshape(x_spgl1,n,n),g0,g1,J,sym);</span>
+0266             <span class="comment">% mse_spgl1 = norm(Ir_spgl1(:)-I(:))^2/N;</span>
+0267             <span class="comment">% psnr_spgl1 = 10*log10(Ir_max*Ir_max/mse_spgl1);</span>
+0268             <span class="comment">% ser_spgl1 = norm(I(:))^2/norm(Ir_spgl1(:)-I(:))^2;</span>
+0269             <span class="comment">% fprintf('  SPGL1-%3.4g,%3.4g,%3.4g.',psnr_spgl1, mse_spgl1, ser_spgl1)</span>
+0270             
+0271             fprintf(<span class="string">'\n'</span>);
+0272             
+0273             Ir_stack = cat(3,Ir_stack,Ir_sparsa);
+0274         <span class="keyword">end</span>
+0275         
+0276         <span class="comment">%% Save results...</span>
+0277         
+0278         <span class="comment">% fprintf('sim iter. %d: \n',sim);</span>
+0279         <span class="keyword">if</span> largescale            
+0280             SIM_stack{sim} = [sim, tau, <span class="keyword">...</span>
+0281                 psnr_sparsa, mse_sparsa, ser_sparsa, sum(iter_sparsa,2), sum(time_sparsa,2)];
+0282             <span class="comment">%   psnr_spgl1, mse_spgl1, ser_spgl1, sum(iter_spgl1,2), sum(time_spgl1,2)];</span>
+0283             <span class="comment">% norm(x-x_nesta)/norm(x), sum(iter_nesta,2), sum(time_nesta,2)];</span>
+0284         <span class="keyword">else</span>
+0285             SIM_stack{sim} = [sim, tau, (norm(x-x_LS)/norm(x)), (norm(x-xh_orac)/norm(x)), iter_orac, <span class="keyword">...</span>
+0286                 (norm(x-xh_adp)/norm(x)), sum(iter_adp,2), sum(time_adp,2), <span class="keyword">...</span>
+0287                 (norm(x-x_sparsa)/norm(x)), sum(iter_sparsa,2), sum(time_sparsa,2)]; 
+0288             <span class="comment">%     (norm(x-x_spgl1)/norm(x)), sum(iter_spgl1,2), sum(time_spgl1,2)];</span>
+0289             <span class="comment">% norm(x-x_nesta)/norm(x), sum(iter_nesta,2), sum(time_nesta,2)];</span>
+0290         <span class="keyword">end</span>
+0291         index = 0;
+0292         <span class="keyword">if</span> largescale == 0
+0293             <span class="comment">% adaptive rwt</span>
+0294             index = index+1;
+0295             SIM_memory{sim}{index,1} = <span class="string">'adp'</span>;
+0296             SIM_memory{sim}{index,2} = iter_adp;
+0297             SIM_memory{sim}{index,3} = err_adp;
+0298             SIM_memory{sim}{index,4} = supp_diff_adp;
+0299             SIM_memory{sim}{index,5} = time_adp;
+0300         <span class="keyword">end</span>
+0301         
+0302         <span class="comment">% sparsa</span>
+0303         index = index+1;
+0304         SIM_memory{sim}{index,1} = <span class="string">'sparsa'</span>;
+0305         SIM_memory{sim}{index,2} = iter_sparsa;
+0306         SIM_memory{sim}{index,3} = err_sparsa;
+0307         SIM_memory{sim}{index,4} = supp_diff_sparsa;
+0308         SIM_memory{sim}{index,5} = time_sparsa;
+0309         <span class="comment">% spgl1</span>
+0310         index = index+1;
+0311         SIM_memory{sim}{index,1} = <span class="string">'spgl1'</span>;
+0312         SIM_memory{sim}{index,2} = iter_spgl1;
+0313         SIM_memory{sim}{index,3} = err_spgl1;
+0314         SIM_memory{sim}{index,4} = supp_diff_spgl1;
+0315         SIM_memory{sim}{index,5} = time_spgl1;
+0316         <span class="comment">%     % nesta</span>
+0317         <span class="comment">%     index = index+1;</span>
+0318         <span class="comment">%     SIM_memory{sim}{index,1} = 'nesta';</span>
+0319         <span class="comment">%     SIM_memory{sim}{index,2} = iter_nesta;</span>
+0320         <span class="comment">%     SIM_memory{sim}{index,3} = err_nesta;</span>
+0321         <span class="comment">%     SIM_memory{sim}{index,4} = supp_diff_nesta;</span>
+0322         <span class="comment">%     SIM_memory{sim}{index,5} = time_nesta;</span>
+0323         <span class="comment">%     % salsa</span>
+0324         <span class="comment">%     index = index+1;</span>
+0325         <span class="comment">%     SIM_memory{sim}{6,1} = 'salsa';</span>
+0326         <span class="comment">%     SIM_memory{sim}{6,2} = iter_salsa;</span>
+0327         <span class="comment">%     SIM_memory{sim}{6,3} = err_salsa;</span>
+0328         <span class="comment">%     SIM_memory{sim}{6,4} = supp_diff_salsa;</span>
+0329         
+0330         <span class="comment">% mS = mean(cell2mat(SIM_stack),1);</span>
+0331         <span class="comment">% fprintf('maxsim %d. oracLS=%3.4g. (err,iter,time): oracWT-%3.4g,%3.4g; adp-%3.4g,%3.4g,%3.4g; rwt-%3.4g,%3.4g,%3.4g; yall1-%3.4g,%3.4g,%3.4g; sparsa-%3.4g,%3.4g,%3.4g; omp-%3.4g,%3.4g; fpc-%3.4g,%3.4g; spgl1-%3.4g,%3.4g. \n', maxsim, mS(2:end));</span>
+0332         
+0333     <span class="keyword">end</span>
+0334     
+0335     
+0336     <span class="comment">%%</span>
+0337     mS = mean(cell2mat(SIM_stack),1);
+0338     <span class="keyword">if</span> largescale == 0
+0339         <span class="comment">% str1 = 'maxsim %d. tau = %3.4g, oracLS=%3.4g. (err,iter,time): oracWT-%3.4g,%3.4g; adp-%3.4g,%3.4g,%3.4g; sparsa-%3.4g,%3.4g,%3.4g; spgl1-%3.4g,%3.4g,%3.4g; nesta-%3.4g,%3.4g,%3.4g;';</span>
+0340         str1 = <span class="string">'maxsim %d. tau = %3.4g, oracLS=%3.4g. (err,iter,time): oracWT-%3.4g,%3.4g; adp-%3.4g,%3.4g,%3.4g; sparsa-%3.4g,%3.4g,%3.4g; spgl1-%3.4g,%3.4g,%3.4g'</span>;
+0341     <span class="keyword">else</span>
+0342         <span class="comment">% str1 = 'maxsim %d. tau = %3.4g, sparsa-%3.4g,%3.4g,%3.4g; spgl1-%3.4g,%3.4g,%3.4g; nesta-%3.4g,%3.4g,%3.4g;';</span>
+0343         str1 = <span class="string">'maxsim %d. tau = %3.4g,\n~sparsa-%3.4g,%3.4g,%3.4g,%3.4g,%3.4g;'</span>; <span class="comment">%\n spgl1-%3.4g,%3.4g,%3.4g';</span>
+0344     <span class="keyword">end</span>
+0345     str2 = sprintf([str1,<span class="string">' \n'</span>], maxsim, mS(2:end));
+0346     fprintf(str2);       
+0347     fprintf(<span class="string">'(N,M,SNR)-%d,%d,%d, adp-%d,rwt-%d, PSNR: $%2.4g$dB --- ($%d$) \n'</span>,N,M,SNR,adp_wt,rwt,10*log10(Ir_max*Ir_max/mS(4)),round(mS(6)));
+0348     
+0349     Ir_avg = mean(Ir_sparsa,3);
+0350     
+0351     figure(100); imagesc(I,[0 255]); colormap gray; axis image off;        
+0352     figure(101); imagesc(Ir_avg,[0 255]); colormap gray; axis image off;
+0353     figure(102); imagesc(Ir_avg-I,[0 255/10]); colormap gray; axis image off;
+0354     <span class="comment">% figure(103); imagesc(Ir_spgl1,[0 255]); colormap gray; axis image off;</span>
+0355     <span class="comment">% figure(104); imagesc(Ir_spgl1-I,[0 255/10]); colormap gray; axis image off;</span>
+0356     
+0357     <span class="keyword">if</span> SAVE_RESULTS
+0358         figure(100); set(gcf, <span class="string">'Color'</span>, <span class="string">'w'</span>);
+0359         eval(sprintf(<span class="string">'export_fig %s.pdf'</span>,sType));
+0360         file_name = sprintf(<span class="string">'%s_N%d_M%d_SNR%d_adp%d_rwt%d_%s'</span>,sType,N,M,SNR,adp_wt,rwt,wType);
+0361         figure(101); set(gcf, <span class="string">'Color'</span>, <span class="string">'w'</span>);
+0362         eval(sprintf(<span class="string">'export_fig %s.pdf'</span>,file_name));
+0363         <span class="comment">% file_name = sprintf('%s_N%d_M%d_SNR%d_adp%d_rwt%d_PSNR%3.4g_ITER%d_TIME%3.4g_spgl1',sType,N,M,SNR,adp_wt,rwt,psnr_spgl1,round(sum(iter_spgl1,2)),sum(time_spgl1,2));</span>
+0364         <span class="comment">% figure(103); set(gcf, 'Color', 'w');</span>
+0365         <span class="comment">% eval(sprintf('export_fig %s.pdf',file_name));</span>
+0366     <span class="keyword">end</span>
+0367 
+0368     fprintf(<span class="string">'\n'</span>);    
+0369         
+0370     I_ALL = [I_ALL Ir_avg];
+0371     
+0372     figure(200);
+0373     <span class="comment">% subaxis(2,3,exp,'SpacingVert',0.01,'MT',0.05,'MB',0.05, 'ML',0.01,'MR',0.01);</span>
+0374     subplot(2,3,exp)
+0375     imagesc(Ir_sparsa, [0 255]); axis off image; colormap gray
+0376     <span class="comment">% subaxis(2,3,exp+3,'SpacingVert',0.01,'MT',0.05,'MB',0.05, 'ML',0.01,'MR',0.01);</span>
+0377     subplot(2,3,exp+3)    
+0378     imagesc(abs(I-Ir_sparsa), [0 255/10]); axis off image; colormap gray
+0379 <span class="keyword">end</span>
+0380 
+0381 <span class="keyword">if</span> SAVE_RESULTS
+0382     figure(200); set(gcf, <span class="string">'Color'</span>, <span class="string">'w'</span>);
+0383     file_name = sprintf(<span class="string">'%s_N%d_M%d_SNR%d_%s_ALL'</span>,sType,N,M,SNR,wType);
+0384     eval(sprintf(<span class="string">'export_fig %s.pdf'</span>,file_name));    
+0385 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

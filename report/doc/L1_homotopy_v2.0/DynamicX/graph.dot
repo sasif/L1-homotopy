@@ -1,0 +1,19 @@
+/* Created by mdot for Matlab */
+digraph m2html {
+  DynamicX_BPDN_demo -> DynamicX_BPDN_function;
+  DynamicX_DS_demo -> DynamicX_DS_function;
+  Simulation_DynamicX_BPDN -> DynamicX_BPDN_function;
+  Simulation_DynamicX_BPDN_Pathological -> DynamicX_BPDN_function;
+  Simulation_DynamicX_BPDN_Wavelet -> DynamicX_BPDN_function;
+  Simulation_DynamicX_BPDN_Wavelet -> DynamicX_varying_model;
+
+  DynamicX_BPDN_Visual_demo [URL="DynamicX_BPDN_Visual_demo.html"];
+  DynamicX_BPDN_demo [URL="DynamicX_BPDN_demo.html"];
+  DynamicX_BPDN_function [URL="DynamicX_BPDN_function.html"];
+  DynamicX_DS_demo [URL="DynamicX_DS_demo.html"];
+  DynamicX_DS_function [URL="DynamicX_DS_function.html"];
+  DynamicX_varying_model [URL="DynamicX_varying_model.html"];
+  Simulation_DynamicX_BPDN [URL="Simulation_DynamicX_BPDN.html"];
+  Simulation_DynamicX_BPDN_Pathological [URL="Simulation_DynamicX_BPDN_Pathological.html"];
+  Simulation_DynamicX_BPDN_Wavelet [URL="Simulation_DynamicX_BPDN_Wavelet.html"];
+}

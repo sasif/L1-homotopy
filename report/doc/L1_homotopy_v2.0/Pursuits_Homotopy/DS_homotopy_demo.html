@@ -1,0 +1,484 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of DS_homotopy_demo</title>
+  <meta name="keywords" content="DS_homotopy_demo">
+  <meta name="description" content="DS_homotopy_demo_test.m">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../menu.html L1_homotopy_v2.0 --><!-- menu.html Pursuits_Homotopy -->
+<h1>DS_homotopy_demo
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>DS_homotopy_demo_test.m</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> DS_homotopy_demo_test.m
+
+ Solves the following Dantzig selector problem
+ min_x  ||x||_1  subject to  ||A'(Ax-y)||_\infty &lt;= epsilon
+
+ using Primal Dual Pursuit Homotopy method.
+
+ Written by: Salman Asif, Georgia Tech
+ Email: sasif@gatech.edu
+
+-------------------------------------------+
+ Copyright (c) 2008.  Muhammad Salman Asif 
+-------------------------------------------+</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="update_dual.html" class="code" title="function [i_theta, out_lambda, theta, chk_lambda] = update_dual(gamma_x, gamma_lambda, z_lambda, lambda_k, del_lambda_p, ak, bk, new_lambda, out_x);">update_dual</a>	update_dual.m</li><li><a href="update_inverse.html" class="code" title="function iAtB = update_inverse(AtB, iAtB_old,flag);">update_inverse</a>	function iAtB_mod = update_inverse(AtB, Atb, atB, atb);</li><li><a href="update_primal.html" class="code" title="function [i_delta, out_x, delta, chk_x] = update_primal(gamma_x, gamma_lambda, z_x, x_k, del_x_vec, pk, dk, epsilon, out_lambda);">update_primal</a>	update_primal.m</li><li><a href="../../L1_homotopy_v2.0/utils/fig.html" class="code" title="function h = fig(varargin)">fig</a>	</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% DS_homotopy_demo_test.m</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% Solves the following Dantzig selector problem</span>
+0004 <span class="comment">% min_x  ||x||_1  subject to  ||A'(Ax-y)||_\infty &lt;= epsilon</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% using Primal Dual Pursuit Homotopy method.</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">% Written by: Salman Asif, Georgia Tech</span>
+0009 <span class="comment">% Email: sasif@gatech.edu</span>
+0010 <span class="comment">%</span>
+0011 <span class="comment">%-------------------------------------------+</span>
+0012 <span class="comment">% Copyright (c) 2008.  Muhammad Salman Asif</span>
+0013 <span class="comment">%-------------------------------------------+</span>
+0014 
+0015 clear; close all; 
+0016 
+0017 rseed = 0;
+0018 rand(<span class="string">'state'</span>,rseed);
+0019 randn(<span class="string">'state'</span>,rseed);
+0020 
+0021 N = 512;   <span class="comment">% signal length</span>
+0022 T = 20;    <span class="comment">% sparsity level</span>
+0023 M = 250;    <span class="comment">% no. of measurements</span>
+0024 
+0025 <span class="comment">% Generate a random signal</span>
+0026 x = zeros(N,1);
+0027 q = randperm(N);
+0028 x(q(1:T)) = sign(randn(T,1));
+0029 
+0030 <span class="comment">% measurement matrix</span>
+0031 A = randn(M,N)/sqrt(M); <span class="comment">% Gaussian</span>
+0032 
+0033 <span class="comment">% Hadamard</span>
+0034 <span class="comment">% H = hadamard(N);</span>
+0035 <span class="comment">% A = H(q(1:M),:)/sqrt(M);</span>
+0036 
+0037 <span class="comment">% Bernoulli</span>
+0038 <span class="comment">% A = randsrc(M,N)/sqrt(M);</span>
+0039 
+0040 <span class="comment">% Random Projection</span>
+0041 <span class="comment">% A = orth(A')';</span>
+0042 
+0043 <span class="comment">% AtA = A'*A;</span>
+0044 
+0045 <span class="comment">% measurements</span>
+0046 SNR = inf;
+0047 s = A*x;
+0048 sigma = sqrt((norm(s)^2/(10^(SNR/10)))/M);
+0049 <span class="comment">% sigma = 0.01;</span>
+0050 e = randn(M,1)*sigma;
+0051 y = A*x+e;
+0052 thresh = 1e-3; <span class="comment">% sqrt(2*log(N))*sigma;</span>
+0053 
+0054 <span class="comment">% Initialization of primal and dual sign and support</span>
+0055 z_x = zeros(N,1);
+0056 z_lambda = zeros(N,1);
+0057 gamma_lambda = [];  <span class="comment">% Dual support</span>
+0058 gamma_x = [];       <span class="comment">% Primal support</span>
+0059 gamma_lambda_app = [];
+0060 
+0061 <span class="comment">% Initial step</span>
+0062 Primal_constrk = -A'*y;
+0063 [c i] = max(abs(Primal_constrk));
+0064 
+0065 gamma_lambdak = i;
+0066 gamma_xk = gamma_lambdak;
+0067 
+0068 z_lambda(gamma_lambdak) = sign(Primal_constrk(gamma_lambdak));
+0069 epsilon = c;
+0070 Primal_constrk(gamma_lambdak) = sign(Primal_constrk(gamma_lambdak))*epsilon;
+0071 xk_1 = zeros(N,1);
+0072 
+0073 lambdak_1 = zeros(N,1);
+0074 lambdak_1(gamma_lambdak) = inv(A(:,gamma_lambdak)'*A(:,gamma_lambdak))*z_lambda(gamma_lambdak);
+0075 
+0076 Dual_constrk = A'*(A*lambdak_1);
+0077 
+0078 z_x(gamma_xk) = -sign(Dual_constrk(gamma_xk));
+0079 Dual_constrk(gamma_xk) = sign(Dual_constrk(gamma_xk));
+0080 
+0081 z_xk = z_x;
+0082 z_lambdak = z_lambda;
+0083 
+0084 <span class="comment">% loop parameters</span>
+0085 done = 0;
+0086 iter = 0;
+0087 data_precision = eps;   <span class="comment">% floating point precision</span>
+0088 
+0089 old_delta = 0;
+0090 out_lambda = [];
+0091 out_x = [];
+0092 count_delta_stop = 0;
+0093 
+0094 constraint_plots = 0;
+0095 
+0096 AtglAgx = A(:,gamma_lambdak)'*A(:,gamma_xk);
+0097 iAtglAgx = inv(A(:,gamma_lambdak)'*A(:,gamma_xk));
+0098 AtgxAgl = AtglAgx';
+0099 iAtgxAgl = iAtglAgx';
+0100 time_s = clock;
+0101 
+0102 itr_history = [iter epsilon 0 0 length(gamma_xk)]
+0103 
+0104 <span class="keyword">while</span> ~done
+0105     iter = iter+1;
+0106     warning(<span class="string">'off'</span>,<span class="string">'MATLAB:divideByZero'</span>)
+0107 
+0108     <span class="comment">%%%% IDEA implementation %%%%</span>
+0109     gamma_x = gamma_xk;
+0110     gamma_lambda = gamma_lambdak;
+0111     z_lambda = z_lambdak;
+0112     z_x = z_xk;
+0113     x_k = xk_1;
+0114     lambda_k = lambdak_1;
+0115 
+0116     <span class="comment">%%%%%%%%%%%%%%%%%%%%%</span>
+0117     <span class="comment">%%%% update on x %%%%</span>
+0118     <span class="comment">%%%%%%%%%%%%%%%%%%%%%</span>
+0119 
+0120     <span class="comment">% UPDATE INVERSE MATRIX</span>
+0121 
+0122     <span class="comment">% Update direction</span>
+0123     <span class="comment">%del_x = -inv(A(:,gamma_lambda)'*A(:,gamma_x))*z_lambda(gamma_lambda);</span>
+0124     del_x = -iAtglAgx*z_lambda(gamma_lambda);
+0125     del_x_vec = zeros(N,1);
+0126     del_x_vec(gamma_x) = del_x;
+0127 
+0128     pk = Primal_constrk;
+0129     <span class="comment">% dk = AtA*del_x_vec;</span>
+0130     dk = A'*(A(:,gamma_x)*del_x);
+0131     
+0132     <span class="comment">%%% CONTROL THE MACHINE PRECISION ERROR AT EVERY OPERATION: LIKE BELOW.</span>
+0133     pk_temp = Primal_constrk;
+0134     <span class="comment">% gammaL_temp = find(abs(abs(Primal_constrk)-epsilon)&lt;min(epsilon,1e-12));</span>
+0135     <span class="comment">% pk_temp(gammaL_temp) = sign(Primal_constrk(gammaL_temp))*epsilon;</span>
+0136     
+0137     xk_temp = x_k;
+0138     <span class="comment">% gammaX_temp = find(abs(x_k)&lt;2*eps);</span>
+0139     <span class="comment">% xk_temp(gammaX_temp) = 0;</span>
+0140     <span class="comment">%%%---</span>
+0141     
+0142     <span class="comment">% Step size computation</span>
+0143     [i_delta, out_x, delta, chk_x] = <a href="update_primal.html" class="code" title="function [i_delta, out_x, delta, chk_x] = update_primal(gamma_x, gamma_lambda, z_x, x_k, del_x_vec, pk, dk, epsilon, out_lambda);">update_primal</a>(gamma_x, gamma_lambda, z_x,  xk_temp, del_x_vec, pk_temp, dk, epsilon, out_lambda);
+0144 
+0145     <span class="keyword">if</span> old_delta &lt; 4*eps &amp; delta &lt; 4*eps
+0146         count_delta_stop = count_delta_stop + 1;
+0147     <span class="keyword">else</span>
+0148         count_delta_stop = 0;
+0149     <span class="keyword">end</span>
+0150     <span class="keyword">if</span> count_delta_stop &gt;= 50
+0151         disp(<span class="string">'stuck in some corner'</span>);
+0152         <span class="keyword">break</span>;
+0153     <span class="keyword">end</span>
+0154     old_delta = delta;
+0155 
+0156     xk_1 = x_k+delta*del_x_vec;
+0157     Primal_constrk = pk+delta*dk;
+0158     epsilon_old = epsilon;
+0159     epsilon = epsilon-delta;
+0160 
+0161     <span class="keyword">if</span> chk_x == 1
+0162         <span class="comment">% If an element is removed from gamma_x</span>
+0163         out_x = out_x(1);
+0164         gl_old = gamma_lambda;
+0165         gx_old = gamma_x;
+0166 
+0167         outx_index = find(gamma_x==out_x);
+0168         gamma_x(outx_index) = gamma_x(end);
+0169         gamma_x(end) = out_x;
+0170         gamma_x = gamma_x(1:end-1);
+0171 
+0172         <span class="comment">%CHECK THIS SINGULARITY CONDITION USING SCHUR COMPLEMENT IDEA !!!</span>
+0173         <span class="comment">% X = [A B; C D];</span>
+0174         <span class="comment">% detX = detA detS</span>
+0175         <span class="comment">% S = D-C A^{-1} B</span>
+0176 
+0177         <span class="comment">% So the idea here is slightly different, we don't want the last</span>
+0178         <span class="comment">% entry (Q22) in the inverse of modified Gram matrix to be zero, because</span>
+0179         <span class="comment">% that will make inversion impossible.</span>
+0180 
+0181         <span class="comment">% This is the best thing, pick the index with maximum absolute</span>
+0182         <span class="comment">% value in the column corresponding to out_x in iAtgxgl. This will</span>
+0183         <span class="comment">% ensure that new matrix will be invertible.</span>
+0184         [max_val outl_index] = max(abs(iAtgxAgl(:,outx_index)));
+0185         new_lambda = gamma_lambda(outl_index);
+0186         some_lambda = new_lambda;
+0187 
+0188         outl_index = find(gamma_lambda==some_lambda);
+0189         gamma_lambda(outl_index) = gamma_lambda(end);
+0190         gamma_lambda(end) = some_lambda;
+0191         gamma_lambdak = gamma_lambda;
+0192         gamma_lambda = gamma_lambda(1:end-1);
+0193 
+0194         rowi = outx_index; <span class="comment">% ith row of A is swapped with last row (out_x)</span>
+0195         colj = outl_index; <span class="comment">% jth column of A is swapped with last column (out_lambda)</span>
+0196         AtgxAgl_ij = AtgxAgl;
+0197         temp_row = AtgxAgl_ij(rowi,:);
+0198         AtgxAgl_ij(rowi,:) = AtgxAgl_ij(<span class="keyword">end</span>,:);
+0199         AtgxAgl_ij(<span class="keyword">end</span>,:) = temp_row;
+0200         temp_col = AtgxAgl_ij(:,colj);
+0201         AtgxAgl_ij(:,colj) = AtgxAgl_ij(:,end);
+0202         AtgxAgl_ij(:,end) = temp_col;
+0203         iAtgxAgl_ij = iAtgxAgl;
+0204         temp_row = iAtgxAgl_ij(colj,:);
+0205         iAtgxAgl_ij(colj,:) = iAtgxAgl_ij(<span class="keyword">end</span>,:);
+0206         iAtgxAgl_ij(<span class="keyword">end</span>,:) = temp_row;
+0207         temp_col = iAtgxAgl_ij(:,rowi);
+0208         iAtgxAgl_ij(:,rowi) = iAtgxAgl_ij(:,end);
+0209         iAtgxAgl_ij(:,end) = temp_col;
+0210 
+0211         AtgxAgl = AtgxAgl_ij(1:end-1,1:end-1);
+0212         AtglAgx = AtgxAgl';
+0213         iAtgxAgl = <a href="update_inverse.html" class="code" title="function iAtB = update_inverse(AtB, iAtB_old,flag);">update_inverse</a>(AtgxAgl_ij, iAtgxAgl_ij,2);
+0214         iAtglAgx = iAtgxAgl';
+0215         xk_1(out_x) = 0;
+0216     <span class="keyword">else</span>
+0217         <span class="comment">% If a new element is added to gamma_lambda</span>
+0218         gamma_lambdak = [gamma_lambda; i_delta];
+0219         new_lambda = i_delta;
+0220         lambda_k(new_lambda) = 0;
+0221     <span class="keyword">end</span>
+0222 
+0223     out_lambda = [];
+0224     z_lambdak = zeros(N,1);
+0225     z_lambdak(gamma_lambdak) = sign(Primal_constrk(gamma_lambdak));
+0226     sgn_new_lambda = sign(Primal_constrk(new_lambda));
+0227     Primal_constrk(gamma_lambdak) = sign(Primal_constrk(gamma_lambdak))*epsilon;
+0228 
+0229     <span class="keyword">if</span> epsilon &lt; thresh; <span class="comment">%sqrt(2*log(N))*sigma; %1e-7 %|| iter &gt; 5*T || (length(gamma_lambda) == K)</span>
+0230         delta_end = epsilon_old-thresh;
+0231         Primal_constrk = pk+delta_end*dk;
+0232         xk_1 = x_k + delta_end*del_x_vec;
+0233         disp(<span class="string">'done!'</span>);
+0234         <span class="keyword">break</span>;
+0235     <span class="keyword">end</span>
+0236 
+0237     <span class="keyword">if</span> iter &gt; 500*T
+0238         disp(<span class="string">'too many iterations ooooooooops'</span>);
+0239     <span class="keyword">end</span>
+0240 
+0241     <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0242     <span class="comment">%%% update on lambda %%%</span>
+0243     <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0244 
+0245     sgn_new_lambda = sign(Primal_constrk(new_lambda));
+0246 
+0247     AtgxAnl = A(:,gamma_x)'*A(:,new_lambda);
+0248     <span class="comment">%AtgxAnl = AtA(gamma_x,new_lambda);</span>
+0249 
+0250     <span class="comment">% Update direction</span>
+0251     <span class="comment">%del_lambda = -inv(A(:,gamma_x)'*A(:,gamma_lambda))*(A(:,gamma_x)'*A(:,new_lambda));</span>
+0252     del_lambda = -iAtgxAgl*AtgxAnl;
+0253     del_lambda_p = zeros(N,1);
+0254     del_lambda_p(gamma_lambda) = del_lambda*sgn_new_lambda;
+0255     del_lambda_p(new_lambda) = 1*sgn_new_lambda;
+0256 
+0257     ak = Dual_constrk;
+0258     <span class="comment">% bk = AtA*del_lambda_p;</span>
+0259     bk = A'*(A(:,[gamma_lambda; new_lambda])*del_lambda_p([gamma_lambda; new_lambda]));
+0260 
+0261     <span class="comment">% check if the sign of update direction is correct</span>
+0262     <span class="keyword">if</span> sign(bk(out_x)) == sign(ak(out_x)) &amp; abs(bk(out_x)) &gt;=eps
+0263         bk = -bk;
+0264         del_lambda_p = -del_lambda_p;
+0265     <span class="keyword">end</span>
+0266 
+0267     <span class="comment">%%% CONTROL THE MACHINE PRECISION ERROR AT EVERY OPERATION: LIKE BELOW.</span>
+0268     ak_temp = Dual_constrk;
+0269     <span class="comment">% gammaX_temp = find(abs(abs(Dual_constrk)-1)&lt;2*eps);</span>
+0270     <span class="comment">% ak_temp(gammaX_temp) = sign(Dual_constrk(gammaX_temp));</span>
+0271     
+0272     lambdak_temp = lambda_k;
+0273     <span class="comment">% gammaL_temp = find(abs(lambda_k)&lt;1*eps);</span>
+0274     <span class="comment">% lambdak_temp(gammaL_temp) = 0;</span>
+0275     <span class="comment">%%%---</span>
+0276     
+0277     <span class="comment">% Step size computation</span>
+0278     [i_theta, out_lambda, theta, chk_lambda] = <a href="update_dual.html" class="code" title="function [i_theta, out_lambda, theta, chk_lambda] = update_dual(gamma_x, gamma_lambda, z_lambda, lambda_k, del_lambda_p, ak, bk, new_lambda, out_x);">update_dual</a>(gamma_x, gamma_lambda, z_lambda, lambdak_temp, del_lambda_p, ak_temp, bk, new_lambda, out_x);
+0279 
+0280     out_x = [];
+0281 
+0282     lambdak_1 = lambda_k + theta*del_lambda_p;
+0283     Dual_constrk = ak+theta*bk;
+0284 
+0285     <span class="keyword">if</span> chk_lambda == 1
+0286         <span class="comment">% If an element is removed from gamma_lambda</span>
+0287         outl_index = find(gamma_lambda==out_lambda);
+0288         i_theta = gamma_x(end);
+0289 
+0290         <span class="keyword">if</span> ~isempty(outl_index) <span class="comment">% because otherwise new_lambda is removed.</span>
+0291             <span class="comment">% Use Sherman-Woodburry-Morrison formula</span>
+0292             <span class="comment">% (A+BC)^{-1} = A^{-1} - A^{-1}B(I+CA^{-1}B)^{-1}CA^{-1};</span>
+0293             iA = iAtgxAgl;
+0294             B = AtgxAnl-A(:,gamma_x)'*A(:,out_lambda);
+0295             C = zeros(1,length(gamma_lambda));
+0296             C(outl_index) = 1;
+0297             AtgxAgl(:,outl_index) = AtgxAnl;
+0298             AtglAgx = AtgxAgl';
+0299 
+0300             iAB = iA*B;
+0301             CiA = iA(outl_index,:);
+0302             iAtgxAgl = iA-iAB*((CiA)/(1+iAB(outl_index)));
+0303             iAtglAgx = iAtgxAgl';
+0304 
+0305             gamma_lambda(outl_index) = new_lambda;
+0306         <span class="keyword">end</span>
+0307 
+0308         z_xk = zeros(N,1);
+0309         z_xk(gamma_x) = -sign(Dual_constrk(gamma_x));
+0310         lambdak_1(out_lambda) = 0;
+0311     <span class="keyword">else</span>
+0312         <span class="comment">% If an element is added to gamma_x</span>
+0313 
+0314         <span class="comment">%%% adding columns</span>
+0315         <span class="comment">% AtglAgx_mod = zeros(length(gamma_x));</span>
+0316         AtglAgx_mod = [AtglAgx A(:,gamma_lambda)'*A(:,i_theta); AtgxAnl' A(:,new_lambda)'*A(:,i_theta)];
+0317         <span class="comment">%AtglAgx_mod = [AtglAgx AtA(gamma_lambda,i_theta); AtgxAnl' AtA(new_lambda,i_theta)];</span>
+0318 
+0319         <span class="comment">%CHECK THIS SINGULARITY CONDITION USING SCHUR COMPLEMENT IDEA !!!</span>
+0320         <span class="comment">% X = [A B; C D];</span>
+0321         <span class="comment">% detX = detA detS</span>
+0322         <span class="comment">% S = D-C A^{-1} B</span>
+0323         A11 = AtglAgx;
+0324         A12 = AtglAgx_mod(1:end-1,end);
+0325         A21 = AtglAgx_mod(<span class="keyword">end</span>,1:end-1);
+0326         A22 = AtglAgx_mod(<span class="keyword">end</span>,end);
+0327         S = A22 - A21*(iAtglAgx*A12);
+0328         <span class="keyword">if</span> abs(S) &lt; 2*eps
+0329             disp(<span class="string">'matrix has become singular'</span>);
+0330             <span class="comment">% done = 1;</span>
+0331             <span class="comment">% break;</span>
+0332         <span class="keyword">end</span>
+0333         AtglAgx = AtglAgx_mod;
+0334         AtgxAgl = AtglAgx';
+0335         iAtglAgx = <a href="update_inverse.html" class="code" title="function iAtB = update_inverse(AtB, iAtB_old,flag);">update_inverse</a>(AtglAgx, iAtglAgx,1);
+0336         iAtgxAgl = iAtglAgx';
+0337 
+0338         out_lambda = [];
+0339         gamma_lambda = [gamma_lambda; new_lambda];
+0340 
+0341         gamma_x = [gamma_x; i_theta];
+0342         new_x = i_theta;
+0343         z_xk = zeros(N,1);
+0344         z_xk(gamma_x) = -sign(Dual_constrk(gamma_x));
+0345         xk_1(new_x) = 0;
+0346     <span class="keyword">end</span>
+0347     Dual_constrk(gamma_x) = sign(Dual_constrk(gamma_x));
+0348     gamma_lambdak = gamma_lambda;
+0349     gamma_xk = gamma_x;
+0350    
+0351     <span class="keyword">if</span> constraint_plots
+0352         <a href="../../L1_homotopy_v2.0/utils/fig.html" class="code" title="function h = fig(varargin)">fig</a> = figure(1);
+0353         subplot(211)
+0354         hold off;
+0355         plot(pk,<span class="string">'.r'</span>, <span class="string">'MarkerSize'</span>,14);        
+0356         hold on;
+0357         plot(Primal_constrk, <span class="string">'LineWidth'</span>,1);
+0358         set(gca,<span class="string">'FontSize'</span>,16, <span class="string">'XLim'</span>,[1 N] );
+0359         title({<span class="string">'BPDN shrinkage constraints,'</span>; [<span class="string">'n = '</span>,num2str(N), <span class="string">', m = '</span>, num2str(M), <span class="string">', T = '</span>,num2str(T)]});
+0360         plot(1:N, epsilon*ones(1,N),<span class="string">'--k'</span>,<span class="string">'MarkerSize'</span>,12);
+0361         plot(1:N, -epsilon*ones(1,N), <span class="string">'--k'</span>,<span class="string">'MarkerSize'</span>,12);
+0362         plot(1:N, epsilon_old*ones(1,N),<span class="string">'--m'</span>,<span class="string">'MarkerSize'</span>,12);
+0363         plot(1:N, -epsilon_old*ones(1,N), <span class="string">'--m'</span>,<span class="string">'MarkerSize'</span>,12);
+0364         
+0365         
+0366         subplot(212);
+0367         hold off;
+0368         plot(ak,<span class="string">'.r'</span>);
+0369         hold on;
+0370         plot(Dual_constrk);
+0371         <span class="comment">%legend('Old constraint', 'New constraint', 'Element change','Location','NorthEast');</span>
+0372         title(<span class="string">'Dual constraints'</span>);
+0373         plot(1:N, 1, <span class="string">'--k'</span>);
+0374         plot(1:N, -1, <span class="string">'--k'</span>);
+0375         axis([1 N  -1.5 1.5])
+0376         
+0377         <span class="keyword">if</span> chk_x == 0
+0378             subplot(211);
+0379             plot(new_lambda, Primal_constrk(new_lambda),<span class="string">'or'</span>,<span class="string">'MarkerSize'</span>,18,<span class="string">'LineWidth'</span>,2);
+0380             text(new_lambda, Primal_constrk(new_lambda)*1.1, [<span class="string">'Incoming \gamma = '</span>,num2str(new_lambda)],<span class="string">'FontSize'</span>,14);
+0381         <span class="keyword">else</span>
+0382             subplot(212)
+0383             plot(out_x, (ak(out_x)),<span class="string">'*k'</span>,<span class="string">'MarkerSize'</span>,18,<span class="string">'LineWidth'</span>,2);
+0384             text(out_x,ak(out_x)*1.1, [<span class="string">'Outgoing \gamma = '</span>,num2str(out_x)],<span class="string">'FontSize'</span>,14);
+0385         <span class="keyword">end</span>
+0386         
+0387         <span class="keyword">if</span> chk_lambda == 0
+0388             subplot(212)
+0389             plot(new_x, Dual_constrk(new_x),<span class="string">'or'</span>,<span class="string">'MarkerSize'</span>,18,<span class="string">'LineWidth'</span>,2);
+0390             text(new_x, Dual_constrk(new_x)*1.1, [<span class="string">'Incoming \gamma = '</span>,num2str(new_x)],<span class="string">'FontSize'</span>,14);
+0391         <span class="keyword">else</span>
+0392             subplot(211);
+0393             plot(out_lambda, (Primal_constrk(out_lambda)),<span class="string">'*k'</span>,<span class="string">'MarkerSize'</span>,18,<span class="string">'LineWidth'</span>,2);
+0394             text(out_lambda,Primal_constrk(out_lambda)*1.1, [<span class="string">'Outgoing \gamma = '</span>,num2str(out_x)],<span class="string">'FontSize'</span>,14);
+0395         <span class="keyword">end</span>
+0396     <span class="keyword">end</span>
+0397     itr_history_temp = [iter epsilon delta theta length(gamma_xk)]
+0398     itr_history = [itr_history; itr_history_temp];
+0399 <span class="keyword">end</span>
+0400 time_e = clock;
+0401 etime(time_e,time_s);
+0402 
+0403 figure(1); clf; 
+0404 subplot(211); plot(pk,<span class="string">'.r'</span>); hold on;
+0405 plot(Primal_constrk); 
+0406 plot(1:N, epsilon,<span class="string">'k'</span>); plot(1:N, -epsilon, <span class="string">'k'</span>); plot(1:N, epsilon_old,<span class="string">'g'</span>); plot(1:N, -epsilon_old, <span class="string">'g'</span>);
+0407 title(<span class="string">'Primal constraints'</span>);
+0408 
+0409 subplot(212); plot(ak,<span class="string">'.r'</span>); hold on; 
+0410 plot(Dual_constrk); 
+0411 plot(1:N, 1, <span class="string">'-k'</span>); plot(1:N, -1, <span class="string">'-k'</span>); axis([1 N  -1.5 1.5])
+0412 title(<span class="string">'Dual constraints'</span>);
+0413 
+0414 figure(2); clf; 
+0415 plot(xk_1); hold on; plot(x,<span class="string">'.r'</span>);
+0416 legend(<span class="string">'estimation'</span>, <span class="string">'original'</span>);
+0417 title(<span class="string">'Estimated signal'</span>)
+0418 
+0419 <span class="comment">% %%</span>
+0420 <span class="comment">% x0 = A'*inv(A*A')*y;</span>
+0421 <span class="comment">% % large scale</span>
+0422 <span class="comment">% Afun = @(z) A*z;</span>
+0423 <span class="comment">% Atfun = @(z) A'*z;</span>
+0424 <span class="comment">% tic</span>
+0425 <span class="comment">% xp = l1eq_pd(x0, Afun, Atfun, y, 1e-8, 1000, 1e-8, 1000);</span>
+0426 <span class="comment">% toc</span></pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

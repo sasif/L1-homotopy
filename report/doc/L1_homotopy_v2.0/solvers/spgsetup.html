@@ -1,0 +1,87 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of spgsetup</title>
+  <meta name="keywords" content="spgsetup">
+  <meta name="description" content="SETUP  Compile the SPGL1 MEX interfaces">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../menu.html L1_homotopy_v2.0 --><!-- menu.html solvers -->
+<h1>spgsetup
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>SETUP  Compile the SPGL1 MEX interfaces</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">SETUP  Compile the SPGL1 MEX interfaces</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">%SETUP  Compile the SPGL1 MEX interfaces</span>
+0002 
+0003 <span class="comment">%   setup.m</span>
+0004 <span class="comment">%   $Id: spgsetup.m 1019 2008-06-17 19:33:48Z mpf $</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">%   ----------------------------------------------------------------------</span>
+0007 <span class="comment">%   This file is part of SPGL1 (Spectral Projected Gradient for L1).</span>
+0008 <span class="comment">%</span>
+0009 <span class="comment">%   Copyright (C) 2007 Ewout van den Berg and Michael P. Friedlander,</span>
+0010 <span class="comment">%   Department of Computer Science, University of British Columbia, Canada.</span>
+0011 <span class="comment">%   All rights reserved. E-mail: &lt;{ewout78,mpf}@cs.ubc.ca&gt;.</span>
+0012 <span class="comment">%</span>
+0013 <span class="comment">%   SPGL1 is free software; you can redistribute it and/or modify it</span>
+0014 <span class="comment">%   under the terms of the GNU Lesser General Public License as</span>
+0015 <span class="comment">%   published by the Free Software Foundation; either version 2.1 of the</span>
+0016 <span class="comment">%   License, or (at your option) any later version.</span>
+0017 <span class="comment">%</span>
+0018 <span class="comment">%   SPGL1 is distributed in the hope that it will be useful, but WITHOUT</span>
+0019 <span class="comment">%   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY</span>
+0020 <span class="comment">%   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General</span>
+0021 <span class="comment">%   Public License for more details.</span>
+0022 <span class="comment">%</span>
+0023 <span class="comment">%   You should have received a copy of the GNU Lesser General Public</span>
+0024 <span class="comment">%   License along with SPGL1; if not, write to the Free Software</span>
+0025 <span class="comment">%   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301</span>
+0026 <span class="comment">%   USA</span>
+0027 <span class="comment">%   ----------------------------------------------------------------------</span>
+0028 
+0029 root = pwd;
+0030 <span class="keyword">try</span>
+0031     cd(<span class="string">'private'</span>)
+0032     mex oneProjectorMex.c oneProjectorCore.c heap.c -output oneProjectorMex -DNDEBUG
+0033     fprintf(<span class="string">'Successfully compiled oneProjector.\n'</span>);
+0034     cd(root)
+0035 <span class="keyword">catch</span>
+0036     cd(root)
+0037     fprintf(<span class="string">'Could not compile oneProjector.'</span>);
+0038     fprintf(<span class="string">'You can still use the slower &quot;.m&quot; version.'</span>);
+0039     rethrow(lasterr);
+0040 <span class="keyword">end</span>
+0041</pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

@@ -1,0 +1,247 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of wtBPDN_Update_function_v1</title>
+  <meta name="keywords" content="wtBPDN_Update_function_v1">
+  <meta name="description" content="Iterative reweighting updates for BPDN">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../../menu.html L1_homotopy_v2.0 --><!-- ../menu.html WeightedBPDN --><!-- menu.html src -->
+<h1>wtBPDN_Update_function_v1
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>Iterative reweighting updates for BPDN</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function out = wtBPDN_Update_function_v1(A, y, in); </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> Iterative reweighting updates for BPDN
+
+ v1 (each weight treated as a separate regularization parameter...)
+ This version is reported in the paper.
+ 
+ Solves the following basis pursuit denoising (BPDN) problem
+ min_x  \Sum \w_i |x_i| + 1/2*||y-Ax||_2^2
+
+ and dynamically update the weights w_i
+
+ Inputs:
+ A - m x n measurement matrix
+ y - measurement vector
+ in - input structure
+   x_old - old estimate
+   gamma - old signal support
+   AtA - A(:,gamma_xh)'*A(:,gamma_xh);
+   iAtA - inv(AtA)
+    or QR/Cholesky factors
+   pk_old - old constrtaints set
+   W_old - old values of regularization parameter
+   W_new - new values of regularization parameter
+   maxiter - maximum number of homotopy iterations
+
+ Outputs:
+ out - output structure
+   x_out - output for BPDN
+   gamma - support of the solution
+   iter - number of homotopy iterations taken by the solver
+   time - time taken by the solver
+
+ Written by: Salman Asif, Georgia Tech
+ Email: sasif@gatech.edu
+ Created: March 16, 2011</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="../../../L1_homotopy_v2.0/utils/compute_delta.html" class="code" title="function out = compute_delta(in)">compute_delta</a>	</li><li><a href="../../../L1_homotopy_v2.0/utils/update_delx.html" class="code" title="">update_delx</a>	script to ubpdate delx</li><li><a href="../../../L1_homotopy_v2.0/utils/update_supp.html" class="code" title="">update_supp</a>	script to update support</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="script_rwtBPDN_adaptive.html" class="code" title="function out = script_rwtBPDN_adaptive(in)">script_rwtBPDN_adaptive</a>	BPDN rwt update (initialize with adaptive_wtBPDN)</li><li><a href="script_rwtBPDN_iterative.html" class="code" title="function out = script_rwtBPDN_iterative(in);">script_rwtBPDN_iterative</a>	BPDN rwt update (initialize with standard homotopy)</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% Iterative reweighting updates for BPDN</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% v1 (each weight treated as a separate regularization parameter...)</span>
+0004 <span class="comment">% This version is reported in the paper.</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% Solves the following basis pursuit denoising (BPDN) problem</span>
+0007 <span class="comment">% min_x  \Sum \w_i |x_i| + 1/2*||y-Ax||_2^2</span>
+0008 <span class="comment">%</span>
+0009 <span class="comment">% and dynamically update the weights w_i</span>
+0010 <span class="comment">%</span>
+0011 <span class="comment">% Inputs:</span>
+0012 <span class="comment">% A - m x n measurement matrix</span>
+0013 <span class="comment">% y - measurement vector</span>
+0014 <span class="comment">% in - input structure</span>
+0015 <span class="comment">%   x_old - old estimate</span>
+0016 <span class="comment">%   gamma - old signal support</span>
+0017 <span class="comment">%   AtA - A(:,gamma_xh)'*A(:,gamma_xh);</span>
+0018 <span class="comment">%   iAtA - inv(AtA)</span>
+0019 <span class="comment">%    or QR/Cholesky factors</span>
+0020 <span class="comment">%   pk_old - old constrtaints set</span>
+0021 <span class="comment">%   W_old - old values of regularization parameter</span>
+0022 <span class="comment">%   W_new - new values of regularization parameter</span>
+0023 <span class="comment">%   maxiter - maximum number of homotopy iterations</span>
+0024 <span class="comment">%</span>
+0025 <span class="comment">% Outputs:</span>
+0026 <span class="comment">% out - output structure</span>
+0027 <span class="comment">%   x_out - output for BPDN</span>
+0028 <span class="comment">%   gamma - support of the solution</span>
+0029 <span class="comment">%   iter - number of homotopy iterations taken by the solver</span>
+0030 <span class="comment">%   time - time taken by the solver</span>
+0031 <span class="comment">%</span>
+0032 <span class="comment">% Written by: Salman Asif, Georgia Tech</span>
+0033 <span class="comment">% Email: sasif@gatech.edu</span>
+0034 <span class="comment">% Created: March 16, 2011</span>
+0035 
+0036 <a name="_sub0" href="#_subfunctions" class="code">function out = wtBPDN_Update_function_v1(A, y, in);</a>
+0037 
+0038 <span class="comment">% x_old, gamma_xh, AtAgx, iAtAgx, pk_old, W_old, W_new, maxiter</span>
+0039 x_old = in.x_old;
+0040 gamma_xh = in.gamma;
+0041 pk_old = in.pk_old;
+0042 W_old = in.W_old;
+0043 W_new = in.W_new;
+0044 maxiter = in.maxiter;
+0045 
+0046 t0 = cputime;
+0047 N = size(A,2);
+0048 M = size(A,1);
+0049 
+0050 <span class="comment">% pk_old = A'*(A*x_k-y);</span>
+0051 <span class="comment">% pk_old(gamma_xh) = sign(pk_old(gamma_xh)).*W_old(gamma_xh);</span>
+0052 xk_1 = x_old;
+0053 
+0054 epsilon = 0;
+0055 Wk = (1-epsilon)*W_old + epsilon*W_new;
+0056 dW = W_new-W_old;
+0057 z_x = -sign(pk_old);
+0058 
+0059 done = 0;
+0060 iter = 0;
+0061 idelta = gamma_xh(1); flag = 1;
+0062 itr_history = [];
+0063 
+0064 <span class="comment">% initialize delx</span>
+0065 in_delx = []; 
+0066 delx_mode = in.delx_mode;
+0067 rhs = -dW.*z_x; 
+0068 opts = in; <span class="comment">% update_delx is now using opts as input parameter</span>
+0069 update_mode = <span class="string">'init1'</span>;
+0070 <a href="../../../L1_homotopy_v2.0/utils/update_delx.html" class="code" title="">update_delx</a>;
+0071 
+0072 
+0073 <span class="keyword">while</span> ~done
+0074     iter = iter+1;
+0075     x_k = xk_1;
+0076     
+0077     delx_vec = zeros(N,1);
+0078     delx_vec(gamma_xh) = delx;
+0079     
+0080     <span class="keyword">if</span> sign(delx_vec(idelta)) == sign(pk_old(idelta)) &amp;&amp; iter &gt; 1
+0081         delta = 0; flag = 0;
+0082     <span class="keyword">else</span>
+0083         pk = pk_old;
+0084         dk = A'*(A(:,gamma_xh)*delx);
+0085         
+0086         <span class="keyword">if</span> flag == 0 &amp;&amp; dW(idelta) &lt; sign(pk(idelta))*dk(idelta)
+0087             delta = 0; flag = 1;
+0088         <span class="keyword">else</span>
+0089             temp_gamma = zeros(N,1);
+0090             temp_gamma(gamma_xh) = gamma_xh;
+0091             gamma_xc = find([1:N]' ~= temp_gamma);
+0092             
+0093             <span class="comment">%% Calculate homotopy step size</span>
+0094             in.delta_flag = 2;
+0095             in.pk = pk; in.dk = dk;
+0096             in.ak = Wk; in.bk = dW;
+0097             in.gamma = gamma_xh; in.gamma_c = gamma_xc;
+0098             in.delx_vec = delx_vec; in.x = xk_1;
+0099             out = <a href="../../../L1_homotopy_v2.0/utils/compute_delta.html" class="code" title="function out = compute_delta(in)">compute_delta</a>(in);
+0100             delta = out.delta; idelta = out.idelta;
+0101             flag = out.flag;
+0102         <span class="keyword">end</span>
+0103     <span class="keyword">end</span>
+0104     <span class="comment">%% Update support</span>
+0105     e0 = epsilon;
+0106     epsilon = e0 + delta;
+0107     
+0108     <span class="keyword">if</span> epsilon &gt; 1
+0109         delta_end = 1-e0;
+0110         xk_1 = x_k + delta_end*delx_vec;
+0111         <span class="keyword">break</span>;
+0112     <span class="keyword">end</span>
+0113     
+0114     xk_1 = x_k + delta*delx_vec;
+0115     gamma_x_old = gamma_xh;
+0116     
+0117     <span class="comment">% disp(sprintf(['iter = %d, delta = %3.4g, idelta = %d, flag = %d'], iter, delta, idelta, flag));</span>
+0118     itr_history = [itr_history; idelta delta flag];
+0119     
+0120     <span class="comment">% update support</span>
+0121     <a href="../../../L1_homotopy_v2.0/utils/update_supp.html" class="code" title="">update_supp</a>; 
+0122 
+0123     pk_old = pk+delta*dk;
+0124     Wk_old = Wk;
+0125     Wk = (1-epsilon)*W_old + epsilon*W_new;
+0126     pk_old([gamma_xh; idelta]) = sign(pk_old([gamma_xh; idelta])).*Wk([gamma_xh; idelta]);
+0127     
+0128     <span class="comment">% update delx</span>
+0129     z_x = -sign(pk_old);
+0130     rhs = -dW.*z_x;
+0131     update_mode = <span class="string">'update'</span>;
+0132     <a href="../../../L1_homotopy_v2.0/utils/update_delx.html" class="code" title="">update_delx</a>;
+0133     <span class="comment">%     AtAgx = (A(:,gamma_xh)'*A(:,gamma_xh));</span>
+0134     <span class="comment">%     delx2 = AtAgx\rhs(gamma_xh); % -AtAgx\(dW(gamma_xh).*z_x);</span>
+0135     <span class="comment">%     figure(112); plot([delx delx2]);</span>
+0136     <span class="comment">%     if norm(delx-delx2) &gt; 1e-5</span>
+0137     <span class="comment">%         stp = 1;</span>
+0138     <span class="comment">%     end</span>
+0139     
+0140     constr_violation = nnz((abs(pk_old(gamma_xc))-Wk(gamma_xc))&gt;1e-10);
+0141     sign_violation = nnz((sign(pk_old(gamma_xh))+sign(xk_1(gamma_xh)))&gt;1);
+0142     <span class="keyword">if</span> constr_violation
+0143         chk = gamma_xc((abs(pk_old(gamma_xc))-Wk(gamma_xc))&gt;1e-10);
+0144         stp = 1;
+0145         fprintf(<span class="string">'problem... with constraint violation -- %s \n'</span>, mfilename);
+0146         fprintf(<span class="string">'Refactorize the matrix... recompute delx \n'</span>);
+0147         <span class="comment">% some times it comes here due to bad conditioning of AtAgx.</span>
+0148         update_mode = <span class="string">'init0'</span>;
+0149         <a href="../../../L1_homotopy_v2.0/utils/update_delx.html" class="code" title="">update_delx</a>;
+0150     <span class="keyword">end</span>
+0151     <span class="keyword">if</span> sign_violation&gt;=1
+0152         chk = gamma_xh(sign(pk_old(gamma_xh))+sign(xk_1(gamma_xh))&gt;1);
+0153         stp = 1;
+0154         fprintf(<span class="string">'problem... sign mismatch -- %s \n'</span>,mfilename);
+0155         fprintf(<span class="string">'Refactorize the matrix... recompute delx \n'</span>);
+0156         update_mode = <span class="string">'init0'</span>;
+0157         <a href="../../../L1_homotopy_v2.0/utils/update_delx.html" class="code" title="">update_delx</a>;
+0158     <span class="keyword">end</span>
+0159 <span class="keyword">end</span>
+0160 
+0161 total_iter = iter;
+0162 total_time = cputime-t0;
+0163 
+0164 out = [];
+0165 out.x_out = xk_1;
+0166 out.gamma = gamma_xh;
+0167 out.iter = total_iter;
+0168 out.time = total_time;</pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of Compile_CWT</title>
+  <meta name="keywords" content="Compile_CWT">
+  <meta name="description" content="">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../../menu.html L1_homotopy_v2.0 --><!-- ../menu.html utils --><!-- menu.html utils_Wavelet -->
+<h1>Compile_CWT
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong></strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function Compile_CWT </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"></pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="afwt.html" class="code" title="">afwt</a>	afwt.m</li><li><a href="afwt2.html" class="code" title="">afwt2</a>	afwt2.m</li><li><a href="fwt.html" class="code" title="">fwt</a>	fwt.m</li><li><a href="fwt2.html" class="code" title="">fwt2</a>	fwt2.m</li><li><a href="ifwt.html" class="code" title="">ifwt</a>	ifwt.m</li><li><a href="ifwt2.html" class="code" title="">ifwt2</a>	ifwt2.m</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function Compile_CWT</a>
+0002 
+0003 MEX_OK = 0;
+0004 
+0005 <span class="comment">% for file = {'fwt','ifwt','fwt2','ifwt2', 'fwt2_CWT', 'afwt2_CWT',  ...</span>
+0006 <span class="comment">%         'ifwt2_CWT', 'afwt','afwt2'}</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">%     file = char(file);</span>
+0009 <span class="comment">%     if exist(file)~=3,</span>
+0010 <span class="comment">%         MEX_OK = 0;</span>
+0011 <span class="comment">%         break;</span>
+0012 <span class="comment">%     end</span>
+0013 <span class="comment">% end</span>
+0014 
+0015 <span class="keyword">if</span> ~MEX_OK
+0016     Friend = computer;
+0017     isPC = 0;
+0018     <span class="keyword">if</span> strcmp(Friend(1:2),<span class="string">'PC'</span>)
+0019         isPC = 1;
+0020     <span class="keyword">end</span>
+0021     <span class="keyword">if</span> isPC
+0022         mex -c fwt_level.c
+0023         mex fwt.c fwt_level.obj -output <a href="fwt.html" class="code" title="">fwt</a>
+0024         mex ifwt.c fwt_level.obj -output <a href="ifwt.html" class="code" title="">ifwt</a>
+0025         mex fwt2.c fwt_level.obj -output <a href="fwt2.html" class="code" title="">fwt2</a>
+0026         mex ifwt2.c fwt_level.obj -output <a href="ifwt2.html" class="code" title="">ifwt2</a>
+0027         
+0028         mex -c afwt_level.c
+0029         mex afwt.c afwt_level.obj -output <a href="afwt.html" class="code" title="">afwt</a>
+0030         mex afwt2.c afwt_level.obj -output <a href="afwt2.html" class="code" title="">afwt2</a>
+0031         
+0032         mex fwt2_CWT.c fwt_level.obj -output fwt2_CWT
+0033         mex ifwt2_CWT.c fwt_level.obj -output ifwt2_CWT
+0034         mex afwt2_CWT.c afwt_level.obj -output afwt2_CWT
+0035         
+0036         <span class="comment">% mex aifwt_mod.c fwt_level.obj -output aifwt_mod</span>
+0037         <span class="comment">% mex aifwt2_mod.c fwt_level.obj -output aifwt2_mod</span>
+0038     <span class="keyword">else</span>
+0039         mex -c fwt_level.c
+0040         mex fwt.c fwt_level.o -output <a href="fwt.html" class="code" title="">fwt</a>
+0041         mex ifwt.c fwt_level.o -output <a href="ifwt.html" class="code" title="">ifwt</a>
+0042         mex fwt2.c fwt_level.o -output <a href="fwt2.html" class="code" title="">fwt2</a>
+0043         mex ifwt2.c fwt_level.o -output <a href="ifwt2.html" class="code" title="">ifwt2</a>
+0044 
+0045         mex fwt2_CWT.c fwt_level.o -output fwt2_CWT
+0046         mex ifwt2_CWT.c fwt_level.o -output ifwt2_CWT
+0047 
+0048         mex -c afwt_level.c
+0049         mex afwt.c afwt_level.o -output <a href="afwt.html" class="code" title="">afwt</a>
+0050         mex afwt2.c afwt_level.o -output <a href="afwt2.html" class="code" title="">afwt2</a>
+0051         mex afwt2_CWT.c afwt_level.o -output afwt2_CWT
+0052         
+0053         <span class="comment">% mex aifwt.c fwt_level.o -output aifwt_mod</span>
+0054         <span class="comment">% mex aifwt2.c fwt_level.o -output aifwt2_mod</span>
+0055     <span class="keyword">end</span>
+0056 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

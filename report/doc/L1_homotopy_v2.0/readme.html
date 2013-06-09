@@ -1,0 +1,204 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of readme</title>
+  <meta name="keywords" content="readme">
+  <meta name="description" content="----------L1 Homotopy Package-------------+">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- menu.html L1_homotopy_v2.0 -->
+<h1>readme
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>----------L1 Homotopy Package-------------+</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment">----------L1 Homotopy Package-------------+</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="compile.html" class="code" title="">compile</a>	% May need to compile the following mex files.</li><li><a href="demo_BPDN.html" class="code" title="">demo_BPDN</a>	demo_BPDN</li><li><a href="demo_dynamicSeq.html" class="code" title="">demo_dynamicSeq</a>	demo_dynamicSeq</li><li><a href="demo_dynamicX.html" class="code" title="">demo_dynamicX</a>	demo_dynamicX</li><li><a href="demo_posBPDN.html" class="code" title="">demo_posBPDN</a>	demo_posBPDN</li><li><a href="demo_rwtL1.html" class="code" title="">demo_rwtL1</a>	demo_rwtL1</li><li><a href="demo_streamingLOT.html" class="code" title="">demo_streamingLOT</a>	demo_streamingLOT</li><li><a href="l1homotopy.html" class="code" title="function out = l1homotopy(A, y, opts)">l1homotopy</a>	l1homotopy.m</li><li><a href="../L1_homotopy_v2.0/utils/utils_meas/realnoiselet.html" class="code" title="">realnoiselet</a>	Real-valued Noiselet Transform</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">%----------L1 Homotopy Package-------------+</span>
+0002 
+0003 Created by: Salman Asif @ Georgia Tech.
+0004 Email: sasif@gatech.edu
+0005 
+0006   
+0007 Code website: http://users.ece.gatech.edu/~sasif/homotopy
+0008 and
+0009 Github repository: https://github.com/sasif/L1-homotopy
+0010   
+0011     (let's say this is)
+0012       Version 2.0 released June 2013
+0013       
+0014     Previous versions: 
+0015       v1.1 release:    July 2012
+0016       v1.0 release:     April 2009
+0017     
+0018 <span class="comment">%------------------------------------------+</span>
+0019 
+0020 References: 
+0021 
+0022 - M. Salman Asif and Justin Romberg, &quot;Sparse recovery of streaming signals using L1-homotopy,&quot; preprint available at http://users.ece.gatech.edu/~sasif/ and ???  
+0023 
+0024 - M. Salman Asif, &quot;Dynamic compressive sensing: Sparse recovery algorithms <span class="keyword">for</span> streaming signals and video.&quot; Doctoral Thesis, Georgia Institute of Technology, 2013. 
+0025 
+0026 <span class="comment">%------------------------------------------------------------</span>
+0027 
+0028 <a href="l1homotopy.html" class="code" title="function out = l1homotopy(A, y, opts)">l1homotopy</a> is a highly versatile homotopy program that can solve a variety of L1-norm minimization problems using a warm start. 
+0029 
+0030 l1homotopy.m is the main <span class="keyword">function</span> that solves the following homotopy program: 
+0031 
+0032 minimize_x  \|W x\|_1 + 1/2*\|Ax-y\|_2^2 + (1-epsilon)u'x,
+0033 
+0034 u is defined as u = -W*sign(xh_old)-A'*(A*xh_old-y) 
+0035 xh_old is an arbitrary warm-start vector (or a zero vector <span class="keyword">if</span> no warm-start is available)
+0036 
+0037 The homotopy is solved by changing epsilon from 0 to 1 using the algorithm described in the paper and the thesis.
+0038 
+0039 
+0040 Scripts <span class="keyword">for</span> different problems are also included in this package to demonstrate the use of <a href="l1homotopy.html" class="code" title="function out = l1homotopy(A, y, opts)">l1homotopy</a>: 
+0041  
+0042 <a href="demo_BPDN.html" class="code" title="">demo_BPDN</a> -- solves LASSO/BPDN problem from scratch
+0043 <a href="demo_posBPDN.html" class="code" title="">demo_posBPDN</a> -- solves BPDN problem with positive sign constraint on the estimate
+0044 <a href="demo_dynamicX.html" class="code" title="">demo_dynamicX</a> -- updates the solution <span class="keyword">for</span> BPDN as the signal changes
+0045 <a href="demo_dynamicSeq.html" class="code" title="">demo_dynamicSeq</a> -- updates the signal as sequential measurements are added
+0046 <a href="demo_rwtL1.html" class="code" title="">demo_rwtL1</a>-- solves iterative reweighting <span class="keyword">for</span> BPDN
+0047 demo_dynamiCRWT -- iteratively updates weights in the L1-norm cost <span class="keyword">while</span> estimating a time-varying signal
+0048 <a href="demo_streamingLOT.html" class="code" title="">demo_streamingLOT</a> -- iteratively estimates a streaming signal using lapped orthogonal transform as the representation basis
+0049 demo_streamingKF -- iteratively estimates a streaming signal that follows a linear dynamic model
+0050 and more<span class="keyword">...</span><span class="comment"> </span>
+0051 
+0052 l1homotopy_DS.m (a similar homotopy program <span class="keyword">for</span> the Dantzig selector will be added to this package soon.)
+0053 
+0054 
+0055 You may need to <a href="compile.html" class="code" title="">compile</a> mex codes <span class="keyword">for</span>
+0056 1. matrix-vector product of the form A_Gamma x_Gamma and A_Gamma^T y
+0057 2. <a href="../L1_homotopy_v2.0/utils/utils_meas/realnoiselet.html" class="code" title="">realnoiselet</a>
+0058 3. Wavelets
+0059 
+0060 See compile.m <span class="keyword">for</span> further details. 
+0061 Add all the folders in MATLAB path or only those that are required <span class="keyword">for</span> each solver. 
+0062 
+0063 This code is in development stage; any comments or bug reports are very welcome.
+0064 
+0065 <span class="comment">%------------------------------------------------------------</span>
+0066 
+0067 Copyright (2009--2013) M. Salman Asif and Justin Romberg
+0068 
+0069 This file is part of L1 homotopy toolbox.
+0070 Copyright (C) 2013, M. Salman Asif, all rights reserved.
+0071 
+0072 Redistribution and use of this code, with or without modification, are permitted provided that the following conditions are met:
+0073 
+0074 The software is provided under the terms of this license strictly <span class="keyword">for</span> academic, non-commercial, not-<span class="keyword">for</span>-profit purposes. Redistributions of source code must retain the above copyright notice, this list of conditions (license) and the following disclaimer. The name of the author may not be used to endorse or promote products derived from this software without specific prior written permission. 
+0075 
+0076 This software is being provided &quot;as is&quot;, without any express or implied warranty. In particular, the authors do not make any representation or warranty of any kind concerning the merchantability of this software or its fitness <span class="keyword">for</span> any particular purpose.
+0077 
+0078 <span class="comment">%------------------------------------------------------------</span>
+0079 
+0080 
+0081 
+0082 <span class="comment">%------------------------------------------------------------</span>
+0083 
+0084 Parts of old releases
+0085 
+0086 <span class="comment">%------------------------------------------------------------</span>
+0087 
+0088 
+0089 Other than L1 decoding and adaptive reweighting methods, these homotopy programs can also be solved using l1homotopy.m (<span class="keyword">for</span> the LASSO/BPDN formulation) and l1homotopy_DS.m (<span class="keyword">for</span> the Dantzig selector formulation).
+0090 
+0091 
+0092 <span class="comment">%---------------</span>
+0093 <span class="comment">% Pursuits_Homotopy (Standard homotopy solvers)</span>
+0094 <span class="comment">%---------------</span>
+0095 
+0096 <span class="comment">% Basis pursuit denoising (BPDN) homotopy</span>
+0097 BPDN_homotopy_function.m
+0098 BPDN_homotopy_demo.m
+0099 
+0100 <span class="comment">% Dantzig selector (DS) homotopy based on primal-dual pursuit</span>
+0101 DS_homotopy_function.m
+0102 DS_homotopy_demo.m
+0103 
+0104 <span class="comment">%---------------</span>
+0105 <span class="comment">% DynamicX (Homotopy update for time-varying sparse signals)</span>
+0106 <span class="comment">%---------------</span>
+0107 
+0108 <span class="comment">% BPDN</span>
+0109 DynamicX_BPDN_function.m
+0110 DynamicX_BPDN_demo.m
+0111 DynamicX_BPDN_Visual_demo.m
+0112 
+0113 <span class="comment">% DS</span>
+0114 DynamicX_DS_function.m
+0115 DynamicX_DS_demo.m
+0116 
+0117 <span class="comment">% Simulations (use functions from GPSR and FPC_AS)</span>
+0118 Simulation_DynamicX_BPDN.m
+0119 Simulation_DynamicX_BPDN_Pathological.m
+0120 Simulation_DynamicX_BPDN_Wavelet.m <span class="comment">% This script uses WaveLab functions.</span>
+0121 
+0122 <span class="comment">%---------------</span>
+0123 <span class="comment">% DynamicSeq (Homotopy update for sequential measurements)</span>
+0124 <span class="comment">%---------------</span>
+0125 
+0126 <span class="comment">% BPDN</span>
+0127 DynamicSeq_BPDN_function.m
+0128 DynamicSeq_BPDN_demo.m
+0129 
+0130 <span class="comment">% DS</span>
+0131 DynamicSeq_DS_function.m
+0132 DynamicSeq_DS_demo.m
+0133 
+0134 <span class="comment">% Simulations (use functions from GPSR and FPC_AS)</span>
+0135 Simulation_DynamicSeq_BPDN.m
+0136 
+0137 <span class="comment">%---------------</span>
+0138 <span class="comment">% Decoding (Correct sparse errors in an encoded signals)</span>
+0139 <span class="comment">%---------------</span>
+0140 
+0141 <span class="comment">% L1 decoding</span>
+0142 l1Decode_homotopy_fast.m
+0143 l1Decode_homotopy_qr.m
+0144 Simulation_l1Decode.m
+0145 
+0146 <span class="comment">% Robust error correction</span>
+0147 DynamicSeq_REC_function.m
+0148 DynamicSeq_REC_demo.m
+0149 Simulation_DynamicSeq_REC.m
+0150 
+0151 
+0152 <span class="comment">%-----------------</span>
+0153 <span class="comment">% Iterative and adaptive reweighting (WeightedBPDN folder)</span>
+0154 <span class="comment">%-----------------</span>
+0155 The codes are based on iterative and adaptive reweighting methods described in the following paper:
+0156 &quot;Fast and accurate algorithms <span class="keyword">for</span> re-weighted L1 norm minimization,&quot; by M. Salman Asif and Justin Romberg
+0157 
+0158 More details in the readme.txt file inside the folder</pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

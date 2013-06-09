@@ -1,0 +1,519 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of yall1</title>
+  <meta name="keywords" content="yall1">
+  <meta name="description" content="">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../menu.html L1_homotopy_v2.0 --><!-- menu.html solvers -->
+<h1>yall1
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong></strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function [x, Out] = yall1(A, b, opts) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">
+ A solver for L1-minimization models:
+
+ min ||Wx||_{w,1}, st Ax = b
+ min ||Wx||_{w,1} + (1/nu)||Ax - b||_1
+ min ||Wx||_{w,1} + (1/2*rho)||Ax - b||_2^2
+ min ||x||_{w,1}, st Ax = b                and x &gt; = 0
+ min ||x||_{w,1} + (1/nu)||Ax - b||_1,      st x &gt; = 0
+ min ||x||_{w,1} + (1/2*rho)||Ax - b||_2^2, st x &gt; = 0
+
+ where (A,b,x) can be complex or real 
+ (but x must be real in the last 3 models)
+
+ Copyright(c) 2009-2011 Yin Zhang, Junfeng Yang, Wotao Yin
+
+ --- Input:
+     A --- either an m x n matrix or
+           a structure with 2 fields:
+           1) A.times: a function handle for A*x
+           2) A.trans: a function handle for A'*y
+     b --- an m-vector, real or complex
+  opts --- a structure with fields:
+           opts.tol   -- tolerance *** required ***
+           opts.nu    -- values &gt; 0 for L1/L1 model
+           opts.rho   -- values &gt; 0 for L1/L2 model
+           opts.basis -- sparsifying unitary basis W (W*W = I)
+                        a struct with 2 fields:
+                        1) times: a function handle for W*x
+                        2) trans: a function handle for W'*y
+           opts.nonneg  -- 1 for nonnegativity constraints
+           opts.nonorth -- 1 for A with non-orthonormal rows
+           see the User's Guide for all other options
+
+ --- Output: 
+     x --- last iterate (hopefully an approximate solution)
+   Out --- a structure with fields:
+           Out.exit    --- exit information
+           Out.iter    --- #iterations taken
+           Out.cputime --- solver CPU time
+           Out.y       --- dual variable
+           Out.z       --- dual slack
+           .....       --- and some more
+ --------------------------------------------------------------
+ define linear operators</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../L1_homotopy_v2.0/WeightedBPDN/src/script_simulation_wtBPDN.html" class="code" title="">script_simulation_wtBPDN</a>	partial script for running different solvers</li><li><a href="../../L1_homotopy_v2.0/WeightedBPDN/src/wtBPDN_homotopy_test.html" class="code" title="">wtBPDN_homotopy_test</a>	BPDN_homotopy_Weighted</li><li><a href="../../L1_homotopy_v2.0/demo_KalmanRWT.html" class="code" title="">demo_KalmanRWT</a>	demo_KalmanRWT</li><li><a href="../../L1_homotopy_v2.0/demo_streamingDWT.html" class="code" title="">demo_streamingDWT</a>	demo_streamingDWT</li><li><a href="../../L1_homotopy_v2.0/demo_streamingLOT.html" class="code" title="">demo_streamingLOT</a>	demo_streamingLOT</li></ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function [A,At,b,opts] = linear_operators(A0, b0, opts)</a></li><li><a href="#_sub2" class="code">function nonorth = check_orth(A, At, b)</a></li><li><a href="#_sub3" class="code">function [x, Out] = yall1_solve(A,At,b,x0,z0,opts)</a></li><li><a href="#_sub4" class="code">function [tol,mu,maxit,print,nu,rho,delta,</a></li><li><a href="#_sub5" class="code">function z = proj2box(z,w,nonneg,nu,m)</a></li><li><a href="#_sub6" class="code">function check_stopping</a></li><li><a href="#_sub7" class="code">function iprint1(mode)</a></li><li><a href="#_sub8" class="code">function iprint2</a></li><li><a href="#_sub9" class="code">function update_mu</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [x, Out] = yall1(A, b, opts)</a>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% A solver for L1-minimization models:</span>
+0004 <span class="comment">%</span>
+0005 <span class="comment">% min ||Wx||_{w,1}, st Ax = b</span>
+0006 <span class="comment">% min ||Wx||_{w,1} + (1/nu)||Ax - b||_1</span>
+0007 <span class="comment">% min ||Wx||_{w,1} + (1/2*rho)||Ax - b||_2^2</span>
+0008 <span class="comment">% min ||x||_{w,1}, st Ax = b                and x &gt; = 0</span>
+0009 <span class="comment">% min ||x||_{w,1} + (1/nu)||Ax - b||_1,      st x &gt; = 0</span>
+0010 <span class="comment">% min ||x||_{w,1} + (1/2*rho)||Ax - b||_2^2, st x &gt; = 0</span>
+0011 <span class="comment">%</span>
+0012 <span class="comment">% where (A,b,x) can be complex or real</span>
+0013 <span class="comment">% (but x must be real in the last 3 models)</span>
+0014 <span class="comment">%</span>
+0015 <span class="comment">% Copyright(c) 2009-2011 Yin Zhang, Junfeng Yang, Wotao Yin</span>
+0016 <span class="comment">%</span>
+0017 <span class="comment">% --- Input:</span>
+0018 <span class="comment">%     A --- either an m x n matrix or</span>
+0019 <span class="comment">%           a structure with 2 fields:</span>
+0020 <span class="comment">%           1) A.times: a function handle for A*x</span>
+0021 <span class="comment">%           2) A.trans: a function handle for A'*y</span>
+0022 <span class="comment">%     b --- an m-vector, real or complex</span>
+0023 <span class="comment">%  opts --- a structure with fields:</span>
+0024 <span class="comment">%           opts.tol   -- tolerance *** required ***</span>
+0025 <span class="comment">%           opts.nu    -- values &gt; 0 for L1/L1 model</span>
+0026 <span class="comment">%           opts.rho   -- values &gt; 0 for L1/L2 model</span>
+0027 <span class="comment">%           opts.basis -- sparsifying unitary basis W (W*W = I)</span>
+0028 <span class="comment">%                        a struct with 2 fields:</span>
+0029 <span class="comment">%                        1) times: a function handle for W*x</span>
+0030 <span class="comment">%                        2) trans: a function handle for W'*y</span>
+0031 <span class="comment">%           opts.nonneg  -- 1 for nonnegativity constraints</span>
+0032 <span class="comment">%           opts.nonorth -- 1 for A with non-orthonormal rows</span>
+0033 <span class="comment">%           see the User's Guide for all other options</span>
+0034 <span class="comment">%</span>
+0035 <span class="comment">% --- Output:</span>
+0036 <span class="comment">%     x --- last iterate (hopefully an approximate solution)</span>
+0037 <span class="comment">%   Out --- a structure with fields:</span>
+0038 <span class="comment">%           Out.exit    --- exit information</span>
+0039 <span class="comment">%           Out.iter    --- #iterations taken</span>
+0040 <span class="comment">%           Out.cputime --- solver CPU time</span>
+0041 <span class="comment">%           Out.y       --- dual variable</span>
+0042 <span class="comment">%           Out.z       --- dual slack</span>
+0043 <span class="comment">%           .....       --- and some more</span>
+0044 <span class="comment">% --------------------------------------------------------------</span>
+0045 <span class="comment">% define linear operators</span>
+0046 [A,At,b,opts] = <a href="#_sub1" class="code" title="subfunction [A,At,b,opts] = linear_operators(A0, b0, opts)">linear_operators</a>(A,b,opts);
+0047 
+0048 m = length(b);
+0049 L1L1 = isfield(opts,<span class="string">'nu'</span>) &amp;&amp; opts.nu &gt; 0;
+0050 <span class="keyword">if</span> L1L1 &amp;&amp; isfield(opts,<span class="string">'weights'</span>)
+0051     opts.weights = [opts.weights(:); ones(m,1)];
+0052 <span class="keyword">end</span>
+0053 
+0054 <span class="comment">% parse options</span>
+0055 posrho = isfield(opts,<span class="string">'rho'</span>)    &amp;&amp; opts.rho &gt; 0;
+0056 posdel = isfield(opts,<span class="string">'delta'</span>)  &amp;&amp; opts.delta &gt; 0;
+0057 posnu  = isfield(opts,<span class="string">'nu'</span>)     &amp;&amp; opts.nu &gt; 0;
+0058 nonneg = isfield(opts,<span class="string">'nonneg'</span>) &amp;&amp; opts.nonneg == 1;
+0059 <span class="keyword">if</span> isfield(opts,<span class="string">'x0'</span>); x0 = opts.x0; <span class="keyword">else</span> x0 = []; <span class="keyword">end</span> 
+0060 <span class="keyword">if</span> isfield(opts,<span class="string">'z0'</span>); z0 = opts.z0; <span class="keyword">else</span> z0 = []; <span class="keyword">end</span> 
+0061 
+0062 <span class="comment">% check conflicts % modified by Junfeng</span>
+0063 <span class="keyword">if</span> posdel &amp;&amp; posrho || posdel &amp;&amp; posnu || posrho &amp;&amp; posnu
+0064     fprintf(<span class="string">'Model parameter conflict! YALL1: set delta = 0 &amp;&amp; nu = 0;\n'</span>);
+0065     opts.delta = 0; posdel = false;
+0066     opts.nu    = 0; posnu  = false;
+0067 <span class="keyword">end</span>
+0068 prob = <span class="string">'the basis pursuit problem'</span>;
+0069 <span class="keyword">if</span> posrho, prob = <span class="string">'the unconstrained L1L2 problem'</span>; <span class="keyword">end</span>
+0070 <span class="keyword">if</span> posdel, prob = <span class="string">'the constrained L1L2 problem'</span>;   <span class="keyword">end</span>
+0071 <span class="keyword">if</span> posnu,  prob = <span class="string">'the unconstrained L1L1 problem'</span>; <span class="keyword">end</span>
+0072 <span class="comment">% disp(['YALL1 is solving ', prob, '.']);</span>
+0073 
+0074 <span class="comment">% check zero solution % modified by Junfeng</span>
+0075 Atb = At(b);
+0076 bmax = norm(b,inf);
+0077 L2Unc_zsol = posrho &amp;&amp; norm(Atb,inf) &lt;= opts.rho;
+0078 L2Con_zsol = posdel &amp;&amp; norm(b) &lt;= opts.delta;
+0079 L1L1_zsol  = posnu  &amp;&amp; bmax &lt; opts.tol;
+0080 BP_zsol    = ~posrho &amp;&amp; ~posdel &amp;&amp; ~posnu &amp;&amp; bmax &lt; opts.tol;
+0081 zsol = L2Unc_zsol || L2Con_zsol || BP_zsol || L1L1_zsol;
+0082 <span class="keyword">if</span> zsol  
+0083     n = length(Atb);
+0084     x = zeros(n,1); 
+0085     Out.iter = 0;
+0086     Out.cntAt = 1;
+0087     Out.cntA = 0;
+0088     Out.exit = <span class="string">'Data b = 0'</span>;
+0089     <span class="keyword">return</span>; 
+0090 <span class="keyword">end</span>
+0091 <span class="comment">% ========================================================================</span>
+0092 
+0093 <span class="comment">% scaling data and model parameters</span>
+0094 b1 = b / bmax;
+0095 <span class="keyword">if</span> posrho, opts.rho   = opts.rho / bmax; <span class="keyword">end</span>
+0096 <span class="keyword">if</span> posdel, opts.delta = opts.delta / bmax; <span class="keyword">end</span>
+0097 <span class="keyword">if</span> isfield(opts,<span class="string">'xs'</span>), opts.xs = opts.xs/bmax; <span class="keyword">end</span>
+0098     
+0099 <span class="comment">% solve the problem</span>
+0100 t0 = cputime; 
+0101 [x1,Out] = <a href="#_sub3" class="code" title="subfunction [x, Out] = yall1_solve(A,At,b,x0,z0,opts)">yall1_solve</a>(A, At, b1, x0, z0, opts);
+0102 Out.cputime = cputime - t0;
+0103 
+0104 <span class="comment">% restore solution x</span>
+0105 x = x1 * bmax;
+0106 <span class="keyword">if</span> L1L1; x = x(1:end-m); <span class="keyword">end</span>
+0107 <span class="keyword">if</span> isfield(opts,<span class="string">'basis'</span>)
+0108     x = opts.basis.trans(x);
+0109 <span class="keyword">end</span>
+0110 <span class="keyword">if</span> nonneg; x = max(0,x); <span class="keyword">end</span>
+0111 
+0112 <span class="keyword">end</span>
+0113 
+0114 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0115 <a name="_sub1" href="#_subfunctions" class="code">function [A,At,b,opts] = linear_operators(A0, b0, opts)</a>
+0116 <span class="comment">%</span>
+0117 <span class="comment">% define linear operators A and At</span>
+0118 <span class="comment">% (possibly modify RHS b if nu &gt; 0)</span>
+0119 <span class="comment">%</span>
+0120 b = b0;
+0121 <span class="keyword">if</span> isnumeric(A0); 
+0122     <span class="keyword">if</span> size(A0,1) &gt; size(A0,2); 
+0123         error(<span class="string">'A must have m &lt; n'</span>);
+0124     <span class="keyword">end</span>
+0125     A  = @(x) A0*x;
+0126     At = @(y) (y'*A0)';
+0127 <span class="keyword">elseif</span> isstruct(A0) &amp;&amp; isfield(A0,<span class="string">'times'</span>) &amp;&amp; isfield(A0,<span class="string">'trans'</span>);
+0128     A  = A0.times;
+0129     At = A0.trans;
+0130 <span class="keyword">elseif</span> isa(A0,<span class="string">'function_handle'</span>)
+0131     A  = @(x) A0(x,1);
+0132     At = @(x) A0(x,2);
+0133 <span class="keyword">else</span>
+0134     error(<span class="string">'A must be a matrix, a struct or a function handle'</span>);
+0135 <span class="keyword">end</span>
+0136 
+0137 <span class="comment">% use sparsfying basis W</span>
+0138 <span class="keyword">if</span> isfield(opts,<span class="string">'basis'</span>)
+0139     C = A; Ct = At; clear A At; 
+0140     B  = opts.basis.times;
+0141     Bt = opts.basis.trans;
+0142     A  = @(x) C(Bt(x));
+0143     At = @(y) B(Ct(y));
+0144 <span class="keyword">end</span>
+0145 
+0146 <span class="comment">% solving L1-L1 model if nu &gt; 0</span>
+0147 <span class="keyword">if</span> isfield(opts,<span class="string">'nu'</span>) &amp;&amp; opts.nu &gt; 0
+0148     C = A; Ct = At; clear A At; 
+0149     m = length(b0);
+0150     nu = opts.nu; 
+0151     t = 1/sqrt(1 + nu^2);
+0152     A  = @(x) ( C(x(1:end-m)) + nu*x(end-m+1:end) )*t;
+0153     At = @(y) [ Ct(y);  nu*y ]*t;
+0154     b = b0*t;
+0155 <span class="keyword">end</span>
+0156 
+0157 <span class="keyword">if</span> ~isfield(opts,<span class="string">'nonorth'</span>); 
+0158     opts.nonorth = <a href="#_sub2" class="code" title="subfunction nonorth = check_orth(A, At, b)">check_orth</a>(A,At,b); 
+0159 <span class="keyword">end</span>
+0160 
+0161 <span class="keyword">end</span>
+0162 
+0163 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0164 <a name="_sub2" href="#_subfunctions" class="code">function nonorth = check_orth(A, At, b)</a>
+0165 <span class="comment">%</span>
+0166 <span class="comment">% check whether the rows of A are orthonormal</span>
+0167 <span class="comment">%</span>
+0168 nonorth = 0;
+0169 s1 = randn(size(b));
+0170 s2 = A(At(s1));
+0171 err = norm(s1-s2)/norm(s1);
+0172 <span class="keyword">if</span> err &gt; 1.e-12; nonorth = 1; <span class="keyword">end</span>
+0173 <span class="keyword">end</span>
+0174 
+0175 
+0176 
+0177 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0178 <span class="comment">%%%%                   solver                %%%%%</span>
+0179 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0180 <a name="_sub3" href="#_subfunctions" class="code">function [x, Out] = yall1_solve(A,At,b,x0,z0,opts)</a>
+0181 
+0182 <span class="comment">% yall1_solve version 1.4 (July, 2011)</span>
+0183 <span class="comment">% Copyright(c) 2009-2011 Yin Zhang</span>
+0184 
+0185 <span class="comment">%% initialization</span>
+0186 m = length(b); bnrm = norm(b);
+0187 [tol,mu,maxit,print,nu,rho,delta, <span class="keyword">...</span><span class="comment"> </span>
+0188     w,nonneg,nonorth,gamma] = get_opts;
+0189 x = x0; z = z0;
+0190 <span class="keyword">if</span> isempty(x0); x = At(b); <span class="keyword">end</span>
+0191 n = length(x); 
+0192 <span class="keyword">if</span> isempty(z0), z = zeros(n,1); <span class="keyword">end</span>
+0193 <span class="keyword">if</span> isfield(opts,<span class="string">'nonorth'</span>) &amp;&amp; opts.nonorth &gt; 0
+0194     y = zeros(m,1); Aty = zeros(n,1); 
+0195 <span class="keyword">end</span>
+0196 <span class="keyword">if</span> print; fprintf(<span class="string">'--- YALL1 v1.4 ---\n'</span>); <span class="keyword">end</span>
+0197 <span class="keyword">if</span> print; <a href="#_sub7" class="code" title="subfunction iprint1(mode)">iprint1</a>(0); <span class="keyword">end</span>;
+0198 
+0199 mu_orig = mu;
+0200 rdmu = rho / mu;
+0201 rdmu1 = rdmu + 1;
+0202 bdmu = b / mu;
+0203 ddmu = delta / mu;
+0204 
+0205 Out.cntA = 0; Out.cntAt = 0;
+0206 rel_gap = 0;  rel_rd  = 0;
+0207 rel_rp  = 0;  stop = 0;
+0208 
+0209 <span class="comment">%% main iterations</span>
+0210 <span class="keyword">for</span> iter = 1:maxit
+0211     
+0212     <span class="comment">%% calculations</span>
+0213     xdmu = x / mu;
+0214     <span class="keyword">if</span> ~nonorth; <span class="comment">% orthonormal A</span>
+0215         y = A(z - xdmu) + bdmu;
+0216         <span class="keyword">if</span> rho &gt; 0;
+0217             y = y / rdmu1;
+0218         <span class="keyword">elseif</span> delta &gt; 0
+0219             y = max(0, 1 - ddmu/norm(y))*y;
+0220         <span class="keyword">end</span>
+0221         Aty = At(y);
+0222     <span class="keyword">else</span>     <span class="comment">% non-orthonormal A</span>
+0223         ry = A(Aty - z + xdmu) - bdmu;
+0224         <span class="keyword">if</span> rho &gt; 0; ry = ry + rdmu*y; <span class="keyword">end</span>
+0225         Atry = At(ry);
+0226         denom = Atry'*Atry;
+0227         <span class="keyword">if</span> rho &gt; 0, denom = denom + rdmu * (ry'*ry); <span class="keyword">end</span>
+0228         stp = real(ry'*ry)/(real(denom) + eps);
+0229         Out.cntAt = Out.cntAt + 1;
+0230         y = y - stp*ry;
+0231         Aty = Aty - stp*Atry;
+0232     <span class="keyword">end</span>
+0233     
+0234     z = Aty + xdmu;
+0235     z = <a href="#_sub5" class="code" title="subfunction z = proj2box(z,w,nonneg,nu,m)">proj2box</a>(z,w,nonneg,nu,m);
+0236     
+0237     Out.cntA  = Out.cntA  + 1;
+0238     Out.cntAt = Out.cntAt + 1;
+0239 
+0240     rd = Aty - z; xp = x;
+0241     x = x + (gamma*mu) * rd;
+0242         
+0243     <span class="comment">%% other chores</span>
+0244     <span class="keyword">if</span> rem(iter,2) == 0, 
+0245         <a href="#_sub6" class="code" title="subfunction check_stopping">check_stopping</a>; <a href="#_sub9" class="code" title="subfunction update_mu    ">update_mu</a>; 
+0246     <span class="keyword">end</span>
+0247     <span class="keyword">if</span> print &gt; 1; <a href="#_sub8" class="code" title="subfunction iprint2">iprint2</a>; <span class="keyword">end</span>
+0248     <span class="keyword">if</span> stop; <span class="keyword">break</span>; <span class="keyword">end</span> 
+0249     
+0250 <span class="keyword">end</span> <span class="comment">% main iterations</span>
+0251 
+0252 <span class="comment">% output</span>
+0253 Out.iter = iter;
+0254 Out.mu = [mu_orig mu];
+0255 Out.obj = [objp objd];
+0256 Out.y = y; Out.z = z;
+0257 
+0258 <span class="keyword">if</span> iter == maxit; Out.exit = <span class="string">'Exit: maxiter'</span>; <span class="keyword">end</span>
+0259 <span class="keyword">if</span> print; <a href="#_sub7" class="code" title="subfunction iprint1(mode)">iprint1</a>(1); <span class="keyword">end</span>
+0260 
+0261 <span class="comment">%% nested functions</span>
+0262     <a name="_sub4" href="#_subfunctions" class="code">function [tol,mu,maxit,print,nu,rho,delta, </a><span class="keyword">...</span>
+0263              w,nonneg,nonorth,gamma] = get_opts
+0264         <span class="comment">% get or set options</span>
+0265         tol = opts.tol;
+0266         mu = mean(abs(b)); 
+0267         <span class="comment">%mu = norm(b)/numel(b);</span>
+0268         maxit = 9999;
+0269         print = 0;
+0270         nu = 0;
+0271         rho = eps;
+0272         delta = 0;
+0273         w = 1;
+0274         nonneg = 0;
+0275         nonorth = 0;
+0276         gamma = 1.; <span class="comment">% ADM parameter</span>
+0277         <span class="keyword">if</span> isfield(opts,<span class="string">'mu'</span>);       mu = opts.mu;    <span class="keyword">end</span>
+0278         <span class="keyword">if</span> isfield(opts,<span class="string">'maxit'</span>); maxit = opts.maxit; <span class="keyword">end</span>
+0279         <span class="keyword">if</span> isfield(opts,<span class="string">'print'</span>); print = opts.print; <span class="keyword">end</span>        
+0280         <span class="keyword">if</span> isfield(opts,<span class="string">'nu'</span>);       nu = opts.nu;    <span class="keyword">end</span>
+0281         <span class="keyword">if</span> isfield(opts,<span class="string">'rho'</span>);     rho = opts.rho;   <span class="keyword">end</span>
+0282         <span class="keyword">if</span> isfield(opts,<span class="string">'delta'</span>); delta = opts.delta; <span class="keyword">end</span>
+0283         <span class="keyword">if</span> isfield(opts,<span class="string">'weights'</span>); w = opts.weights; <span class="keyword">end</span>
+0284         <span class="keyword">if</span> isfield(opts,<span class="string">'nonneg'</span>);   nonneg = opts.nonneg;  <span class="keyword">end</span>
+0285         <span class="keyword">if</span> isfield(opts,<span class="string">'nonorth'</span>); nonorth = opts.nonorth; <span class="keyword">end</span>
+0286         <span class="keyword">if</span> isfield(opts,<span class="string">'gamma'</span>);   gamma   = opts.gamma;   <span class="keyword">end</span>
+0287     <span class="keyword">end</span>
+0288 
+0289     <a name="_sub5" href="#_subfunctions" class="code">function z = proj2box(z,w,nonneg,nu,m)</a>
+0290         <span class="keyword">if</span> nonneg
+0291             z = min(w,real(z));
+0292             <span class="keyword">if</span> nu &gt; 0 <span class="comment">%L1L1 model</span>
+0293                 z(end-m:end) = max(-1,z(end-m:end));
+0294             <span class="keyword">end</span>
+0295         <span class="keyword">else</span>
+0296             z = z .* w ./ max(w,abs(z));
+0297         <span class="keyword">end</span>
+0298     <span class="keyword">end</span>
+0299 
+0300     <a name="_sub6" href="#_subfunctions" class="code">function check_stopping</a>
+0301         q = 0.1; <span class="comment">% q in [0,1)</span>
+0302         <span class="keyword">if</span> delta &gt; 0; q = 0; <span class="keyword">end</span>
+0303         <span class="comment">% dual residual</span>
+0304         rdnrm = norm(rd); 
+0305         rel_rd = rdnrm / norm(z);
+0306         <span class="comment">% duality gap</span>
+0307         objp = sum(abs(w.*x));
+0308         objd = b'*y;
+0309         <span class="keyword">if</span> delta &gt; 0, objd = objd - delta*norm(y); <span class="keyword">end</span>
+0310         <span class="keyword">if</span> rho &gt; 0
+0311             rp = A(x) - b; 
+0312             rpnrm = norm(rp); 
+0313             Out.cntA = Out.cntA + 1;
+0314             objp = objp + (0.5/rho)*rpnrm^2;
+0315             objd = objd - (0.5*rho)*norm(y)^2;
+0316         <span class="keyword">end</span>
+0317         rel_gap = abs(objd - objp)/abs(objp);
+0318         
+0319         <span class="comment">% check relative change</span>
+0320         xrel_chg = norm(x-xp)/norm(x);
+0321         <span class="keyword">if</span> xrel_chg &lt; tol*(1 - q)
+0322             Out.exit = <span class="string">'Exit: Stablized'</span>; 
+0323             stop = 1; <span class="keyword">return</span>; 
+0324         <span class="keyword">end</span>
+0325         
+0326         <span class="comment">% decide whether to go further</span>
+0327         <span class="keyword">if</span> xrel_chg &gt;= tol*(1 + q); <span class="keyword">return</span>; <span class="keyword">end</span>
+0328         gap_small = rel_gap &lt; tol;
+0329         <span class="keyword">if</span> ~gap_small; <span class="keyword">return</span>; <span class="keyword">end</span>
+0330         d_feasible = rel_rd &lt; tol;
+0331         <span class="keyword">if</span> ~d_feasible; <span class="keyword">return</span>; <span class="keyword">end</span>
+0332 
+0333         <span class="comment">% check primal residual</span>
+0334         <span class="keyword">if</span> rho == 0, 
+0335             rp = A(x) - b; 
+0336             rpnrm = norm(rp);
+0337             Out.cntA = Out.cntA + 1; 
+0338         <span class="keyword">end</span>;    
+0339         <span class="keyword">if</span> rho &gt; 0;
+0340             p_feasible = true;
+0341         <span class="keyword">elseif</span> delta &gt; 0
+0342             p_feasible = rpnrm &lt;= delta*(1 + tol);
+0343         <span class="keyword">else</span>
+0344             p_feasible = rpnrm &lt; tol*bnrm;
+0345         <span class="keyword">end</span>
+0346         <span class="keyword">if</span> p_feasible, stop = 1; Out.exit = <span class="string">'Exit: Converged'</span>; <span class="keyword">end</span>        
+0347     <span class="keyword">end</span>
+0348 
+0349     <a name="_sub7" href="#_subfunctions" class="code">function iprint1(mode)</a>
+0350         <span class="keyword">switch</span> mode;
+0351             <span class="keyword">case</span> 0; <span class="comment">% at the beginning</span>
+0352                 rp = A(x) - b;
+0353                 rpnrm = norm(rp);
+0354                 fprintf(<span class="string">' norm( A*x0 - b ) = %6.2e\n'</span>,rpnrm);
+0355             <span class="keyword">case</span> 1; <span class="comment">% at the end</span>
+0356                 rp = A(x) - b;
+0357                 objp = sum(abs(w.*x));
+0358                 objd = b'*y;
+0359                 <span class="keyword">if</span> rho &gt; 0
+0360                     objp = objp + (0.5/rho)*(rp'*rp);
+0361                     objd = objd - (0.5*rho)*( y'*y );
+0362                 <span class="keyword">end</span>
+0363                 <span class="keyword">if</span> delta &gt; 0; objd = objd - delta*norm(y); <span class="keyword">end</span>
+0364                 dgap = abs(objd - objp);
+0365                 rel_gap = dgap / abs(objp);
+0366                 rdnrm = norm(rd);
+0367                 rel_rd = rdnrm / norm(z);
+0368                 rpnrm = norm(rp);
+0369                 rel_rp = rpnrm / bnrm;
+0370                 fprintf(<span class="string">' Rel_Gap   Rel_ResD  Rel_ResP\n'</span>);
+0371                 fprintf(<span class="string">' %8.2e  %8.2e  %8.2e\n'</span>,rel_gap,rel_rd,rel_rp);
+0372         <span class="keyword">end</span>
+0373     <span class="keyword">end</span>
+0374 
+0375     <a name="_sub8" href="#_subfunctions" class="code">function iprint2</a>
+0376         rdnrm = norm(rd);
+0377         rp = A(x) - b;
+0378         rpnrm = norm(rp);
+0379         objp = sum(abs(w.*x));
+0380         objd = b'*y;
+0381         <span class="keyword">if</span> rho &gt; 0
+0382             objp = objp + (0.5/rho)*rpnrm^2;
+0383             objd = objd - (0.5*rho)*(y'*y);
+0384         <span class="keyword">end</span>
+0385         <span class="keyword">if</span> delta &gt; 0; 
+0386             objd = objd - delta*norm(y); 
+0387         <span class="keyword">end</span>
+0388         gap = abs(objd - objp);
+0389         <span class="keyword">if</span> ~rem(iter,50)
+0390             fprintf(<span class="string">'  Iter %4i:'</span> ,iter);
+0391             fprintf(<span class="string">'  Rel_Gap  %6.2e'</span>,gap/objp);
+0392             fprintf(<span class="string">'  Rel_ResD %6.2e'</span>,rdnrm/norm(z));
+0393             fprintf(<span class="string">'  Rel_ResP %6.2e'</span>,norm(rp)/norm(b));
+0394             fprintf(<span class="string">'\n'</span>);
+0395         <span class="keyword">end</span>
+0396         
+0397         <span class="keyword">if</span> ~isfield(opts,<span class="string">'xs'</span>), <span class="keyword">return</span>; <span class="keyword">end</span>
+0398         <span class="keyword">if</span> isfield(opts,<span class="string">'nu'</span>) &amp;&amp; opts.nu, <span class="keyword">return</span>; <span class="keyword">end</span>
+0399         
+0400         <span class="keyword">if</span> iter &lt;= 1, 
+0401             Out.objd = []; Out.rd = []; 
+0402             Out.objp = []; Out.rp = [];
+0403             opts.xsnrm = norm(opts.xs);
+0404             Out.relerr = [];
+0405         <span class="keyword">end</span>
+0406         Out.objd = [Out.objd objd];
+0407         Out.objp = [Out.objp objp];
+0408         Out.rd = [Out.rd rdnrm];
+0409         Out.rp = [Out.rp rpnrm];
+0410         err = norm(x-opts.xs)/opts.xsnrm;
+0411         Out.relerr = [Out.relerr err];
+0412     <span class="keyword">end</span>
+0413 
+0414     <a name="_sub9" href="#_subfunctions" class="code">function update_mu    </a><span class="comment">% added to v14</span>
+0415         mfrac = 0.1; big = 50; nup = 8;
+0416         mu_min = mfrac^nup * mu_orig;
+0417         do_update = rel_gap &gt; big*rel_rd;
+0418         do_update = do_update &amp;&amp; mu &gt; 1.1*mu_min;
+0419         do_update = do_update &amp;&amp; iter &gt; 10;
+0420         <span class="keyword">if</span> ~do_update, <span class="keyword">return</span>; <span class="keyword">end</span>
+0421         <span class="comment">% do update</span>
+0422         mu = max(mfrac*mu,mu_min);
+0423         rdmu = rho / mu; rdmu1 = rdmu + 1;
+0424         bdmu = b / mu; ddmu = delta / mu;
+0425         <span class="keyword">if</span> print&gt;1; fprintf(<span class="string">'  -- mu updated\n'</span>); <span class="keyword">end</span>
+0426     <span class="keyword">end</span>
+0427 
+0428 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of DynamicX_varying_model</title>
+  <meta name="keywords" content="DynamicX_varying_model">
+  <meta name="description" content="I have 'perturbed' the following function from WaveLab.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../menu.html L1_homotopy_v2.0 --><!-- menu.html DynamicX -->
+<h1>DynamicX_varying_model
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>I have 'perturbed' the following function from WaveLab.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function sig_mod = DynamicX_varying_model(Name,n); </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> I have 'perturbed' the following function from WaveLab.
+
+ MakeSignal -- Make artificial signal
+  Usage
+    sig = MakeSignal(Name,n)
+  Inputs
+    Name   string: 'HeaviSine', 'Bumps', 'Blocks',
+            'Doppler', 'Ramp', 'Cusp', 'Sing', 'HiSine',
+            'LoSine', 'LinChirp', 'TwoChirp', 'QuadChirp',
+            'MishMash', 'WernerSorrows' (Heisenberg),
+            'Leopold' (Kronecker), 'Piece-Regular' (Piece-Wise Smooth),
+         'Riemann','HypChirps','LinChirps', 'Chirps', 'Gabor'
+         'sineoneoverx','Cusp2','SmoothCusp','Gaussian'
+         'Piece-Polynomial' (Piece-Wise 3rd degree polynomial)
+    n      desired signal length
+  Outputs
+    sig    1-d signal
+
+  References
+    Various articles of D.L. Donoho and I.M. Johnstone</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../L1_homotopy_v2.0/utils/MakeSignal.html" class="code" title="function sig = MakeSignal(Name,n)">MakeSignal</a>	MakeSignal -- Make artificial signal</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="Simulation_DynamicX_BPDN_Wavelet.html" class="code" title="">Simulation_DynamicX_BPDN_Wavelet</a>	BPDN update with dynamic change in x</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function sig_mod = DynamicX_varying_model(Name,n);</a>
+0002 
+0003 <span class="comment">% I have 'perturbed' the following function from WaveLab.</span>
+0004 <span class="comment">%</span>
+0005 <span class="comment">% MakeSignal -- Make artificial signal</span>
+0006 <span class="comment">%  Usage</span>
+0007 <span class="comment">%    sig = MakeSignal(Name,n)</span>
+0008 <span class="comment">%  Inputs</span>
+0009 <span class="comment">%    Name   string: 'HeaviSine', 'Bumps', 'Blocks',</span>
+0010 <span class="comment">%            'Doppler', 'Ramp', 'Cusp', 'Sing', 'HiSine',</span>
+0011 <span class="comment">%            'LoSine', 'LinChirp', 'TwoChirp', 'QuadChirp',</span>
+0012 <span class="comment">%            'MishMash', 'WernerSorrows' (Heisenberg),</span>
+0013 <span class="comment">%            'Leopold' (Kronecker), 'Piece-Regular' (Piece-Wise Smooth),</span>
+0014 <span class="comment">%         'Riemann','HypChirps','LinChirps', 'Chirps', 'Gabor'</span>
+0015 <span class="comment">%         'sineoneoverx','Cusp2','SmoothCusp','Gaussian'</span>
+0016 <span class="comment">%         'Piece-Polynomial' (Piece-Wise 3rd degree polynomial)</span>
+0017 <span class="comment">%    n      desired signal length</span>
+0018 <span class="comment">%  Outputs</span>
+0019 <span class="comment">%    sig    1-d signal</span>
+0020 <span class="comment">%</span>
+0021 <span class="comment">%  References</span>
+0022 <span class="comment">%    Various articles of D.L. Donoho and I.M. Johnstone</span>
+0023 
+0024 <span class="comment">% N = 2048;</span>
+0025 <span class="comment">%</span>
+0026 <span class="comment">% HeaviSine = MakeSignal('HeaviSine',N);</span>
+0027 <span class="comment">% Blocks    = MakeSignal('Blocks',N);</span>
+0028 <span class="comment">% Doppler   = MakeSignal('Doppler',N);</span>
+0029 <span class="comment">% Ramp      = MakeSignal('Ramp',N);</span>
+0030 <span class="comment">% Piece_Polynomial = MakeSignal('Piece-Polynomial',N);</span>
+0031 <span class="comment">%</span>
+0032 <span class="comment">% name = 1;</span>
+0033 <span class="comment">% switch name</span>
+0034 <span class="comment">%     case 1</span>
+0035 <span class="comment">%         Name = 'HeaviSine';</span>
+0036 <span class="comment">%     case 2</span>
+0037 <span class="comment">%         Name = 'Blocks';</span>
+0038 <span class="comment">%     case 3</span>
+0039 <span class="comment">%         Name = 'Doppler';</span>
+0040 <span class="comment">%     case 4</span>
+0041 <span class="comment">%         Name = 'Ramp';</span>
+0042 <span class="comment">%     case 5</span>
+0043 <span class="comment">%         Name = 'Piece-Polynomial';</span>
+0044 <span class="comment">%     otherwise</span>
+0045 <span class="comment">%         disp('hey ... ');</span>
+0046 <span class="comment">% end</span>
+0047 
+0048 N = n;
+0049 sig = <a href="../../L1_homotopy_v2.0/utils/MakeSignal.html" class="code" title="function sig = MakeSignal(Name,n)">MakeSignal</a>(Name,N);
+0050 
+0051 sig_old = sig;
+0052 
+0053 <span class="comment">% modify the signal randomly while preserving the structure.</span>
+0054 t = (1:N)./N;
+0055 <span class="keyword">if</span> strcmp(Name,<span class="string">'HeaviSine'</span>),
+0056     signal = (1+randn*.05)*4.*sin(4*pi.*t*(1+randn*.02));
+0057     signal = signal - sign(t - .3*(1+randn*.01)) - sign(.72*(1+randn*.01) - t);
+0058 
+0059 <span class="keyword">elseif</span> strcmp(Name,<span class="string">'Doppler'</span>),
+0060     sig = sqrt(t.*(1-t)).*sin((2*pi*1.05) ./(t+.05));
+0061     signal = (1+randn*.02)*sqrt(t.*(1-t)).*sin((2*pi*1.05*(1+randn*.02)) ./(t+.05*(1+randn*.02)));
+0062 
+0063 <span class="keyword">elseif</span> strcmp(Name,<span class="string">'Ramp'</span>)
+0064     sig = t - (t &gt;= .37);
+0065     signal = (1+randn*.05)*t - (t &gt;= .37*(1+randn*.02));
+0066 <span class="keyword">elseif</span> strcmp (Name,<span class="string">'Blocks'</span>)
+0067     pos = [ .1 .13 .15 .23 .25 .40 .44 .65  .76 .78 .81];
+0068     hgt = [4 (-5) 3 (-4) 5 (-4.2) 2.1 4.3  (-3.1) 2.1 (-4.2)];
+0069     sig = zeros(size(t));
+0070     <span class="keyword">for</span> j=1:length(pos)
+0071         sig = sig + (1 + sign(t-pos(j))).*(hgt(j)/2) ;
+0072     <span class="keyword">end</span>
+0073     signal = sig;
+0074     <span class="keyword">for</span> j=1:length(pos)-1
+0075         rand_s = randn;
+0076         wt = (1+rand_s*.1);
+0077         wt = 1+randsrc*rand*.2;
+0078         signal(ceil(pos(j)*N):floor(pos(j+1)*N)) =  signal(ceil(pos(j)*N):floor(pos(j+1)*N))*wt;
+0079     <span class="keyword">end</span>
+0080 
+0081 <span class="keyword">elseif</span> strcmp(Name,<span class="string">'Piece-Polynomial'</span>),
+0082     n = N;
+0083     t = (1:fix(n/5)) ./fix(n/5);
+0084     sig1=20*(t.^3+t.^2+4)*(1+(randn*.1));
+0085     sig3=40*(2.*t.^3+t)*(1+(randn*.1)) + 100*(1+(randn*.05));
+0086     sig2=10.*t.^3*(1+(randn*.05)) + 45*(1+(randn*.1));
+0087     sig4=16*t.^2+8.*t*(1+randn*.1)+16*(1+(randn*.05));
+0088     sig5=20*(t+4)*(1+(randn*.1));
+0089     sig6(1:fix(n/10))=ones(1,fix(n/10))*(1+(randn*.1));
+0090     sig6=sig6*20*(1+(randn*.05));
+0091     sig(1:fix(n/5))=sig1;
+0092     sig(2*fix(n/5):-1:(fix(n/5)+1))=sig2;
+0093     sig((2*fix(n/5)+1):3*fix(n/5))=sig3;
+0094     sig((3*fix(n/5)+1):4*fix(n/5))=sig4;
+0095     sig((4*fix(n/5)+1):5*fix(n/5))=sig5(fix(n/5):-1:1);
+0096     diff=n-5*fix(n/5);
+0097     sig(5*fix(n/5)+1:n)=sig(diff:-1:1);
+0098     <span class="comment">%sig((fix(n/20)+1):(fix(n/20)+fix(n/10)))=-ones(1,fix(n/10))*20;</span>
+0099     sig((fix(n/20)+1):(fix(n/20)+fix(n/10)))=ones(1,fix(n/10))*10;
+0100     sig((n-fix(n/10)+1):(n+fix(n/20)-fix(n/10)))=ones(1,fix(n/20))*150;
+0101     <span class="comment">% zero-mean</span>
+0102     bias=sum(sig)/n;
+0103     sig=sig-bias;
+0104     signal = sig;
+0105 <span class="keyword">end</span>
+0106 
+0107 sig_mod = signal;
+0108 
+0109 <span class="comment">% Originally made by David L. Donoho.</span>
+0110 <span class="comment">% Function has been enhanced.</span>
+0111 
+0112 <span class="comment">%  Part of Wavelab Version 850</span>
+0113 <span class="comment">%  Built Tue Jan  3 13:20:39 EST 2006</span>
+0114 <span class="comment">%  This is Copyrighted Material</span>
+0115 <span class="comment">%  For Copying permissions see COPYING.m</span>
+0116 <span class="comment">%  Comments? e-mail wavelab@stat.stanford.edu</span></pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

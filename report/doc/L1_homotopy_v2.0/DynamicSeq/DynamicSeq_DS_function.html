@@ -1,0 +1,600 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of DynamicSeq_DS_function</title>
+  <meta name="keywords" content="DynamicSeq_DS_function">
+  <meta name="description" content="Dantzig Selector with sequential measurements using homotopy.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+  <script type="text/javascript">
+    if (top.frames.length == 0) { top.location = "../../index.html"; };
+  </script>
+</head>
+<body>
+<a name="_top"></a>
+<!-- ../menu.html L1_homotopy_v2.0 --><!-- menu.html DynamicSeq -->
+<h1>DynamicSeq_DS_function
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>Dantzig Selector with sequential measurements using homotopy.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function [xp_h, lambda_h, gamma_xh, gamma_lh, iter, th] = DynamicSeq_DS_function(A, b, Q_glgx, R_glgx, y, w, xp, lame, gamma_x, gamma_lambda, pk, ak, tau, maxiter) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> Dantzig Selector with sequential measurements using homotopy.
+ 
+ Solves  
+ min_x  ||x||_1 s.t. ||A'(Ax-y)+b'(bx-w)||_\infty &lt;= tau
+
+ using homotopy update method
+ [xp_h, lambda_h, gamma_xh, gamma_lh, iter, th] =
+ DynamicSeq_DS_function(A, b, Q_glgx, R_glgx, y, w, xp, lame, gamma_x, gamma_lambda, pk, ak, tau, maxiter)
+
+ A: mxn matrix
+ b: new rows in measurement matrix
+ [Q_glgx, R_glgx] = qr factors for A_glgx
+ y: old set of measurements
+ w: new measurements
+ xp: old primal solution
+ lame: old dual solution
+ gamma_x: old primal support
+ gamma_lambda: old dual support
+ pk: old primal constraints
+ ak: old dual constraints
+ tau: threshold parameter.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="DynamicSeq_DS_demo.html" class="code" title="">DynamicSeq_DS_demo</a>	Dantzig selector sequential measurement update homotopy comparison</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% Dantzig Selector with sequential measurements using homotopy.</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% Solves</span>
+0004 <span class="comment">% min_x  ||x||_1 s.t. ||A'(Ax-y)+b'(bx-w)||_\infty &lt;= tau</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% using homotopy update method</span>
+0007 <span class="comment">% [xp_h, lambda_h, gamma_xh, gamma_lh, iter, th] =</span>
+0008 <span class="comment">% DynamicSeq_DS_function(A, b, Q_glgx, R_glgx, y, w, xp, lame, gamma_x, gamma_lambda, pk, ak, tau, maxiter)</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">% A: mxn matrix</span>
+0011 <span class="comment">% b: new rows in measurement matrix</span>
+0012 <span class="comment">% [Q_glgx, R_glgx] = qr factors for A_glgx</span>
+0013 <span class="comment">% y: old set of measurements</span>
+0014 <span class="comment">% w: new measurements</span>
+0015 <span class="comment">% xp: old primal solution</span>
+0016 <span class="comment">% lame: old dual solution</span>
+0017 <span class="comment">% gamma_x: old primal support</span>
+0018 <span class="comment">% gamma_lambda: old dual support</span>
+0019 <span class="comment">% pk: old primal constraints</span>
+0020 <span class="comment">% ak: old dual constraints</span>
+0021 <span class="comment">% tau: threshold parameter.</span>
+0022 
+0023 <span class="comment">% Dantzig selector solution dynamica update with sequential measurements</span>
+0024 <span class="comment">% Rank one update is based on qr factorization.</span>
+0025 
+0026 <span class="comment">% Author: Salman Asif, Georgia Tech.</span>
+0027 <span class="comment">% Email: sasif@ece.gatech.edu</span>
+0028 <span class="comment">% Created: June 2009</span>
+0029 <span class="comment">%</span>
+0030 <span class="comment">%-------------------------------------------+</span>
+0031 <span class="comment">% Copyright (c) 2009.  Muhammad Salman Asif</span>
+0032 <span class="comment">%-------------------------------------------+</span>
+0033 
+0034 <a name="_sub0" href="#_subfunctions" class="code">function [xp_h, lambda_h, gamma_xh, gamma_lh, iter, th] = DynamicSeq_DS_function(A, b, Q_glgx, R_glgx, y, w, xp, lame, gamma_x, gamma_lambda, pk, ak, tau, maxiter)</a>
+0035 
+0036 t0 = cputime;
+0037 N = length(xp);
+0038 e0 = 0;
+0039 gamma_xh = gamma_x;
+0040 gamma_lh = gamma_lambda;
+0041 xp_h = xp;
+0042 lambda_h = lame;
+0043 idelta = [];
+0044 itheta = [];
+0045 epsilon = 0;
+0046 pk_old = pk;
+0047 pk_old(gamma_lh) = sign(pk_old(gamma_lh))*tau;
+0048 ak_old = ak;
+0049 ak_old(gamma_xh) = sign(ak_old(gamma_xh));
+0050 out_lambda = [];
+0051 out_x = [];
+0052 in_x = [];
+0053 in_lambda = [];
+0054 
+0055 iter = 0;
+0056 
+0057 <span class="keyword">while</span> iter &lt; maxiter
+0058     iter = iter+1;
+0059    
+0060     e0h = e0; <span class="comment">% making e0h==1 workes with BPDN but NOT with DS.</span>
+0061     <span class="comment">% The reason for this is because the value of step size is not</span>
+0062     <span class="comment">% guaranteed to stay positive.</span>
+0063     
+0064     dx = b(:,gamma_lh)'*(b(:,gamma_xh)*xp_h(gamma_xh)-w);
+0065     
+0066     <span class="comment">%%% NEED FAST UPDATE</span>
+0067     <span class="comment">% iAglgx = inv(A(:,gamma_lh)'*A(:,gamma_xh)+e0h*b(:,gamma_lh)'*b(:,gamma_xh));</span>
+0068     <span class="comment">% ux = (b(:,gamma_xh)*iAglgx*b(:,gamma_lh)');</span>
+0069     <span class="comment">% delx = -iAglgx*dx;</span>
+0070     
+0071     iAb_vec = R_glgx\(Q_glgx'*b(:,gamma_lh)');
+0072     ux = (b(:,gamma_xh)*iAb_vec);
+0073     delx = -R_glgx\(Q_glgx'*dx);
+0074 
+0075     pk = pk_old; <span class="comment">% A'*(A*xp_h-y)+e0*b'*(b*xp_h-w);</span>
+0076     dk = b'*(b*xp_h-w)+(A'*(A(:,gamma_xh)*delx)+e0h*b'*(b(:,gamma_xh)*delx));
+0077     delx_vec = zeros(N,1);
+0078     delx_vec(gamma_xh) = delx;
+0079 
+0080     dl = b(:,gamma_xh)'*(b(:,gamma_lh)*lambda_h(gamma_lh));
+0081     ul = ux;
+0082    
+0083     <span class="comment">%%% NEED FAST UPDATE</span>
+0084     <span class="comment">% iAgxgl = iAglgx';</span>
+0085     <span class="comment">% del_lam = -iAgxgl*dl;</span>
+0086      
+0087     del_lam = -Q_glgx*(R_glgx'\dl);
+0088         
+0089     ak = ak_old; <span class="comment">%A'*A*lambda_h+e0*b'*b*lambda_h;</span>
+0090     bk = b'*(b*lambda_h)+(A'*(A(:,gamma_lh)*del_lam)+e0h*b'*(b(:,gamma_lh)*del_lam));
+0091     del_lam_vec = zeros(N,1);
+0092     del_lam_vec(gamma_lh) = del_lam;
+0093 
+0094     <span class="comment">% gamma_lc = setdiff([1:N],[gamma_lh]);</span>
+0095     temp_gamma = zeros(N,1);
+0096     temp_gamma(gamma_lh) = gamma_lh;
+0097     gamma_lc = find([1:N]' ~= temp_gamma);
+0098 
+0099     d_constr1 = (tau-pk(gamma_lc))./dk(gamma_lc);
+0100     d_constr2 = (tau+pk(gamma_lc))./-dk(gamma_lc);
+0101     d_constr3 = (-xp_h(gamma_xh)./delx_vec(gamma_xh));
+0102     idelta_1 = find(d_constr1&gt;2*eps);
+0103     idelta_2 = find(d_constr2&gt;2*eps);
+0104     idelta_3 = find(d_constr3&gt;2*eps);
+0105     delta1 = min(d_constr1(idelta_1));
+0106     delta2 = min(d_constr2(idelta_2));
+0107     delta3 = min(d_constr3(idelta_3));
+0108     <span class="keyword">if</span> isempty(delta1)
+0109         delta1 = inf;
+0110     <span class="keyword">end</span>
+0111     <span class="keyword">if</span> isempty(delta2)
+0112         delta2 = inf;
+0113     <span class="keyword">end</span>
+0114     <span class="keyword">if</span> isempty(delta3)
+0115         delta3 = inf;
+0116     <span class="keyword">end</span>
+0117 
+0118     <span class="keyword">if</span> delta1&gt;delta2
+0119         delta = delta2;
+0120         idelta = gamma_lc(find(d_constr2==delta2));
+0121         flag_delta = 1;
+0122     <span class="keyword">else</span>
+0123         delta = delta1;
+0124         idelta = gamma_lc(find(d_constr1==delta1));
+0125         flag_delta = 1;
+0126     <span class="keyword">end</span>
+0127     <span class="keyword">if</span> delta3 &lt; delta
+0128         delta = delta3;
+0129         idelta = gamma_xh(find(d_constr3==delta3));
+0130         flag_delta = 0;
+0131     <span class="keyword">end</span>
+0132     
+0133     <span class="comment">% gamma_xc = setdiff([1:N],[gamma_xh]);</span>
+0134     temp_gamma = zeros(N,1);
+0135     temp_gamma(gamma_xh) = gamma_xh;
+0136     gamma_xc = find([1:N]' ~= temp_gamma);
+0137 
+0138     b_constr1 = (1-ak(gamma_xc))./bk(gamma_xc);
+0139     b_constr2 = (1+ak(gamma_xc))./-bk(gamma_xc);
+0140     b_constr3 = (-lambda_h(gamma_lh)./del_lam_vec(gamma_lh));
+0141     itheta_1 = find(b_constr1&gt;2*eps);
+0142     itheta_2 = find(b_constr2&gt;2*eps);
+0143     itheta_3 = find(b_constr3&gt;2*eps);
+0144     theta1 = min(b_constr1(itheta_1));
+0145     theta2 = min(b_constr2(itheta_2));
+0146     theta3 = min(b_constr3(itheta_3));
+0147     <span class="keyword">if</span> isempty(theta1)
+0148         theta1 = inf;
+0149     <span class="keyword">end</span>
+0150     <span class="keyword">if</span> isempty(theta2)
+0151         theta2 = inf;
+0152     <span class="keyword">end</span>
+0153     <span class="keyword">if</span> isempty(theta3)
+0154         theta3 = inf;
+0155     <span class="keyword">end</span>
+0156 
+0157     <span class="keyword">if</span> theta1&gt;theta2
+0158         theta = theta2;
+0159         itheta = gamma_xc(find(b_constr2==theta2));
+0160         flag_theta = 1;
+0161     <span class="keyword">else</span>
+0162         theta = theta1;
+0163         itheta = gamma_xc(find(b_constr1==theta1));
+0164         flag_theta = 1;
+0165     <span class="keyword">end</span>
+0166     <span class="keyword">if</span> theta3 &lt; theta
+0167         theta = theta3;
+0168         itheta = gamma_lh(find(b_constr3==theta3));
+0169         flag_theta = 0;
+0170     <span class="keyword">end</span>
+0171 
+0172     <span class="keyword">if</span> 1-theta*ul &lt;=0 &amp; ul &gt;0
+0173         stp = 1;
+0174     <span class="keyword">end</span>
+0175     <span class="keyword">if</span> 1-delta*ux &lt;=0 &amp; ux &gt;0
+0176         stp = 1;
+0177     <span class="keyword">end</span>
+0178 
+0179     epsilon_x = (delta+e0-e0h*delta*ux)/(1-delta*ux);
+0180     epsilon_l = (theta+e0-e0h*theta*ul)/(1-theta*ul);
+0181 
+0182     dteta = min(delta, theta);
+0183 
+0184     <span class="keyword">if</span> epsilon_l &lt;0
+0185         epsilon_l = inf;
+0186     <span class="keyword">end</span>
+0187     <span class="keyword">if</span> epsilon_x &lt; 0
+0188         epsilon_x = inf;
+0189     <span class="keyword">end</span>
+0190 
+0191     epsilon = min(epsilon_x,epsilon_l);
+0192 
+0193     <span class="keyword">if</span> epsilon &gt;=1
+0194         dteta_end = ((1-e0)/(1+ux*(1-e0h)));
+0195         xp_h = xp_h + dteta_end*delx_vec;
+0196         lambda_h = lambda_h + dteta_end*del_lam_vec;
+0197         <span class="keyword">break</span>;
+0198     <span class="keyword">end</span>
+0199 
+0200     gamma_xh_old = gamma_xh;
+0201     gamma_lh_old = gamma_lh;
+0202     xp_h_old = xp_h;
+0203     xp_h = xp_h+dteta*delx_vec;
+0204     lambda_h_old = lambda_h;
+0205     lambda_h = lambda_h+dteta*del_lam_vec;
+0206     
+0207     pk_t = pk+dteta*dk;
+0208     ak_t = ak+dteta*bk;
+0209 
+0210     in_lambda = [];
+0211     out_lambda = [];
+0212     in_x = [];
+0213     out_x = [];
+0214     <span class="keyword">if</span> epsilon_x &gt; epsilon_l
+0215         <span class="comment">%%%%%%%%%%%%%%%%%%%%%</span>
+0216         <span class="comment">%%% x post-update %%%</span>
+0217         <span class="comment">%%%%%%%%%%%%%%%%%%%%%</span>
+0218         <span class="keyword">if</span> flag_theta == 1
+0219             <span class="comment">% when an element is added to Gamma_x by selected</span>
+0220             <span class="comment">% epsilon_dual</span>
+0221             new_x = itheta;
+0222             gamma_xh_app = [gamma_xh; new_x];
+0223             in_x = itheta;
+0224             
+0225             <span class="comment">%%% UPDATE THE MATRIX AND ITS INVERSE HERE</span>
+0226             <span class="comment">% just update with new epsilon</span>
+0227             Q0 = Q_glgx;
+0228             R0 = R_glgx;
+0229             [Q_glgx R_glgx] = qrupdate(Q0, R0, (epsilon-e0)*b(:,gamma_lh)',b(:,gamma_xh)');
+0230         <span class="keyword">else</span>
+0231             <span class="comment">% when an element is removed from Gamma_lambda by selected</span>
+0232             <span class="comment">% epsilon_dual</span>
+0233             outl_index = find(gamma_lh == itheta);
+0234             <span class="comment">% gamma_lh = setdiff(gamma_lh,itheta);</span>
+0235             gamma_lh = gamma_lh([1:outl_index-1 outl_index+1:length(gamma_lh)]);
+0236             
+0237             <span class="comment">% [max_val outx_index] = max(abs(iAglgx(:,outl_index)));</span>
+0238             outx_index = length(gamma_xh);
+0239             new_x = gamma_xh(outx_index);
+0240             <span class="comment">% gamma_xh = setdiff(gamma_xh,new_x);</span>
+0241             gamma_xh = gamma_xh([1:outx_index-1 outx_index+1:length(gamma_xh)]);
+0242             gamma_xh_app = [gamma_xh; new_x];
+0243             
+0244             lambda_h(itheta) = 0;
+0245             out_lambda = itheta;
+0246             
+0247             <span class="comment">%%% UPDATE THE MATRIX AND ITS INVERSE HERE</span>
+0248             <span class="comment">% out_lambda and new_x removed, and new epsilon</span>
+0249             Q0 = Q_glgx;
+0250             R0 = R_glgx;
+0251             [Q1 R1] = qrupdate(Q0, R0, (epsilon-e0)*b(:,gamma_lh_old)',b(:,gamma_xh_old)');
+0252             loc_vector = zeros(length(gamma_lh_old),1);
+0253             loc_vector(outl_index) = 1;
+0254             rep_row = (A(:,out_lambda)'*A(:,gamma_xh_old)+epsilon*b(:,out_lambda)'*b(:,gamma_xh_old))';
+0255             [Q2t R2t] = qrupdate(Q1, R1, loc_vector,-rep_row);
+0256             loc_vector = zeros(length(gamma_xh_old),1);
+0257             loc_vector(outx_index) = 1;
+0258             rep_vec = (A(:,gamma_lh_old)'*A(:,new_x)+epsilon*b(:,gamma_lh_old)'*b(:,new_x));
+0259             rep_vec(outl_index) = 1;
+0260             [Q3t R3t] = qrupdate(Q2t, R2t, -rep_vec, loc_vector);
+0261             Q_glgx = Q3t([1:outl_index-1 outl_index+1:length(gamma_lh_old)],[1:outx_index-1 outx_index+1:length(gamma_xh_old)]);
+0262             R_glgx = R3t([1:outx_index-1 outx_index+1:length(gamma_xh_old)],[1:outx_index-1 outx_index+1:length(gamma_xh_old)]);
+0263         
+0264             <span class="comment">% [Q2 R2] = qrdelete(Q1, R1, outl_index,'row');</span>
+0265             <span class="comment">% [Q_glgx R_glgx] = qrdelete(Q2, R2, outx_index, 'col');</span>
+0266         <span class="keyword">end</span>
+0267         z_x = -sign(ak_t(new_x));
+0268     
+0269         dx = ((A(:,gamma_lh)'*A(:,new_x)+epsilon*b(:,gamma_lh)'*b(:,new_x))*z_x);
+0270         
+0271         <span class="comment">%%% NEED FAST UPDATE</span>
+0272         <span class="comment">% iAglgx_btb = inv(A(:,gamma_lh)'*A(:,gamma_xh)+epsilon*b(:,gamma_lh)'*b(:,gamma_xh));</span>
+0273         <span class="comment">% del_x_hat = -iAglgx_btb*dx;</span>
+0274 
+0275         del_x_hat = -R_glgx\(Q_glgx'*dx);
+0276 
+0277         del_xhat_vec = zeros(N,1);
+0278         del_xhat_vec(gamma_xh) = del_x_hat;
+0279         del_xhat_vec(new_x) = z_x;
+0280 
+0281         dk_t = A'*(A*del_xhat_vec)+epsilon*b'*(b*del_xhat_vec);
+0282         <span class="keyword">if</span> flag_theta == 0
+0283             <span class="keyword">if</span> sign(pk_t(itheta))== sign(dk_t(itheta))
+0284                 z_x = -z_x;
+0285                 del_xhat_vec = -del_xhat_vec;
+0286                 dk_t = -dk_t;
+0287             <span class="keyword">end</span>
+0288         <span class="keyword">end</span>
+0289         pk_t(out_lambda) = sign(pk_t(out_lambda))*tau;
+0290         <span class="comment">% gamma_lc = setdiff([1:N],[gamma_lh]);</span>
+0291         temp_gamma = zeros(N,1);
+0292         temp_gamma(gamma_lh) = gamma_lh;
+0293         gamma_lc = find([1:N]' ~= temp_gamma);
+0294 
+0295         d_constr1 = (tau-pk_t(gamma_lc))./dk_t(gamma_lc);
+0296         d_constr2 = (tau+pk_t(gamma_lc))./-dk_t(gamma_lc);
+0297         d_constr3 = (-xp_h(gamma_xh_app)./del_xhat_vec(gamma_xh_app));
+0298         idelta_1 = find(d_constr1&gt;2*eps);
+0299         idelta_2 = find(d_constr2&gt;2*eps);
+0300         idelta_3 = find(d_constr3&gt;2*eps);
+0301         delta1 = min(d_constr1(idelta_1));
+0302         delta2 = min(d_constr2(idelta_2));
+0303         delta3 = min(d_constr3(idelta_3));
+0304 
+0305         <span class="keyword">if</span> delta1&gt;delta2
+0306             delta = delta2;
+0307             idelta = gamma_lc(find(d_constr2==delta2));
+0308             flag_delta = 1;
+0309         <span class="keyword">else</span>
+0310             delta = delta1;
+0311             idelta = gamma_lc(find(d_constr1==delta1));
+0312             flag_delta = 1;
+0313         <span class="keyword">end</span>
+0314         <span class="keyword">if</span> delta3 &lt; delta
+0315             delta = delta3;
+0316             idelta = gamma_xh_app(find(d_constr3==delta3));
+0317             flag_delta = 0;
+0318         <span class="keyword">end</span>
+0319         
+0320         xp_h_old = xp_h;
+0321         xp_h = xp_h + delta*del_xhat_vec;
+0322 
+0323         <span class="keyword">if</span> flag_delta == 1
+0324             gamma_xh_old = gamma_xh;
+0325             gamma_lh_old = gamma_lh;
+0326             gamma_lh = [gamma_lh; idelta];
+0327             gamma_xh = gamma_xh_app;
+0328             in_lambda = idelta;
+0329             
+0330             <span class="comment">%%% UPDATE THE MATRIX AND ITS INVERSE HERE FOR</span>
+0331             <span class="comment">% new_x and new_lambda added;</span>
+0332             Q0 = Q_glgx;
+0333             R0 = R_glgx;
+0334             Q0t = [Q0 zeros(length(gamma_xh_old),1); zeros(1,length(gamma_lh_old)) 1];
+0335             R0t = [R0 zeros(length(gamma_xh_old),1); zeros(1,length(gamma_lh_old)) 1];
+0336             loc_vector = zeros(length(gamma_lh),1);
+0337             loc_vector(end) = 1;
+0338             rep_row = (A(:,in_lambda)'*A(:,gamma_xh)+epsilon*b(:,in_lambda)'*b(:,gamma_xh))';
+0339             [Q2t R2t] = qrupdate(Q0t, R0t, loc_vector, rep_row);
+0340             rep_vec = A(:,gamma_lh)'*A(:,new_x)+epsilon*b(:,gamma_lh)'*b(:,new_x);
+0341             rep_vec(end) = -1;
+0342             [Q_glgx R_glgx] = qrupdate(Q2t, R2t, rep_vec, loc_vector);
+0343 
+0344             <span class="comment">% [Q1, R1] = qrinsert(Q0, R0, length(gamma_lh), A(:,gamma_lh_old)'*A(:,new_x)+epsilon*b(:,gamma_lh_old)'*b(:,new_x),'col');</span>
+0345             <span class="comment">% [Q_glgx, R_glgx] = qrinsert(Q1,R1, length(gamma_lh), A(:,in_lambda)'*A(:,gamma_xh)+epsilon*b(:,in_lambda)'*b(:,gamma_xh),'row');</span>
+0346         <span class="keyword">else</span>
+0347             gamma_xh_old = gamma_xh;
+0348             gamma_lh_old = gamma_lh;
+0349             
+0350             <span class="comment">% gamma_xh = setdiff(gamma_xh_app,idelta);</span>
+0351             outx_index = find(gamma_xh==idelta);
+0352             out_x = idelta;
+0353             xp_h(out_x) = 0;
+0354             
+0355             <span class="keyword">if</span> ~isempty(outx_index) <span class="comment">% Because otherwise new_x is removed</span>
+0356                 gamma_xh(outx_index) = new_x;
+0357     
+0358                 <span class="comment">%%% UPDATE THE MATRIX AND ITS INVERSE HERE</span>
+0359                 <span class="comment">% new_x and out_x swapped</span>
+0360                 Q0 = Q_glgx;
+0361                 R0 = R_glgx;
+0362                 loc_vector = zeros(length(gamma_xh),1);
+0363                 loc_vector(outx_index) = 1;
+0364                 [Q_glgx, R_glgx] = qrupdate(Q0,R0, A(:,gamma_lh)'*A(:,new_x)+epsilon*b(:,gamma_lh)'*b(:,new_x)-(A(:,gamma_lh)'*A(:,out_x)+epsilon*b(:,gamma_lh)'*b(:,out_x)),loc_vector);
+0365             <span class="keyword">end</span>
+0366         <span class="keyword">end</span>
+0367 
+0368         pk_old = pk_t+delta*dk_t;
+0369         pk_old(gamma_lh) = sign(pk_old(gamma_lh))*tau;
+0370         ak_old = ak_t;
+0371         ak_old(gamma_xh_app) = sign(ak_old(gamma_xh_app));
+0372     <span class="keyword">else</span> 
+0373         <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0374         <span class="comment">%%% lambda post-update %%%</span>
+0375         <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0376         <span class="keyword">if</span> flag_delta == 1
+0377             <span class="comment">% when an element is added to Gamma_lambda by selected</span>
+0378             <span class="comment">% epsilon_primal</span>
+0379             new_lambda = idelta;
+0380             gamma_lh_app = [gamma_lh; new_lambda];
+0381             in_lambda = idelta;
+0382             <span class="comment">%%% UPDATE THE MATRIX AND ITS INVERSE HERE</span>
+0383             <span class="comment">% just update the epsilon</span>
+0384             Q0 = Q_glgx;
+0385             R0 = R_glgx;
+0386             [Q_glgx R_glgx] = qrupdate(Q0, R0, (epsilon-e0)*b(:,gamma_lh)',b(:,gamma_xh)');
+0387         <span class="keyword">else</span>
+0388             gamma_lh_old = gamma_lh;
+0389             gamma_xh_old = gamma_xh;
+0390             
+0391             <span class="comment">% when an element is removed from Gamma_x by selected</span>
+0392             <span class="comment">% epsilon_primal</span>
+0393             outx_index = find(gamma_xh==idelta);
+0394             <span class="comment">% gamma_xh = setdiff(gamma_xh,idelta);</span>
+0395             gamma_xh = gamma_xh([1:outx_index-1 outx_index+1:length(gamma_xh)]);
+0396             
+0397             <span class="comment">% [max_val outl_index] = max(abs(iAgxgl(:,outx_index)));</span>
+0398             outl_index = length(gamma_lh);
+0399             new_lambda = gamma_lh(outl_index);
+0400             <span class="comment">% gamma_lh = setdiff(gamma_lh,new_lambda);</span>
+0401             gamma_lh = gamma_lh([1:outl_index-1 outl_index+1:length(gamma_lh)]);
+0402             gamma_lh_app = [gamma_lh; new_lambda];
+0403             xp_h(idelta) = 0;
+0404             out_x = idelta;
+0405             
+0406             <span class="comment">%%% UPDATE THE MATRIX AND ITS INVERSE HERE</span>
+0407             <span class="comment">% out_x and new_lambda removed and new epsilon</span>
+0408             Q0 = Q_glgx;
+0409             R0 = R_glgx;
+0410             [Q1 R1] = qrupdate(Q0, R0, (epsilon-e0)*b(:,gamma_lh_old)',b(:,gamma_xh_old)');
+0411             loc_vector = zeros(length(gamma_lh_old),1);
+0412             loc_vector(outl_index) = 1;
+0413             rep_row = (A(:,new_lambda)'*A(:,gamma_xh_old)+epsilon*b(:,new_lambda)'*b(:,gamma_xh_old))';
+0414             [Q2t R2t] = qrupdate(Q1, R1, loc_vector,-rep_row);
+0415             loc_vector = zeros(length(gamma_xh_old),1);
+0416             loc_vector(outx_index) = 1;
+0417             rep_vec = (A(:,gamma_lh_old)'*A(:,out_x)+epsilon*b(:,gamma_lh_old)'*b(:,out_x));
+0418             rep_vec(outl_index) = 1; 
+0419             [Q3t R3t] = qrupdate(Q2t, R2t, -rep_vec, loc_vector);
+0420             Q_glgx = Q3t([1:outl_index-1 outl_index+1:length(gamma_lh_old)],[1:outx_index-1 outx_index+1:length(gamma_xh_old)]);
+0421             R_glgx = R3t([1:outx_index-1 outx_index+1:length(gamma_xh_old)],[1:outx_index-1 outx_index+1:length(gamma_xh_old)]);
+0422             
+0423             <span class="comment">% [Q2 R2] = qrdelete(Q1, R1, outl_index,'row');</span>
+0424             <span class="comment">% [Q_glgx R_glgx] = qrdelete(Q2, R2, outx_index, 'col');</span>
+0425         <span class="keyword">end</span>
+0426         z_l = sign(pk_t(new_lambda));
+0427         
+0428         dl = ((A(:,gamma_xh)'*A(:,new_lambda)+epsilon*b(:,gamma_xh)'*b(:,new_lambda))*z_l);
+0429         
+0430         <span class="comment">%%% NEED FAST UPDATE</span>
+0431         <span class="comment">% iAgxgl_btb = inv(A(:,gamma_xh)'*A(:,gamma_lh)+epsilon*b(:,gamma_xh)'*b(:,gamma_lh));</span>
+0432         <span class="comment">% del_lam_hat = -iAgxgl_btb*dl;</span>
+0433          
+0434         del_lam_hat = -Q_glgx*(R_glgx'\dl);
+0435         
+0436         del_lhat_vec = zeros(N,1);
+0437         del_lhat_vec(gamma_lh) = del_lam_hat;
+0438         del_lhat_vec(new_lambda) = z_l;
+0439 
+0440         bk_t = A'*(A*del_lhat_vec)+epsilon*b'*(b*del_lhat_vec);
+0441         <span class="keyword">if</span> flag_delta == 0
+0442             <span class="keyword">if</span> sign(ak_t(idelta))==sign(bk_t(idelta))
+0443                 z_l = -z_l;
+0444                 del_lhat_vec = -del_lhat_vec;
+0445                 bk_t = -bk_t;
+0446             <span class="keyword">end</span>
+0447         <span class="keyword">end</span>
+0448         ak_t(out_x) = sign(ak_t(out_x));
+0449         <span class="comment">% gamma_xc = setdiff([1:N],[gamma_xh]);</span>
+0450         temp_gamma = zeros(N,1);
+0451         temp_gamma(gamma_xh) = gamma_xh;
+0452         gamma_xc = find([1:N]' ~= temp_gamma);
+0453 
+0454         b_constr1 = (1-ak_t(gamma_xc))./bk_t(gamma_xc);
+0455         b_constr2 = (1+ak_t(gamma_xc))./-bk_t(gamma_xc);
+0456         b_constr3 = (-lambda_h(gamma_lh_app)./del_lhat_vec(gamma_lh_app));
+0457         itheta_1 = find(b_constr1&gt;2*eps);
+0458         itheta_2 = find(b_constr2&gt;2*eps);
+0459         itheta_3 = find(b_constr3&gt;2*eps);
+0460         theta1 = min(b_constr1(itheta_1));
+0461         theta2 = min(b_constr2(itheta_2));
+0462         theta3 = min(b_constr3(itheta_3));
+0463 
+0464         <span class="keyword">if</span> theta1&gt;theta2
+0465             theta = theta2;
+0466             itheta = gamma_xc(find(b_constr2==theta2));
+0467             flag_theta = 1;
+0468         <span class="keyword">else</span>
+0469             theta = theta1;
+0470             itheta = gamma_xc(find(b_constr1==theta1));
+0471             flag_theta = 1;
+0472         <span class="keyword">end</span>
+0473         <span class="keyword">if</span> theta3 &lt; theta
+0474             theta = theta3;
+0475             itheta = gamma_lh_app(find(b_constr3==theta3));
+0476             flag_theta = 0;
+0477         <span class="keyword">end</span>
+0478 
+0479         lambda_h_old = lambda_h;
+0480         lambda_h = lambda_h + theta*del_lhat_vec;
+0481         <span class="keyword">if</span> flag_theta == 1
+0482             gamma_lh_old = gamma_lh;
+0483             gamma_xh_old = gamma_xh;
+0484             gamma_xh = [gamma_xh; itheta];
+0485             gamma_lh = gamma_lh_app;
+0486             in_x = itheta;
+0487             
+0488             <span class="comment">%%% UPDATE THE MATRIX AND ITS INVERSE HERE</span>
+0489             <span class="comment">% new_lambda and in_x added</span>
+0490             Q0 = Q_glgx;
+0491             R0 = R_glgx;
+0492             Q0t = [Q0 zeros(length(gamma_xh_old),1); zeros(1,length(gamma_lh_old)) 1];
+0493             R0t = [R0 zeros(length(gamma_xh_old),1); zeros(1,length(gamma_lh_old)) 1];
+0494             loc_vector = zeros(length(gamma_lh),1);
+0495             loc_vector(end) = 1;
+0496             rep_row = (A(:,new_lambda)'*A(:,gamma_xh)+epsilon*b(:,new_lambda)'*b(:,gamma_xh))';
+0497             [Q2t R2t] = qrupdate(Q0t, R0t, loc_vector, rep_row);
+0498             rep_vec = A(:,gamma_lh)'*A(:,in_x)+epsilon*b(:,gamma_lh)'*b(:,in_x);
+0499             rep_vec(end) = -1;
+0500             [Q_glgx R_glgx] = qrupdate(Q2t, R2t, rep_vec, loc_vector);
+0501 
+0502             <span class="comment">% [Q1, R1] = qrinsert(Q0, R0, length(gamma_xh), A(:,gamma_lh_old)'*A(:,in_x)+epsilon*b(:,gamma_lh_old)'*b(:,in_x),'col');</span>
+0503             <span class="comment">% [Q_glgx, R_glgx] = qrinsert(Q1,R1, length(gamma_xh), A(:,new_lambda)'*A(:,gamma_xh)+epsilon*b(:,new_lambda)'*b(:,gamma_xh),'row');</span>
+0504         <span class="keyword">else</span>
+0505             <span class="comment">% gamma_lh = setdiff(gamma_lh_app,itheta);</span>
+0506             outl_index = find(gamma_lh==itheta);
+0507             out_lambda = itheta;
+0508             
+0509             out_lambda = itheta;
+0510             lambda_h(itheta) = 0;
+0511             <span class="keyword">if</span> ~isempty(outl_index) <span class="comment">% Because otherwise new_lambda is removed</span>
+0512                 gamma_lh_old = gamma_lh;
+0513                 gamma_xh_old = gamma_xh;
+0514                 gamma_lh(outl_index) = new_lambda; 
+0515 
+0516                 <span class="comment">%%% UPDATE THE MATRIX AND ITS INVERSE HERE</span>
+0517                 <span class="comment">% new_lambda and out_lambda swapped</span>
+0518                 Q0 = Q_glgx;
+0519                 R0 = R_glgx;
+0520                 loc_vector = zeros(length(gamma_xh),1);
+0521                 loc_vector(outl_index) = 1;
+0522                 row_replaced =  (A(:,new_lambda)'*A(:,gamma_xh)+epsilon*b(:,new_lambda)'*b(:,gamma_xh)-(A(:,out_lambda)'*A(:,gamma_xh)+epsilon*b(:,out_lambda)'*b(:,gamma_xh)));
+0523                 [Q_glgx, R_glgx] = qrupdate(Q0,R0, loc_vector,row_replaced');
+0524             <span class="keyword">end</span>
+0525 
+0526         <span class="keyword">end</span>
+0527         ak_old = ak_t+theta*bk_t;
+0528         ak_old(gamma_xh) = sign(ak_old(gamma_xh));
+0529         pk_old = pk_t;
+0530         pk_old(gamma_lh_app) = sign(pk_old(gamma_lh_app))*tau;
+0531     <span class="keyword">end</span>
+0532     e0 = epsilon;
+0533 <span class="keyword">end</span>
+0534 th = cputime-t0;</pre></div>
+<hr><address>Generated on Sun 09-Jun-2013 02:08:02 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" target="_parent">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>
