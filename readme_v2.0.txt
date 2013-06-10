@@ -44,9 +44,9 @@ demo_posBPDN -- solves BPDN problem with positive sign constraint on the estimat
 demo_dynamicX -- updates the solution for BPDN as the signal changes
 demo_dynamicSeq -- updates the signal as sequential measurements are added
 demo_rwtL1-- solves iterative reweighting for BPDN
-demo_dynamiCRWT -- iteratively updates weights in the L1-norm cost while estimating a time-varying signal
+demo_dynamicRWT -- iteratively updates weights in the L1-norm cost while estimating a time-varying signal
 demo_streamingLOT -- iteratively estimates a streaming signal using lapped orthogonal transform as the representation basis
-demo_streamingKF -- iteratively estimates a streaming signal that follows a linear dynamic model
+demo_KalmanRWT -- iteratively estimates a streaming signal that follows a linear dynamic model
 and more... 
 
 l1homotopy_DS.m (a similar homotopy program for the Dantzig selector will be added to this package soon.)
