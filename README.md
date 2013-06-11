@@ -106,7 +106,8 @@ Parts of old releases
 %------------------------------------------------------------
 
 
-Other than L1 decoding and adaptive reweighting methods, these homotopy programs can also be solved using l1homotopy.m (for the LASSO/BPDN formulation) and l1homotopy_DS.m (for the Dantzig selector formulation).
+Other than L1 decoding and adaptive reweighting methods, these homotopy programs can also be solved 
+using l1homotopy.m (for the LASSO/BPDN formulation).
 
 
 %---------------  
