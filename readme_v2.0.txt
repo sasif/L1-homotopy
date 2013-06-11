@@ -49,8 +49,6 @@ demo_streamingLOT -- iteratively estimates a streaming signal using lapped ortho
 demo_KalmanRWT -- iteratively estimates a streaming signal that follows a linear dynamic model
 and more... 
 
-l1homotopy_DS.m (a similar homotopy program for the Dantzig selector will be added to this package soon.)
-
 
 You may need to compile mex codes for
 1. matrix-vector product of the form A_Gamma x_Gamma and A_Gamma^T y
@@ -84,7 +82,8 @@ Parts of old releases
 %------------------------------------------------------------
 
 
-Other than L1 decoding and adaptive reweighting methods, these homotopy programs can also be solved using l1homotopy.m (for the LASSO/BPDN formulation) and l1homotopy_DS.m (for the Dantzig selector formulation).
+Other than L1 decoding and adaptive reweighting methods, these homotopy programs can also be 
+solved using l1homotopy.m (for the LASSO/BPDN formulation).
 
 
 %---------------
